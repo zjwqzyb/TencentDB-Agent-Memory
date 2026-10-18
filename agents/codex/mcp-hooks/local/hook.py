@@ -2,6 +2,7 @@
 
 import hashlib, json, os, sqlite3, sys, time
 from client import STATE, project, redact, remote
+from task_commands import instruction as task_instruction
 
 os.umask(0o077)
 
@@ -122,7 +123,8 @@ def instruction(data, sid, prompt, p=None):
         if p.get("capture_conversations")
         else "本项目未启用对话自动采集；"
     ) + "不采集工具日志、思考、附件原文、系统提示或旧聊天。\n"
-    base += "用户若发送 mem:help，说明命令；mem:sync 调 get_project_agent 刷新并使用返回配置；mem:session-reset 调 project_session.reset(expected_generation)，再重新初始化；mem:create-task / mem:update-task 用 manage_project_task；mem:create-skill 先根据当前对话整理具体 SKILL.md（由当前 Codex 模型生成），按用户授权用 create_project_skill 写入；用户要求后台自动抽取时用 extract_project_skill。缺字段才追问；没有工具成功结果不得声称已操作。命令是此适配层工作流，不是 Proxy 原生拦截。\n"
+    base += "用户若发送 mem:help，说明命令；mem:sync 调 get_project_agent 刷新并使用返回配置；mem:session-reset 调 project_session.reset(expected_generation)，再重新初始化；任务操作按下列新版 CLI 工作流执行；mem:create-skill 先根据当前对话整理具体 SKILL.md（由当前 Codex 模型生成），按用户授权用 create_project_skill 写入；用户要求后台自动抽取时用 extract_project_skill。缺字段才追问；没有工具成功结果不得声称已操作。命令是此适配层工作流，不是 Proxy 原生拦截。\n"
+    base += task_instruction()
     if p.get("rename_on_bind"):
         base += task_title_instruction()
     if s["state"] != "initialized":

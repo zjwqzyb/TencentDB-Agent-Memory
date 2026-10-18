@@ -27,6 +27,22 @@ for field in (
 C["project_key"] = PROJECT_KEY
 
 
+class PanelError(RuntimeError):
+    """Expose a safe status category, never a raw response body or credentials."""
+
+    def __init__(self, code):
+        self.code = code
+        self.definite_rejection = code in (400, 401, 403, 404, 409, 422)
+        message = "Panel request failed " + str(code)
+        if code == 409:
+            message += "; task revision conflict: reload, review changes and use a new request_id; no automatic retry"
+        elif code in (400, 422):
+            message += (
+                "; check fields, acceptance/evidence, blockers and subtask completion"
+            )
+        super().__init__(message)
+
+
 def api(path, body):
     request = urllib.request.Request(
         C["base_url"].rstrip("/") + "/api/v1/" + path,
@@ -43,7 +59,7 @@ def api(path, body):
         ) as response:
             result = json.load(response)
     except urllib.error.HTTPError as exc:
-        raise RuntimeError("Panel HTTP " + str(exc.code)) from None
+        raise PanelError(exc.code) from None
     if result.get("code") != 0:
-        raise RuntimeError("Panel request failed " + str(result.get("code")))
+        raise PanelError(result.get("code"))
     return result["data"]

@@ -417,6 +417,10 @@ def once(rid, payload, fn):
                 raise ValueError("Request ID reused for different content")
             if old["status"] == "done":
                 return dict(json.loads(old["result"]), deduplicated=True)
+            if old["status"] == "rejected":
+                raise ValueError(
+                    "Previous mutation rejected: " + json.loads(old["result"])["error"]
+                )
             raise RuntimeError(
                 "uncertain outcome; inspect ledger, do not automatically repeat this mutation"
             )
@@ -426,9 +430,15 @@ def once(rid, payload, fn):
         )
     try:
         result = fn()
-    except Exception:
+    except Exception as exc:
         with db() as d:
-            d.execute("UPDATE writes SET status='uncertain' WHERE id=?", (rid,))
+            if getattr(exc, "definite_rejection", False):
+                d.execute(
+                    "UPDATE writes SET status='rejected',result=? WHERE id=?",
+                    (json.dumps({"error": str(exc)}), rid),
+                )
+            else:
+                d.execute("UPDATE writes SET status='uncertain' WHERE id=?", (rid,))
         raise
     with db() as d:
         d.execute(
@@ -609,7 +619,7 @@ def run(r):
     b = binding(sid)
     if child_binding(sid) and (
         action in ("create_skill", "extract_skill")
-        or (action == "task" and r.get("operation") != "list")
+        or (action == "task" and r.get("operation") not in ("list", "get"))
     ):
         raise ValueError(
             "Subagent tools are read-only; ask the parent to confirm and apply mutations"
@@ -677,40 +687,9 @@ def run(r):
         }
         return once(r["request_id"], payload, lambda: api("skill/create", payload))
     if action == "task":
-        op = r["operation"]
-        if op == "list":
-            return api("task/list-with-agents", {"team_id": b["team_id"], "limit": 100})
-        if op == "create":
-            payload = {
-                "team_id": b["team_id"],
-                "creator_user_id": C["user_id"],
-                "title": r["title"],
-                "description": r.get("description", ""),
-                "linked_agents": [{"agent_id": b["agent_id"]}],
-                "metadata_json": json.dumps({"source": "codex-mcp"}),
-            }
-        elif op == "update":
-            if not b.get("task_id"):
-                raise ValueError(
-                    "Select a task through session initialization before updating"
-                )
-            task = api("meta/task/get", {"task_id": b["task_id"]})
-            metadata = task.get("metadata_json") or {}
-            if isinstance(metadata, str):
-                metadata = json.loads(metadata)
-            if "issue" in metadata:
-                raise ValueError(
-                    "Managed task requires revision-aware issue/update; use the project tracker CLI"
-                )
-            payload = {"task_id": b["task_id"]}
-            for key in ("title", "description", "status"):
-                if key in r:
-                    payload[key] = r[key]
-            if len(payload) == 1:
-                raise ValueError("No task changes supplied")
-        else:
-            raise ValueError("Unsupported task operation")
-        return once(r["request_id"], payload, lambda: api("meta/task/" + op, payload))
+        from project_tasks import execute
+
+        return execute(r, b, api, once)
     if action == "extract_skill":
         with db() as d:
             rows = d.execute(

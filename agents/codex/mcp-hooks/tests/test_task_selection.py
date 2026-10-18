@@ -10,6 +10,7 @@ import unittest
 from unittest.mock import patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[1] / "server"
+sys.path.insert(0, str(ROOT))
 stub = types.ModuleType("project_api")
 stub.C = {"team_id": "team", "agent_id": "agent", "user_id": "user"}
 stub.api = lambda *args: None
@@ -327,7 +328,7 @@ class TaskSelectionTests(unittest.TestCase):
             return original(path, body)
 
         with patch.object(rt, "api", api), self.assertRaisesRegex(
-            ValueError, "revision-aware"
+            ValueError, "expected_revision"
         ):
             rt.run(
                 {

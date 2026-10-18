@@ -1,6 +1,7 @@
 """MCP tool contracts for the six Agent capabilities."""
 
 from project_runtime import run as runtime
+from project_tasks import STAGES, TRIAGES
 
 S = {"type": "string"}
 B = {"type": "boolean"}
@@ -30,6 +31,33 @@ def tool(name, desc, props, required=(), write=False):
             "openWorldHint": False,
         },
     }
+
+
+ISSUE = {
+    "type": "object",
+    "properties": {
+        "kind": enum("spec", "enhancement", "bug"),
+        "stage": enum(*STAGES),
+        "triage": enum(*TRIAGES),
+        "labels": {"type": "array", "items": S, "maxItems": 30},
+        "parent_id": {"type": ["string", "null"]},
+        "blocked_by": {"type": "array", "items": S, "maxItems": 100},
+        "assignee_agent_id": {"type": ["string", "null"]},
+        "milestone": S,
+        "acceptance": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"text": S, "done": B},
+                "required": ["text", "done"],
+                "additionalProperties": False,
+            },
+            "maxItems": 100,
+        },
+        "evidence": S,
+    },
+    "additionalProperties": False,
+}
 
 
 TOOLS = [
@@ -127,13 +155,40 @@ TOOLS = [
     ),
     tool(
         "manage_project_task",
-        "List team tasks, create a task linked to the selected Agent, or update the currently selected task. Use create/update only when explicitly requested. Show concrete title/description before requesting any missing approval. Created task is not selected automatically; fill an empty binding with select_agent_task, otherwise reset/reinitialize. Managed issue tasks require the revision-aware tracker CLI. request_id must be unique per intended write and reused only for identical retry.",
+        "Task CLI parity via native meta/issue API: list/get/create/update/comment. "
+        "get returns issue.revision, acceptance, comments, blockers and children. "
+        "Read before writing; update/comment require expected_revision from that read and a stable request_id. "
+        "Conflict means reload and review, never automatically retry a stale patch or use legacy task/update. "
+        "task_id defaults to the bound task; explicit full IDs may address tasks in this session team. "
+        "Create links the current Agent without changing the session binding. "
+        "issue is a partial workflow patch; omitted fields stay unchanged and supplied arrays replace existing arrays. "
+        "Use issue.parent_id/blocked_by for subtask/dependency edges; no hard delete. "
+        "Only perform user-authorized writes; done requires verified acceptance/evidence and resolved blockers/children. "
+        "list supports CLI filters, ready and all pages. Children may list/get only.",
         {
-            "operation": enum("list", "create", "update"),
+            "operation": enum("list", "get", "create", "update", "comment"),
+            "task_id": S,
             "request_id": S,
+            "expected_revision": {"type": "integer", "minimum": 0},
             "title": S,
             "description": S,
-            "status": S,
+            "source_url": S,
+            "issue": ISSUE,
+            "body": {"type": "string", "minLength": 1, "maxLength": 20000},
+            "status": {
+                **enum("running", "completed", *STAGES),
+                "description": "Compatibility alias for issue.stage; prefer issue.stage. completed maps to done, running to in_progress; server completion checks still apply.",
+            },
+            "query": S,
+            "state": enum("open", "closed"),
+            "stage": enum(*STAGES),
+            "triage": enum(*TRIAGES),
+            "label": S,
+            "parent_id": S,
+            "ready": B,
+            "all": B,
+            "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+            "offset": {"type": "integer", "minimum": 0},
         },
         ["operation"],
         True,

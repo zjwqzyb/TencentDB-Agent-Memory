@@ -173,15 +173,17 @@ initialized → 正常读取资产、召回和归档
 | `read_wiki_pages` | 按引用读取 Wiki 页面 |
 | `query_code_graph` | `search` 检索符号，`explore` 查看代码关系 |
 | `project_skills` | `list/search/read/file` 查看当前 Agent 的 Skill 和资源文件 |
-| `manage_project_task` | 列任务，按用户要求创建关联任务或更新当前绑定的旧版任务 |
+| `manage_project_task` | 对齐新 CLI 的 list/get/create/update/comment，支持工作流、筛选、子任务和带 revision 的更新 |
 | `create_project_skill` | 用当前 Codex 模型整理的具体内容创建 Skill |
 | `extract_project_skill` | 显式请求后，提交当前代际已归档对话的服务端异步 Skill 抽取 |
 
-`mem:help`、`mem:sync`、`mem:session-reset`、`mem:create-task`、`mem:update-task`、`mem:create-skill` 是 Hook 告知助手的工作流提示，**不是客户端命令解析器或 Proxy 原生拦截**。助手仍需调用相应工具并检查成功结果，不能仅凭回复声称完成操作。
+任务指令及 CLI 对照见 [新版任务指令](TASK-COMMANDS.md)，包含 `mem:list-tasks`、`mem:ready-tasks`、`mem:get-task`、`mem:comment-task`、`mem:create-subtask`、`mem:claim-task`、`mem:complete-task` 和 `mem:cancel-task`。
+
+`mem:help`、`mem:sync`、`mem:session-reset`、任务指令、`mem:create-skill` 是 Hook 告知助手的工作流提示，**不是客户端命令解析器或 Proxy 原生拦截**。助手仍需调用相应工具并检查成功结果，不能仅凭回复声称完成操作。
 
 `mem:create-skill` 先整理可审阅的 `SKILL.md` 内容，再按用户授权写入。后台 `extract_project_skill` 使用服务端的抽取模型配置，需要对应功能已部署；提交成功只表示进入异步流程。当前轮最终回复尚未触发 `Stop` 时，不在服务端已采集的抽取范围中。
 
-写工具使用稳定 `request_id`：每次独立意图分配新 ID，只有完全相同的重试才复用。已存在 `metadata_json.issue` 的托管任务需要带 revision 的 `issue/update` 接口或项目任务 CLI，不能通过旧版 `manage_project_task update` 修改；服务端会明确拒绝，不自动降级。创建任务不会自动更换当前绑定。
+写工具使用稳定 `request_id`：每次独立意图分配新 ID，只有完全相同的重试才复用。`manage_project_task update/comment` 现在统一使用新 CLI 对应的 `meta/issue` 接口：先 get 读取 `issue.revision`，再提交 expected_revision。既支持历史任务的 revision=0，也支持托管任务；版本冲突要重新读取和审阅补丁，不自动覆盖，更不回退旧 task/update。创建任务不会自动更换当前绑定。
 
 读取列表的部分接口最多返回前 100 项，记忆召回也有数量和上下文长度限制；需要完整内容时按工具支持的分页/路径读取。空 Skill/Wiki 列表代表尚无可用资产，不表示接口未接通。
 
@@ -218,6 +220,8 @@ sqlite3 /absolute/path/to/state/example-project/events.sqlite3 \
   'SELECT state, count(*) FROM outbox GROUP BY state;'
 ```
 
+任务写入被明确校验/权限/版本拒绝时，`writes.status` 为 `rejected`，不自动重试；它与网络结果不明的 `uncertain` 不同。重新读取并形成新补丁后使用新 request_id。
+
 服务端 `state/<project-key>/runtime.sqlite3` 的 `writes` 账本按阶段记录 `request_id-memory` 与 `request_id-skill`。已完成阶段会返回去重结果；`pending/uncertain` 不允许自动重试。先备份数据库，检查原始请求的保存目标、账本与 Panel 实际数据。只有确认未发生写入或完成对账修复后，才由管理员决定恢复对应项；不要批量把 `review` 改回 `queued`，也不要用新 ID 盲重试。
 
 ## 排障
@@ -249,7 +253,7 @@ sqlite3 /absolute/path/to/state/example-project/events.sqlite3 \
 2. 服务端将真实配置放到独立 `config/<key>.json`，保留 `user_id/user_key/team_id/agent_id`，按当前模板补字段；把相应项目数据库迁入独立 `state/<key>/`，核对所有者及权限后更新包装器。
 3. 检查旧 outbox 是否有无 `generation` 的 v1 `save` 请求。本版本不接收这种未固定代际的请求，也不自动重定位旧写入，须在旧部署中对账处理后再切换。
 4. 安装器不会识别另一路径下的旧 Hook 命令。切换安装目录前人工移除旧的本适配器条目，避免双重采集；不要删除其他扩展的 Hooks。
-5. 重启 MCP/Hook，检查 14 个工具、正确团队/Agent、初始化流程及首轮 Stop 结果，再恢复正常使用。当前目录代码提交不会自动替换任何正在运行的部署。
+5. 升级到新版任务适配器时同步 `project_tasks.py`、`project_runtime.py`、`project_tools.py` 和 `project_api.py`，本地同步 `task_commands.py` 与 `hook.py`；部署的 Panel/Core 必须有新 issue API。重启 MCP/Hook，检查 14 个工具、正确团队/Agent、初始化流程及首轮 Stop 结果，再恢复正常使用。当前目录代码提交不会自动替换任何正在运行的部署。
 
 卸载时，删除本适配器的 MCP 表和四类 Hook 中对应命令条目，保留其他配置，重启客户端后再移走适配器源码。状态和凭据按数据保留要求单独处理，不因卸载自动删除。安装备份的 `manifest.json` 记录每个文件的原路径、原来是否存在及备份编号；恢复时逐项核对，避免覆盖安装后其他工具新增的设置。
 
@@ -263,6 +267,6 @@ python3 -m compileall -q agents/codex/mcp-hooks
 sh -n agents/codex/mcp-hooks/server/run-container.sh
 ```
 
-测试覆盖目录隔离、脱敏与采集开关、Hook 重复回调、结果不明队列、任务选择/分页/代际、子 Agent 固定绑定、分阶段写入去重、MCP 子进程断线及禁止重放写操作、清单变更、EOF 队列排空、服务端 14 工具契约和安装器的配置合并。包装器测试使用假的 Docker 命令，不在生产创建容器或写入记忆。
+测试覆盖目录隔离、脱敏与采集开关、Hook 重复回调、结果不明队列、任务选择/分页/代际、新任务 CLI 契约、revision 冲突、评论与子任务、新指令、子 Agent 固定绑定、分阶段写入去重、MCP 子进程断线及禁止重放写操作、清单变更、EOF 队列排空、服务端 14 工具契约和安装器的配置合并。包装器测试使用假的 Docker 命令，不在生产创建容器或写入记忆。
 
 上线验收另需在目标客户端验证实际 Hook 事件、正确项目绑定、首轮最终回复保存、跨会话召回，以及按需验证 Wiki/Skill/代码图。不能把离线测试通过当成生产资产已就绪。

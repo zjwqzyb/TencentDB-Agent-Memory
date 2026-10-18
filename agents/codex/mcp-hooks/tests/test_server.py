@@ -44,9 +44,17 @@ class ServerSmokeTests(unittest.TestCase):
                 check=True,
             )
             replies = [json.loads(line) for line in result.stdout.splitlines()]
-            self.assertEqual(replies[0]["result"]["serverInfo"]["version"], "3.0.0")
+            self.assertEqual(replies[0]["result"]["serverInfo"]["version"], "3.1.0")
             tools = replies[1]["result"]["tools"]
             self.assertEqual(len(tools), 14)
+            task_tool = next(t for t in tools if t["name"] == "manage_project_task")
+            props = task_tool["inputSchema"]["properties"]
+            self.assertEqual(
+                props["operation"]["enum"],
+                ["list", "get", "create", "update", "comment"],
+            )
+            self.assertIn("expected_revision", props)
+            self.assertIn("acceptance", props["issue"]["properties"])
             for tool in tools:
                 self.assertIn("session_id", tool["inputSchema"]["required"])
             self.assertTrue(replies[2]["result"]["isError"])

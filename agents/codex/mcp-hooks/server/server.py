@@ -22,7 +22,7 @@ def respond(request):
             "serverInfo": {
                 "name": "team-assets",
                 "title": "团队资产 · " + C["name"],
-                "version": "3.0.0",
+                "version": "3.1.0",
             },
         }
     elif method == "ping":
