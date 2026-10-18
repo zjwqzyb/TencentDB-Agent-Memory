@@ -1,0 +1,17 @@
+{
+  "projects": [
+    {
+      "key": "example-project",
+      "name": "示例项目",
+      "path": "/absolute/path/to/project",
+      "enabled": false,
+      "team": "示例团队",
+      "agent": "开发助手",
+      "capture_conversations": false,
+      "rename_on_bind": false,
+      "ssh_host": "memory-server",
+      "mcp_command": "/usr/local/bin/tencent-memory-mcp-remote example-project",
+      "bridge_command": "/usr/local/bin/tencent-project-memory-remote example-project"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Agents
 
+Codex 另提供 [MCP + Hooks 直接接入](./codex/mcp-hooks/README.md)：无需修改模型、provider 或 ChatGPT 登录，可使用团队资产工具、跨会话记忆和按需归档。下文继续介绍 Proxy 接入方式。
+
 Memory Proxy 目前适配了 7 类 AI Agent 客户端，各自协议、会话初始化方式、注入逻辑差异显著。
 
 > 🛠 **想接入一个新的 AI Agent 客户端（未在下表中）？**

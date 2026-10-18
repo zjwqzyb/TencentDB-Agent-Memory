@@ -1,0 +1,54 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/absolute/path/to/python3 /absolute/path/to/tencent-memory/hook.py",
+            "timeout": 60,
+            "statusMessage": "检索项目长期记忆",
+            "additionalContextLimit": 12000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/absolute/path/to/python3 /absolute/path/to/tencent-memory/hook.py",
+            "timeout": 50,
+            "statusMessage": "保存项目长期记忆"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/absolute/path/to/python3 /absolute/path/to/tencent-memory/hook.py",
+            "timeout": 50,
+            "statusMessage": "继承父会话团队资产绑定",
+            "additionalContextLimit": 12000
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/absolute/path/to/python3 /absolute/path/to/tencent-memory/hook.py",
+            "timeout": 50,
+            "statusMessage": "归档子 Agent 最终结果"
+          }
+        ]
+      }
+    ]
+  }
+}

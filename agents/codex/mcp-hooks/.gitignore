@@ -1,0 +1,11 @@
+# Only examples/ may contain configuration templates.
+projects.json
+!examples/projects.json
+*.server.json
+!examples/*.server.json
+local/projects.json
+server/*.json
+state/
+local/state/
+__pycache__/
+*.pyc

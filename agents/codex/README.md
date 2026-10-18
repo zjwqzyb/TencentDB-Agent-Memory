@@ -1,5 +1,9 @@
 # Codex
 
+Codex 可通过两种方式接入。保留当前模型、provider 和 ChatGPT 登录，直接使用团队资产工具、记忆召回和最终回复归档时，使用 [MCP + Hooks 接入指南](./mcp-hooks/README.md)，源码和安装器也在该目录。
+
+以下章节介绍 **Memory Proxy 接入**，其中 provider、路由与 Plan 模式要求只适用于 Proxy。
+
 > agentSource: `codex` | 协议: OpenAI Responses API | Handler: `codexHandler.ts` (独立)
 >
 > 本地历史导入 Memory Hub：见 [资产导入手册](./asset-import.md)。

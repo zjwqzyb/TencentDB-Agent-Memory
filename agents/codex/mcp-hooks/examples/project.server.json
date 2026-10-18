@@ -1,0 +1,10 @@
+{
+  "name": "示例项目",
+  "team_name": "示例团队",
+  "base_url": "http://memory-panel:8125",
+  "service_id": "REPLACE_WITH_SERVICE_ID",
+  "user_id": "REPLACE_WITH_USER_ID",
+  "user_key": "REPLACE_WITH_USER_KEY",
+  "team_id": "REPLACE_WITH_TEAM_ID",
+  "agent_id": "REPLACE_WITH_AGENT_ID"
+}
