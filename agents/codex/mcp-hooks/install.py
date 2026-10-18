@@ -22,6 +22,20 @@ EVENTS = {
 }
 
 
+def same_executable(left, right):
+    return (isinstance(left, str) and Path(left).is_absolute()
+            and Path(left).resolve() == Path(right).resolve())
+
+
+def same_hook_command(left, right):
+    try:
+        a, b = shlex.split(left or ""), shlex.split(right)
+    except ValueError:
+        return False
+    return (len(a) == len(b) == 2 and same_executable(a[0], b[0])
+            and Path(a[1]).is_absolute() and Path(a[1]).resolve() == Path(b[1]).resolve())
+
+
 def hook_config(existing, command):
     """Preserve unrelated event groups and update only our command entries."""
     data = json.loads(json.dumps(existing))
@@ -39,7 +53,7 @@ def hook_config(existing, command):
         found = False
         for group in groups:
             for old in group.get("hooks", []):
-                if old.get("command") == command:
+                if old.get("command") == command or same_hook_command(old.get("command"), command):
                     old.update(entry)
                     found = True
         if not found:
@@ -60,7 +74,7 @@ def mcp_config(text, python, launcher, project_dir, name):
     existing = data.get("mcp_servers", {}).get(name)
     if existing is not None:
         # Existing adapter entries remain untouched, including operator overrides.
-        if existing.get("command") != python or existing.get("args") != fields["args"]:
+        if not same_executable(existing.get("command"), python) or existing.get("args") != fields["args"]:
             raise ValueError("MCP entry already exists for another command: " + name)
         if project_dir and existing.get("cwd") != str(project_dir):
             raise ValueError("Existing MCP cwd differs; edit that entry explicitly")
@@ -103,6 +117,10 @@ def install(codex_home, destination, project_dir=None, name="team_assets"):
     changes = {
         destination / p.name: p.read_bytes() for p in (SOURCE / "local").glob("*.py")
     }
+    changes.update({
+        destination / "runtime" / p.name: p.read_bytes()
+        for p in (SOURCE / "server").glob("*.py")
+    })
     changes[config_path] = new_toml.encode()
     changes[hooks_path] = (
         json.dumps(new_hooks, ensure_ascii=False, indent=2) + "\n"

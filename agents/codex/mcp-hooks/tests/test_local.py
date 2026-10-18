@@ -36,9 +36,8 @@ class RoutingTests(unittest.TestCase):
             name="test",
             team="team",
             agent="agent",
-            ssh_host="memory-server",
-            mcp_command="mcp " + key,
-            bridge_command="bridge " + key,
+            config_file=str(self.root / (key + ".json")),
+            transport="http",
         )
 
     def configure(self, items):
@@ -60,17 +59,19 @@ class RoutingTests(unittest.TestCase):
         self.configure([self.item("project", base)])
         self.assertEqual(client.project(str(link))["key"], "project")
 
-    def test_invalid_keys_hosts_and_ambiguous_paths_fail_closed(self):
+    def test_invalid_keys_configs_and_ambiguous_paths_fail_closed(self):
         first = self.item("valid", self.root)
         for field, value in [
             ("key", "../escape"),
-            ("ssh_host", "-oProxyCommand=bad"),
+            ("config_file", "relative.json"),
+            ("config_file", str(self.root / "other-project.json")),
+            ("transport", "ssh"),
             ("path", "relative"),
         ]:
             self.configure([{**first, field: value}])
             with self.subTest(field=field), self.assertRaises(ValueError):
                 client.project(str(self.root))
-        self.configure([first, {**first, "key": "other"}])
+        self.configure([first, self.item("other", self.root)])
         with self.assertRaisesRegex(ValueError, "Ambiguous"):
             client.project(str(self.root))
 
@@ -211,6 +212,20 @@ class HookCaptureTests(unittest.TestCase):
 
 
 class InstallerTests(unittest.TestCase):
+    def test_python_symlink_upgrade_reuses_existing_mcp_and_hook_entries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            alias = root / "python-alias"
+            alias.symlink_to(sys.executable)
+            launcher, script = root / "mcp-launcher.py", root / "hook.py"
+            text = '[mcp_servers.team_assets]\ncommand=' + json.dumps(str(alias)) + '\nargs=' + json.dumps([str(launcher)]) + '\n'
+            self.assertEqual(installer.mcp_config(text, str(Path(sys.executable).resolve()), launcher, None, "team_assets"), text)
+            old = installer.hook_config({}, str(alias) + " " + str(script))
+            new = installer.hook_config(old, str(Path(sys.executable).resolve()) + " " + str(script))
+            for groups in new["hooks"].values():
+                self.assertEqual(len(groups), 1)
+                self.assertEqual(len(groups[0]["hooks"]), 1)
+
     def test_merge_idempotent_preserves_settings_and_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -228,6 +243,8 @@ class InstallerTests(unittest.TestCase):
             }
             (home / "hooks.json").write_text(json.dumps(existing))
             backup = installer.install(home, destination, root)
+            self.assertTrue((destination / "runtime/project_runtime.py").is_file())
+            self.assertTrue((destination / "runtime/server.py").is_file())
             self.assertTrue((backup / "manifest.json").is_file())
             self.assertIn(original, (home / "config.toml").read_text())
             hooks = json.loads((home / "hooks.json").read_text())

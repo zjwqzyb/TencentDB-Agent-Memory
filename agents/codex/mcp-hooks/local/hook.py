@@ -41,7 +41,7 @@ def flush(d, p):
         try:
             remote(p, json.loads(payload))
         except Exception as e:
-            # SSH failure may follow a committed write; never auto-replay.
+            # A network/process failure may follow a committed write; never replay.
             status = "review"
             d.execute(
                 "UPDATE outbox SET state=?,error=?,updated=? WHERE id=?",
@@ -303,7 +303,7 @@ def subagent(e, p, d):
     except Exception as exc:
         audit(d, "subagent_save_failed", parent, detail=type(exc).__name__)
         return {
-            "systemMessage": "团队资产：子 Agent 最终结果已进入本地队列，需要检查 outbox 状态；review 项目须人工核对服务端账本。"
+            "systemMessage": "团队资产：子 Agent 最终结果已进入本地队列，需要检查 outbox 状态；review 项目须人工核对运行时账本。"
         }
     return {}
 
@@ -337,7 +337,7 @@ def main(e):
             if p.get("capture_conversations"):
                 flush(d, p)
         except Exception:
-            warn = "团队资产：部分记忆尚未同步，已保留本地队列；review 项目须人工核对服务端账本。"
+            warn = "团队资产：部分记忆尚未同步，已保留本地队列；review 项目须人工核对运行时账本。"
         try:
             data = remote(
                 p, {"action": "before", "session_id": sid, "query": prompt[:1600]}

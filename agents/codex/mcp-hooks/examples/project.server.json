@@ -1,7 +1,7 @@
 {
   "name": "示例项目",
   "team_name": "示例团队",
-  "base_url": "http://memory-panel:8125",
+  "base_url": "http://panel.example.internal:8125",
   "service_id": "REPLACE_WITH_SERVICE_ID",
   "user_id": "REPLACE_WITH_USER_ID",
   "user_key": "REPLACE_WITH_USER_KEY",

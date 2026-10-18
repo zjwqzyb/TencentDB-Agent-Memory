@@ -1,6 +1,6 @@
 """Revision-aware task operations matching agents/tools/issues.py's JSON API.
 
-The CLI and MCP use the same native issue routes. Credentials stay on the server;
+The CLI and MCP use the same native issue routes. Credentials stay in private config;
 there is no shell execution, legacy task write fallback or automatic conflict retry.
 """
 

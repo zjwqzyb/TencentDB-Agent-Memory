@@ -1,7 +1,9 @@
-"""One Hook request over SSH stdin. No legacy/unpinned capture fallback."""
+"""One local Hook request over stdin. No legacy/unpinned capture fallback."""
 
 import json
+import os
 import sys
+os.umask(0o077)
 from project_runtime import run
 
 if __name__ == "__main__":

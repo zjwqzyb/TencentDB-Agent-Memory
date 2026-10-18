@@ -2,6 +2,8 @@
 
 MCP + Hooks 的任务操作现在与 `agents/tools/issues.py` 使用相同的 `meta/issue/{list,get,create,update,comment}` API。旧任务和新托管任务都使用原来的完整 `task_id`。本说明针对直接 MCP 接入；Proxy 的命令拦截器是另一套实现，不会因更新本适配器自动升级。
 
+3.2 起由本地 API 运行时直接访问 Panel HTTP(S)，不再经过 SSH；绑定与写入账本从远端完整迁到本地，迁移方法见 [使用说明](README.md#从-ssh-部署迁移)。任务命令和 revision 契约不变。
+
 ## 命令清单
 
 这些 `mem:` 文本是助手工作流，Hook 注入用法，由助手调用 `manage_project_task`；不是 shell 命令或自动执行的客户端解析器。全部操作使用 Hook 提供的真实 `session_id`。执行写入需要用户或项目工作流已授权。

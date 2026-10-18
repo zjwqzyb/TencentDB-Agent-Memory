@@ -4,8 +4,8 @@ import json
 import os
 import pathlib
 import re
-import shutil
 import subprocess
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 CONFIG = pathlib.Path(os.environ.get("TENCENT_MEMORY_PROJECTS", ROOT / "projects.json"))
@@ -32,16 +32,14 @@ def project(cwd):
         path = pathlib.Path(item["path"])
         if not path.is_absolute():
             raise ValueError("Project paths must be absolute")
-        host = item["ssh_host"]
-        if (
-            not isinstance(host, str)
-            or not re.fullmatch(r"[A-Za-z0-9_@.:-]+", host)
-            or host.startswith("-")
-        ):
-            raise ValueError("Invalid SSH host; use an SSH config alias")
-        for field in ("name", "team", "agent", "bridge_command", "mcp_command"):
+        for field in ("name", "team", "agent", "config_file"):
             if not isinstance(item.get(field), str) or not item[field].strip():
                 raise ValueError("Missing project configuration: " + field)
+        if item.get("transport", "http") != "http":
+            raise ValueError("Only direct Panel HTTP transport is supported")
+        config = pathlib.Path(item["config_file"])
+        if not config.is_absolute() or config.name != key + ".json":
+            raise ValueError("config_file must be an absolute path ending in <key>.json")
         resolved = path.resolve()
         if actual.is_relative_to(resolved):
             matches.append((len(resolved.parts), resolved, item))
@@ -53,31 +51,37 @@ def project(cwd):
     return matches[0][2]
 
 
-def ssh(p, command):
-    executable = shutil.which("ssh")
-    if not executable:
-        raise RuntimeError("OpenSSH client is required")
-    return [
-        executable,
-        "-T",
-        "-o",
-        "BatchMode=yes",
-        "-o",
-        "ConnectTimeout=5",
-        "-o",
-        "LogLevel=ERROR",
-        "-o",
-        "ServerAliveInterval=5",
-        "-o",
-        "ServerAliveCountMax=2",
-        p["ssh_host"],
-        command,
-    ]
+def runtime(p, mode):
+    """Run the shared adapter locally; credentials never enter command arguments."""
+    key = p["key"]
+    if not KEY_PATTERN.fullmatch(key):
+        raise ValueError("Invalid project key")
+    config = pathlib.Path(p["config_file"])
+    if not config.is_absolute() or config.name != key + ".json":
+        raise ValueError("Invalid project config_file")
+    if not config.is_file():
+        raise ValueError("Panel configuration missing; configure or migrate this project")
+    program = {"mcp": "server.py", "bridge": "project-memory-bridge.py"}[mode]
+    script = ROOT / "runtime" / program
+    if not script.is_file():
+        raise ValueError("Local runtime missing; rerun the adapter installer")
+    folder = STATE / key
+    folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+    env = dict(
+        os.environ,
+        TENCENT_MEMORY_PROJECT=key,
+        TENCENT_MEMORY_CONFIG_DIR=str(config.parent),
+        TENCENT_MEMORY_STATE_DIR=str(folder),
+    )
+    return [sys.executable, "-B", str(script), key], env
 
 
 def remote(p, request):
+    # Retain the public helper name for existing Hook integrations.
+    command, env = runtime(p, "bridge")
     result = subprocess.run(
-        ssh(p, p["bridge_command"]),
+        command,
+        env=env,
         input=json.dumps(request, ensure_ascii=False),
         text=True,
         capture_output=True,
@@ -86,7 +90,7 @@ def remote(p, request):
     try:
         data = json.loads(result.stdout)
     except (ValueError, TypeError):
-        raise RuntimeError("Memory server unavailable") from None
+        raise RuntimeError("Local Panel adapter unavailable") from None
     if result.returncode or not data.get("ok"):
         raise RuntimeError(data.get("error", "Memory request failed"))
     return data["data"]

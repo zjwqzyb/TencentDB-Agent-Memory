@@ -2,27 +2,28 @@
 
 这套适配器让 Codex 直接使用 MemoryPanel 的团队资产，同时保留现有模型、provider 和 ChatGPT 登录。MCP 负责资产工具，Hooks 负责会话上下文、记忆召回和按需归档；不经过 Memory Proxy。
 
-本目录收录本地与服务端源码、安装脚本、配置模板和离线测试。所有名称、路径、SSH 主机和身份 ID 均需由部署者配置，仓库不包含访问令牌或运行时数据库。原来的 Proxy 接入见 [Codex Proxy 说明](../README.md)，其中修改 provider、Proxy 路由、Plan 模式的要求只适用于该接入方式。
+本目录收录本地 MCP/Hook、共用 API 运行时、安装/迁移脚本、配置模板和离线测试。所有地址、路径和身份 ID 均需由部署者配置，仓库不包含访问令牌或运行时数据库。原来的 Proxy 接入见 [Codex Proxy 说明](../README.md)，其中修改 provider、Proxy 路由、Plan 模式的要求只适用于该接入方式。
 
 ## 架构与范围
 
 ```text
-Codex ── stdio MCP ── 本地启动器/重连监督器 ── SSH ── 项目 MCP 容器
-  │                                                       │
-  └── Hook JSON ── 本地 Hook/SQLite ── SSH ── 单次请求桥接容器
-                                                          │
-                                           MemoryPanel 原生 API / ACL
+Codex ── stdio MCP ── 本地启动器/监督器 ── 本地 API 运行时 ── HTTP(S) ── Panel
+  │                                         │
+  └── Hook JSON ── 本地 Hook/SQLite ──────────┘
+                            每项目 runtime.sqlite3：绑定、代际、写入去重
 ```
 
+MCP 和 Hooks 的正常调用都不再经过 SSH，也不需要启动 Docker 容器。`server/*.py` 是保留目录名的共用运行时源码，安装器将其复制到本地 `runtime/`；目录名不表示它必须远端部署。Panel 后端仍负责原生 API、用户认证和业务 ACL。
+
 - 本地以真实工作目录匹配 `projects.json`，解析符号链接，优先匹配最深的项目目录。未配置目录不会回退到其他项目。
-- 每个服务端项目配置限定一个 Team，凭配置用户的密钥访问 Panel；会话只能在该团队内选择用户拥有的有效 Agent，并选择与 Agent 关联的任务。
-- 每个项目独立配置文件、服务端 SQLite 状态和本地队列。记忆目标按所选 Team + Agent 派生。同一 Team + Agent 对应同一份长期记忆；需要独立记忆时应使用不同 Agent。
+- 每个本地凭据配置限定一个 Team，凭配置用户的密钥访问 Panel；会话只能在该团队内选择用户拥有的有效 Agent，并选择与 Agent 关联的任务。
+- 每个项目独立配置文件、本地运行时 SQLite 状态和 Hook 队列。记忆目标按所选 Team + Agent 派生。同一 Team + Agent 对应同一份长期记忆；需要独立记忆时应使用不同 Agent。
 - Session 使用客户端提供的真实 ID，绑定带 `generation`。重新选择不会改写旧代际，旧队列与子 Agent 保留原来的保存目标。
 - 只使用 Hook 事件字段，不扫描旧聊天、transcript、工具日志或内部推理。Wiki、代码图和 Skill 必须在后台实际挂载；工具可用不表示资产已有内容。
 
 ## 环境要求与兼容边界
 
-本地需要 Python **3.11+**、OpenSSH，以及能提供下列事件的 Codex 客户端。服务端需要 Docker、Python 3.11 容器、可访问的 MemoryPanel 和相应原生 API。Python 实现只使用标准库，无需安装业务依赖。
+本地需要 Python **3.11+**、能直接访问的 MemoryPanel HTTP(S) 地址，以及能提供下列事件的 Codex 客户端。Panel 必须部署相应原生 API。Python 实现只使用标准库，无需 OpenSSH、Docker 或额外 Python 包。
 
 | Hook | 本实现读取的事件字段 | 用途 |
 | --- | --- | --- |
@@ -35,55 +36,30 @@ Codex ── stdio MCP ── 本地启动器/重连监督器 ── SSH ── 
 
 官方参考入口：[MCP](https://developers.openai.com/codex/mcp)、[高级配置](https://developers.openai.com/codex/config-advanced)、[配置参考](https://developers.openai.com/codex/config-reference)。客户端配置和 Hook 能力以所用版本为准。本目录的自动化测试验证适配器自身，不验证客户端的版本兼容性。
 
-## 服务端部署
+## Panel 连接与本地凭据
 
-先在 MemoryPanel 准备有效用户、Team、该用户拥有的 Agent，并把需要的 Wiki、Code Graph、记忆资产挂载到 Agent。`service_id` 与 `user_key` 是访问 Panel 的凭据；`user_id` 必须与凭据身份对应，不能使用管理员身份绕过团队 ACL。
+先在 MemoryPanel 准备有效用户、Team、该用户拥有的 Agent，并把需要的 Wiki、Code Graph、记忆资产挂载到 Agent。`service_id` 与 `user_key` 是业务用户凭据，`user_id` 必须与凭据身份对应，不能使用管理员身份绕过团队 ACL。
 
-以下命令从仓库根目录执行，示例项目 key 为 `example-project`。在部署主机上运行；路径、容器网络、Panel 服务名和端口按实际环境调整。
+Panel 地址使用**本机可直接访问的根地址**，例如 `http://panel.example.internal:8125`，不包含 `/api/v1`。已有内网 HTTP 可直接使用；公开网络使用部署好的 HTTPS。不会自动跟随 HTTP 重定向，避免认证头发送到其他地址，应填写最终地址。
+
+安装后创建仅当前用户可读的配置：
 
 ```sh
-sudo install -d -m 0755 /opt/tencent-agent-memory/mcp
-sudo install -d -m 0700 /opt/tencent-agent-memory/config /opt/tencent-agent-memory/state
-sudo install -m 0644 agents/codex/mcp-hooks/server/*.py /opt/tencent-agent-memory/mcp/
-sudo install -m 0755 agents/codex/mcp-hooks/server/run-container.sh \
-  agents/codex/mcp-hooks/server/tencent-memory-mcp-remote \
-  agents/codex/mcp-hooks/server/tencent-project-memory-remote /usr/local/bin/
-sudo install -o 10001 -g 10001 -m 0600 \
-  agents/codex/mcp-hooks/examples/project.server.json \
-  /opt/tencent-agent-memory/config/example-project.json
-sudo install -d -o 10001 -g 10001 -m 0700 /opt/tencent-agent-memory/state/example-project
-sudoedit /opt/tencent-agent-memory/config/example-project.json
-docker pull python:3.11-slim-bookworm
+install -d -m 0700 "$HOME/.codex/tencent-memory/config"
+install -m 0600 agents/codex/mcp-hooks/examples/project.server.json \
+  "$HOME/.codex/tencent-memory/config/example-project.json"
 ```
 
-填写 JSON 中全部占位值：
+编辑该 JSON 中全部占位值：
 
 | 字段 | 含义 |
 | --- | --- |
 | `name`, `team_name` | 项目与默认团队的展示名称 |
-| `base_url` | 容器内可访问的 Panel 根地址，不包含 `/api/v1` |
-| `service_id`, `user_key` | 业务用户凭据，仅留在服务端受保护文件中 |
+| `base_url` | 本机可访问的 Panel HTTP(S) 根地址 |
+| `service_id`, `user_key` | 业务用户凭据，仅存于本机受保护文件中 |
 | `user_id`, `team_id`, `agent_id` | 真实用户、默认团队和默认 Agent ID |
 
-项目 key 必须是最长 64 字符的小写字母/数字/连字符，首字符不能是连字符；文件名、命令参数和本地配置要一致。容器只挂载当前项目的一个凭据文件。默认运行参数为 UID/GID `10001:10001`、只读根文件系统、移除 capabilities、禁止提权，每项目一个可写 `/state`。
-
-默认 Docker 网络为 `tdai-memory-stack`。已有部署使用其他布局时，在管理员拥有的 `/etc/tencent-memory/runner.env` 中设置：
-
-```sh
-TENCENT_MEMORY_ROOT=/opt/tencent-agent-memory
-TENCENT_MEMORY_NETWORK=your-existing-panel-network
-TENCENT_MEMORY_IMAGE=python:3.11-slim-bookworm
-```
-
-该文件由 shell 加载，只允许管理员写入。不要为了连通性取消 Panel 认证。生产环境可把镜像固定到经验证的 digest。运行账户需要访问 Docker；这种权限和普通 SSH shell 都属于可信部署权限，容器参数不构成对 SSH 账户的沙箱。若向非管理员开放，应另配 SSH forced-command 白名单，限制允许的命令和项目。
-
-本地用 SSH config 配置 `memory-server` 别名和密钥认证，先人工确认主机指纹，再确认无交互连接可用：
-
-```sh
-ssh -T -o BatchMode=yes memory-server true
-```
-
-不要把密码、私钥或 Panel 令牌放入 SSH 命令。包装器不会提供默认项目；项目参数缺失或目录不存在会直接失败。
+项目 key 是最长 64 字符的小写字母/数字/连字符，首字符不能是连字符；凭据文件名必须为 `<key>.json`，与本地项目映射一致。凭据不进入命令行、日志或 Git。不要用容器内部服务名配置本机无法解析的地址。
 
 ## 本地安装
 
@@ -111,15 +87,14 @@ python3 agents/codex/mcp-hooks/install.py --project-dir "$PWD"
       "agent": "开发助手",
       "capture_conversations": false,
       "rename_on_bind": false,
-      "ssh_host": "memory-server",
-      "mcp_command": "/usr/local/bin/tencent-memory-mcp-remote example-project",
-      "bridge_command": "/usr/local/bin/tencent-project-memory-remote example-project"
+      "transport": "http",
+      "config_file": "/absolute/path/to/.codex/tencent-memory/config/example-project.json"
     }
   ]
 }
 ```
 
-`team`、`agent` 是初始化提示里的默认名称，真实 ID 和权限以服务端配置及实时 API 为准。`mcp_command`、`bridge_command` 是可信本地配置中的远程 shell 命令；项目 key 应按上述规则填写，切勿使用聊天内容拼接命令。
+`team`、`agent` 是初始化提示里的默认名称，真实 ID 和权限以 `config_file` 及实时 API 为准。`config_file` 必须是绝对路径，以 `<key>.json` 结尾；`transport` 为 `http`。旧 SSH 字段不会作为备用连接；旧部署须先完成下文的状态迁移。
 
 - `capture_conversations=true`：部署者明确允许本项目初始化后自动归档用户输入、最终回复和子 Agent 最终报告。默认关闭。
 - `rename_on_bind=true`：允许助手在成功绑定任务后，尝试用客户端原生标题工具把当前会话改为完整任务标题。默认关闭；工具失败不影响绑定，普通轮次不反复改名，用户本轮要求保留标题优先。
@@ -127,7 +102,7 @@ python3 agents/codex/mcp-hooks/install.py --project-dir "$PWD"
 
 重启或重新加载客户端 MCP/Hook 运行时。手动配置模板见 [config.toml](examples/config.toml) 和 [hooks.json](examples/hooks.json)。命令里的 Python、脚本及项目路径必须替换为绝对路径；带空格时使用正确 shell 引号，安装器会自动处理 Hook 命令的引用。
 
-**MCP 的项目取决于其进程工作目录。** 安装器的 `--project-dir` 会写入 MCP 的 `cwd`。Hook 则按每次事件的 `cwd` 路由。多项目部署时，两者必须指向同一项目；单个固定 `cwd` 的全局 MCP 表不会随聊天目录自动切换。为各工作区配置正确的 MCP `cwd`，或使用客户端支持的项目级 MCP 配置/独立配置目录，避免同时加载指向错误项目的全局项。服务端收到的请求不会跨项目自动寻找其他团队。
+**MCP 的项目取决于其进程工作目录。** 安装器的 `--project-dir` 会写入 MCP 的 `cwd`。Hook 则按每次事件的 `cwd` 路由。多项目部署时，两者必须指向同一项目；单个固定 `cwd` 的全局 MCP 表不会随聊天目录自动切换。为各工作区配置正确的 MCP `cwd`，或使用客户端支持的项目级 MCP 配置/独立配置目录，避免同时加载指向错误项目的全局项。本地 API 运行时不会跨项目自动寻找其他团队。
 
 ## 首次会话与任务绑定
 
@@ -197,13 +172,13 @@ initialized → 正常读取资产、召回和归档
 
 脱敏仅覆盖常见密钥格式和密码赋值，**不保证删除所有敏感信息**。关闭 `capture_conversations` 会停止自动归档；为召回而发送的查询文本仍会到达配置的服务端。需要完全停用时将该项目 `enabled=false` 并停止对应 MCP。
 
-本地 SQLite 含待发送文本、绑定和审计记录；服务端 SQLite 含会话、幂等账本和已采集片段。状态目录应仅对运行账户可读，按组织要求加密、备份和清理；当前实现没有自动保留期限。Hook 成功发送后清空 outbox 的消息 payload，服务端抽取片段仍会保留。不要把这些目录加入 Git。
+本地 `events.sqlite3` 含待发送文本、采集状态和审计记录；同一项目目录中的 `runtime.sqlite3` 含会话绑定、幂等账本和已采集片段。状态目录应仅对运行账户可读，按组织要求加密、备份和清理；当前实现没有自动保留期限。Hook 成功发送后清空 outbox 的消息 payload，本地运行时抽取片段仍会保留。不要把这些目录加入 Git。
 
 ## 断线、队列与恢复
 
-MCP 本地进程在远程 SSH 断线后保持 stdio 可用；下次请求可重连。只有明确声明为只读且幂等的工具可自动重试。已经开始发送的写操作即使超时也不会自动重放，会返回 `Outcome unknown`，必须先核对服务端状态。
+MCP 监督器在本地 API 子进程退出后保持 stdio 可用；下次请求可重新启动子进程。HTTP 请求失败会返回安全的错误，不会切回 SSH。只有明确声明为只读且幂等的工具可自动重试。已经开始发送的写操作即使超时也不会自动重放，会返回 `Outcome unknown`，必须先核对服务端状态。
 
-重连会核对 MCP 协议、capabilities 和完整工具清单。清单变化时要求重启 MCP，以免客户端继续使用旧契约。本地日志位于 `state/mcp/lifecycle-*.jsonl`，只记录生命周期元数据和错误分类，不记录请求内容或原始远程 stderr。
+重连会核对 MCP 协议、capabilities 和完整工具清单。清单变化时要求重启 MCP，以免客户端继续使用旧契约。本地日志位于 `state/mcp/lifecycle-*.jsonl`，只记录生命周期元数据和错误分类，不记录请求内容或原始适配器 stderr。
 
 Hook 队列位于 `state/<project-key>/events.sqlite3`：
 
@@ -222,7 +197,7 @@ sqlite3 /absolute/path/to/state/example-project/events.sqlite3 \
 
 任务写入被明确校验/权限/版本拒绝时，`writes.status` 为 `rejected`，不自动重试；它与网络结果不明的 `uncertain` 不同。重新读取并形成新补丁后使用新 request_id。
 
-服务端 `state/<project-key>/runtime.sqlite3` 的 `writes` 账本按阶段记录 `request_id-memory` 与 `request_id-skill`。已完成阶段会返回去重结果；`pending/uncertain` 不允许自动重试。先备份数据库，检查原始请求的保存目标、账本与 Panel 实际数据。只有确认未发生写入或完成对账修复后，才由管理员决定恢复对应项；不要批量把 `review` 改回 `queued`，也不要用新 ID 盲重试。
+本地 `state/<project-key>/runtime.sqlite3` 的 `writes` 账本按阶段记录 `request_id-memory` 与 `request_id-skill`。已完成阶段会返回去重结果；`pending/uncertain` 不允许自动重试。先备份数据库，检查原始请求的保存目标、账本与 Panel 实际数据。只有确认未发生写入或完成对账修复后，才由管理员决定恢复对应项；不要批量把 `review` 改回 `queued`，也不要用新 ID 盲重试。
 
 ## 排障
 
@@ -233,7 +208,8 @@ sqlite3 /absolute/path/to/state/example-project/events.sqlite3 \
 | Hook 无召回/无保存 | 客户端是否触发四类事件；输入 JSON 是否包含真实 ID；配置是否加载；采集开关是否开启 |
 | 每轮要求初始化或看到其他团队 | 检查 Hook 的工作目录与 MCP 的固定 `cwd` 是否指向相同项目，勿猜测旧绑定有效 |
 | 有任务却不能空绑定 | 调 `choices`，按所选 Agent 过滤并让用户选任务；服务端会检查超过第一页的关联任务 |
-| SSH 认证失败 | 密钥、known_hosts、SSH 别名与无交互登录；不要关闭主机密钥检查 |
+| HTTP 连接失败或重定向 | 本机可达性、Panel 最终地址与端口；不要继续使用 Docker 内部服务名；不会回退 SSH |
+| `Panel configuration missing` | 检查 `config_file`、私有凭据文件和迁移状态 |
 | `Panel HTTP 401/403` | 服务凭据、用户身份、有效团队成员资格、Agent 所有者和资产 ACL |
 | `Panel HTTP 404` | 目标部署是否有该原生 API；本地源码有路由不代表运行镜像已更新 |
 | Wiki 搜索为空 | 检查 `wiki_status`、原始文档及页面；元数据资产 active 不代表 Wiki 已构建 |
@@ -243,19 +219,41 @@ sqlite3 /absolute/path/to/state/example-project/events.sqlite3 \
 | Skill 抽取未见新 Skill | 查看后台异步任务和模型配置；本轮需要先完成 Stop 才会进入已归档范围 |
 | 写操作结果不明 | 按上一节检查账本，禁止盲重试；日志不会输出原始载荷帮助“复现” |
 
-## 升级、迁移与卸载
+## 从 SSH 部署迁移
 
-更新前备份本地 `config.toml`、`hooks.json`、`projects.json`、本地 state，以及服务端凭据和每个项目的 state。数据库运行中备份应使用 SQLite backup API/一致性快照，不要直接复制正在写入的文件。
+凭据与会话/幂等账本原来在远端，不能只修改 URL 或从空数据库启动，否则当前 session 会丢失绑定和历史写入去重。
 
-已部署的早期私有脚本不能直接视为全新安装：
+1. 暂停旧 MCP、Hooks 和其他使用同一运行时数据库的写入进程。等待在途请求结束，检查 `writes` 的 `pending/uncertain`；不明结果先对账。切换后不要同时运行旧、新写入端。
+2. 在旧运行时导出私有 `<key>.json`，并使用 SQLite backup API 导出一致的 `runtime.sqlite3`。不要直接复制正在写入的主数据库文件。安全地传到本机受保护目录；这些是部署资料，不提交仓库。
+3. 先运行本目录 `install.py` 安装共用本地运行时，保留现有 `projects.json`、`state` 和其他配置。再导入导出文件，指定本机可达地址：
 
-1. 本地映射保留旧值，并补上 `mcp_command`、采集/改名开关；不要继续依赖写死的主机或默认项目。
-2. 服务端将真实配置放到独立 `config/<key>.json`，保留 `user_id/user_key/team_id/agent_id`，按当前模板补字段；把相应项目数据库迁入独立 `state/<key>/`，核对所有者及权限后更新包装器。
-3. 检查旧 outbox 是否有无 `generation` 的 v1 `save` 请求。本版本不接收这种未固定代际的请求，也不自动重定位旧写入，须在旧部署中对账处理后再切换。
-4. 安装器不会识别另一路径下的旧 Hook 命令。切换安装目录前人工移除旧的本适配器条目，避免双重采集；不要删除其他扩展的 Hooks。
-5. 升级到新版任务适配器时同步 `project_tasks.py`、`project_runtime.py`、`project_tools.py` 和 `project_api.py`，本地同步 `task_commands.py` 与 `hook.py`；部署的 Panel/Core 必须有新 issue API。重启 MCP/Hook，检查 14 个工具、正确团队/Agent、初始化流程及首轮 Stop 结果，再恢复正常使用。当前目录代码提交不会自动替换任何正在运行的部署。
+```sh
+python3 agents/codex/mcp-hooks/install.py
+python3 agents/codex/mcp-hooks/migrate.py \
+  --project-key example-project \
+  --config-file /private/export/example-project.json \
+  --runtime-db /private/export/runtime.sqlite3 \
+  --panel-url http://panel.example.internal:8125
+```
 
-卸载时，删除本适配器的 MCP 表和四类 Hook 中对应命令条目，保留其他配置，重启客户端后再移走适配器源码。状态和凭据按数据保留要求单独处理，不因卸载自动删除。安装备份的 `manifest.json` 记录每个文件的原路径、原来是否存在及备份编号；恢复时逐项核对，避免覆盖安装后其他工具新增的设置。
+迁移工具不连接 SSH，不读取旧聊天，只导入明确提供的配置与状态。支持 `--install-dir` 和 `--state-dir`；状态根目录默认使用 `TENCENT_MEMORY_STATE_DIR`，未设置时使用 `<install-dir>/state`。MCP、Hook 和迁移工具须使用相同状态根目录。
+
+导入会校验数据库完整性、v3 表结构和绑定团队，保留全部 generation、固定子 Agent 绑定、已采集片段及写入账本。原有 Hook 的 `events.sqlite3` 不变。先写凭据和状态，最后替换当前项目映射，清除旧 SSH 字段；其他项目记录不变。迁移会备份原配置并生成 `manifest.json`，凭据与数据库文件权限为 0600，目录为 0700。已有目标运行时数据库时拒绝覆盖。
+
+4. 多项目安装对每个要启用的项目重复导入，或先禁用尚未迁移的条目。重新连接 MCP 并重新加载 Hook，检查 14 个工具、版本 3.2.0、正确团队/Agent 和原 generation。普通已初始化会话无需 reset、重新绑定或改名。
+5. 核对 Hook 待发送队列和首轮 Stop 保存。历史 `review`、`pending/uncertain` 不会自动清空或重放。确认正常后停用旧适配器入口，保留受保护的旧快照以便对账。
+
+回滚时先停用新写入端，按备份清单恢复配置。切换后产生过写入时必须先对账并迁回最新绑定/账本，不能直接用旧数据库覆盖；不得同时恢复两个可写副本。
+
+仓库保留 `server/run-container.sh` 和旧远端包装器，便于识别和导出早期部署；当前本地启动器、Hook 和安装器不会调用它们。
+
+## 升级与卸载
+
+后续升级先备份本地 `config.toml`、`hooks.json`、`projects.json`、私有 `config` 和每项目 `state`。运行中的数据库使用 SQLite backup API。安装器同步本地代码和 `runtime/`，保留已有项目映射、凭据、数据库和同名 MCP 的手动设置；新版本源码不会自动替换已启动进程，需重连 MCP。
+
+切换安装目录前移除旧的本适配器 Hook 条目，避免双重采集，不影响其他扩展。升级任务适配器时 Panel/Core 必须有新版 `meta/issue` API。
+
+卸载时删除本适配器 MCP 表和四类 Hook 中对应命令条目，保留其他配置，重启客户端后再移走源码。状态和凭据按数据保留要求单独处理，不因卸载自动删除。恢复安装备份时逐项核对清单，避免覆盖后来其他工具新增的设置。
 
 ## 开发验证
 
@@ -267,6 +265,6 @@ python3 -m compileall -q agents/codex/mcp-hooks
 sh -n agents/codex/mcp-hooks/server/run-container.sh
 ```
 
-测试覆盖目录隔离、脱敏与采集开关、Hook 重复回调、结果不明队列、任务选择/分页/代际、新任务 CLI 契约、revision 冲突、评论与子任务、新指令、子 Agent 固定绑定、分阶段写入去重、MCP 子进程断线及禁止重放写操作、清单变更、EOF 队列排空、服务端 14 工具契约和安装器的配置合并。包装器测试使用假的 Docker 命令，不在生产创建容器或写入记忆。
+测试包含在 PATH 无 SSH/Docker 时运行完整已安装 MCP/Hook 的真实本机 HTTP 回环、认证头和重定向隔离、迁移前后全表/队列一致性，并覆盖目录隔离、脱敏与采集开关、Hook 重复回调、结果不明队列、任务选择/分页/代际、新任务 CLI 契约、revision 冲突、评论与子任务、新指令、子 Agent 固定绑定、分阶段写入去重、MCP 子进程断线及禁止重放写操作、清单变更、EOF 队列排空、服务端 14 工具契约和安装器的配置合并。包装器测试使用假的 Docker 命令，不在生产创建容器或写入记忆。
 
 上线验收另需在目标客户端验证实际 Hook 事件、正确项目绑定、首轮最终回复保存、跨会话召回，以及按需验证 Wiki/Skill/代码图。不能把离线测试通过当成生产资产已就绪。

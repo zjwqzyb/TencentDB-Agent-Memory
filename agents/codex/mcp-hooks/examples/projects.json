@@ -9,9 +9,8 @@
       "agent": "开发助手",
       "capture_conversations": false,
       "rename_on_bind": false,
-      "ssh_host": "memory-server",
-      "mcp_command": "/usr/local/bin/tencent-memory-mcp-remote example-project",
-      "bridge_command": "/usr/local/bin/tencent-project-memory-remote example-project"
+      "transport": "http",
+      "config_file": "/absolute/path/to/.codex/tencent-memory/config/example-project.json"
     }
   ]
 }

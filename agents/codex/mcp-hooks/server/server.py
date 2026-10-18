@@ -4,6 +4,7 @@ import json
 import os
 import sys
 
+os.umask(0o077)
 if len(sys.argv) != 2:
     raise SystemExit("Usage: server.py PROJECT_KEY")
 os.environ["TENCENT_MEMORY_PROJECT"] = sys.argv[1]
@@ -22,7 +23,7 @@ def respond(request):
             "serverInfo": {
                 "name": "team-assets",
                 "title": "团队资产 · " + C["name"],
-                "version": "3.1.0",
+                "version": "3.2.0",
             },
         }
     elif method == "ping":

@@ -1,8 +1,8 @@
-"""Keep local MCP stdio alive when the remote SSH transport disconnects.
+"""Keep MCP stdio alive when the local Panel adapter subprocess disconnects.
 
 Only initialization and positively identified read-only, idempotent calls may
 be retried. A transmitted write is never replayed, including on a timeout.
-Logs contain lifecycle metadata only, never payloads or remote stderr text.
+Logs contain lifecycle metadata only, never payloads or adapter stderr text.
 """
 
 import asyncio
@@ -70,8 +70,10 @@ class Supervisor:
         request_timeout=55,
         handshake_timeout=12,
         backoff=(0.5, 1, 2, 4),
+        env=None,
     ):
         self.command, self.emit = command, emit
+        self.env = env
         self.startup_timeout, self.request_timeout = startup_timeout, request_timeout
         self.handshake_timeout, self.backoff = handshake_timeout, backoff
         self.proc = None
@@ -142,7 +144,7 @@ class Supervisor:
             while True:
                 line = await self.proc.stdout.readline()
                 if not line:
-                    # Wait briefly for SSH to publish its actual exit status.
+                    # Wait briefly for the adapter to publish its exit status.
                     with contextlib.suppress(asyncio.TimeoutError):
                         await asyncio.wait_for(self.proc.wait(), 0.2)
                     raise TransportError("upstream_eof")
@@ -168,6 +170,7 @@ class Supervisor:
         await self.close_upstream("replace_connection")
         self.proc = await asyncio.create_subprocess_exec(
             *self.command,
+            env=self.env,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -347,19 +350,19 @@ class Supervisor:
             if transmitted and not safe:
                 return self.error(
                     request,
-                    "Remote MCP disconnected after dispatch. Outcome unknown; "
+                    "Panel adapter disconnected after dispatch. Outcome unknown; "
                     "the operation was NOT retried. Check server state before any retry; "
                     "reuse the original request_id for idempotent writes.",
                 )
             if isinstance(exc, RecoveryError):
                 return self.error(
                     request,
-                    "Remote MCP contract is incompatible (" + str(exc) + "). "
+                    "Panel adapter contract is incompatible (" + str(exc) + "). "
                     "Restart team_assets to negotiate a fresh session. No write was replayed.",
                 )
             return self.error(
                 request,
-                "Remote MCP unavailable. Local transport remains open; "
+                "Panel adapter unavailable. Local transport remains open; "
                 "retry after connectivity returns. No write was replayed.",
             )
 
@@ -409,14 +412,14 @@ class Supervisor:
             self.emit("launcher_stopped")
 
 
-async def stdio_main(command):
+async def stdio_main(command, env=None):
     import sys
 
     loop = asyncio.get_running_loop()
     reader = asyncio.StreamReader(limit=32 * 1024 * 1024)
     protocol = asyncio.StreamReaderProtocol(reader)
     transport, _ = await loop.connect_read_pipe(lambda: protocol, sys.stdin.buffer)
-    supervisor = Supervisor(command, lifecycle_logger())
+    supervisor = Supervisor(command, lifecycle_logger(), env=env)
     main_task = asyncio.current_task()
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, main_task.cancel)
@@ -431,8 +434,8 @@ async def stdio_main(command):
         transport.close()
 
 
-def main(command):
+def main(command, env=None):
     try:
-        asyncio.run(stdio_main(command))
+        asyncio.run(stdio_main(command, env=env))
     except (asyncio.CancelledError, KeyboardInterrupt, BrokenPipeError):
         pass

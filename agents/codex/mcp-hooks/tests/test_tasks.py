@@ -371,7 +371,7 @@ class PanelErrorTests(unittest.TestCase):
             io.BytesIO(b"secret body must not escape"),
         )
         with patch.object(
-            self.api.urllib.request, "urlopen", side_effect=error
+            self.api.HTTP, "open", side_effect=error
         ), self.assertRaises(self.api.PanelError) as raised:
             self.api.api("meta/issue/update", {})
         self.assertTrue(raised.exception.definite_rejection)
@@ -380,7 +380,7 @@ class PanelErrorTests(unittest.TestCase):
 
     def test_5xx_remains_uncertain_and_envelope_conflict_is_classified(self):
         self.assertFalse(self.api.PanelError(500).definite_rejection)
-        with patch.object(self.api.urllib.request, "urlopen") as urlopen:
+        with patch.object(self.api.HTTP, "open") as urlopen:
             urlopen.return_value.__enter__.return_value = io.StringIO('{"code":409}')
             with self.assertRaises(self.api.PanelError) as raised:
                 self.api.api("meta/issue/update", {})
