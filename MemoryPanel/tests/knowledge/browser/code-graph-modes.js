@@ -71,8 +71,9 @@ async (page) => {
     await waitRows(1);
     assert((await work.innerText()).includes('未提取 TypeScript 接口继承关系'), 'real SDK interface inheritance limitation is explicit');
     await page.getByRole('button', { name: '展开父类型', exact: true }).click();
-    await page.getByText('当前索引或语言不支持此关系视图。', { exact: false }).first().waitFor();
-    assert(true, 'unsupported interface parent extraction is not presented as known-empty inheritance');
+    await page.getByText('当前索引器未提取 TypeScript 接口继承关系；可查看类继承和接口实现关系', { exact: true }).waitFor();
+    await page.getByRole('button', { name: '选择其他符号', exact: true }).waitFor();
+    assert(true, 'unsupported interface parent extraction gives the specific extractor limitation and recovery action');
     await control({ clearRequests: true });
     await mode.selectOption('dependencies');
     await waitRows(2);

@@ -2,7 +2,7 @@
  * CodeDetailView —— Code 资产详情视图（仓库信息 / 代码搜索 / 代码探索）。
  * 数据与回调来自 useCodeSources 返回对象；Markdown 用共享 AssetMarkdown（compact 密度）。
  */
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { CodeGraphWorkspace } from '../graph/CodeGraphWorkspace';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, Card, MetricsBoard, SearchBox, StatusTip, Text } from 'tea-component';
@@ -15,6 +15,7 @@ import type { CodeSourcesStore } from '../hooks/useCodeSources';
 export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState('overview');
+  const graphPanelRef = useRef<HTMLDivElement>(null);
   const {
     setSubView,
     selected,
@@ -31,13 +32,46 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
     handleExplore,
   } = store;
 
+  useLayoutEffect(() => {
+    if (tab !== 'graph') return;
+    const panel = graphPanelRef.current;
+    const root = panel?.closest<HTMLElement>('._codedetail-root');
+    const header = root?.querySelector<HTMLElement>('.tea-card');
+    const tabs = root?.querySelector<HTMLElement>('._codedetail-tabs');
+    const syncError = root?.querySelector<HTMLElement>('._codedetail-error');
+    const scrollport = panel?.closest<HTMLElement>('.tea-layout__content-body');
+    if (!panel || !scrollport) return;
+    scrollport.scrollTop = 0;
+
+    const updateHeight = () => {
+      const panelTop = panel.getBoundingClientRect().top;
+      const scrollportRect = scrollport.getBoundingClientRect();
+      const contentTop = panelTop - scrollportRect.top + scrollport.scrollTop;
+      const remaining = Math.max(0, scrollport.clientHeight - contentTop - 16);
+      panel.style.setProperty('--code-detail-graph-height', `${remaining}px`);
+    };
+
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(scrollport);
+    if (header) observer.observe(header);
+    if (tabs) observer.observe(tabs);
+    if (syncError) observer.observe(syncError);
+    window.addEventListener('resize', updateHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+      panel.style.removeProperty('--code-detail-graph-height');
+    };
+  }, [tab, selected?.code_graph_id, selected?.sync_error]);
+
   if (!selected) return null;
 
-  const selRepo = selected ? formatRepoName(selected.repo_name, selected.repo_url) : '';
-  const selBranch = selected?.branch ?? '';
+  const selRepo = formatRepoName(selected.repo_name, selected.repo_url);
+  const selBranch = selected.branch ?? '';
 
   return (
-    <div className="_codedetail-root">
+    <div className={`_codedetail-root${tab === 'graph' ? ' _codedetail-root--graph' : ''}`}>
       {/* 返回面包屑 */}
       <div className="_codedetail-breadcrumb">
         <Button type="link" onClick={() => setSubView('list')}>
@@ -54,11 +88,27 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
         <Card.Body className="_codedetail-header-body">
           <div className="_codedetail-header-row">
             <div className="_codedetail-header-left">
+              {tab === 'graph' && (
+                <Button
+                  className="_codedetail-graph-back"
+                  type="link"
+                  onClick={() => setSubView('list')}
+                >
+                  <span className="_codedetail-inline-icon">
+                    <ArrowLeftIcon size={12} /> {t('code.detail.breadcrumb')}
+                  </span>
+                </Button>
+              )}
               <CodeIcon size={20} />
               <span className="_codedetail-title" title={selRepo}>
                 {selRepo}
               </span>
               {selected && statusLabel(t, selected.status)}
+              {tab === 'graph' && (
+                <span className="_codedetail-graph-branch _codedetail-mono">
+                  {selBranch} · {selected.commit_hash?.slice(0, 8) ?? '—'}
+                </span>
+              )}
             </div>
             <div className="_codedetail-header-actions">
               <Button type="primary" onClick={() => handleSync(selected.code_graph_id)}>
@@ -69,21 +119,34 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
               </Button>
             </div>
           </div>
-          <div className="_detail-meta-row">
-            <span>{t('code.detail.branch', { branch: selBranch })}</span>
-            {selected?.commit_hash && (
-              <>
-                <span className="_detail-meta-sep">·</span>
-                <span className="_codedetail-mono">@ {selected.commit_hash}</span>
-              </>
-            )}
-            {selected?.last_sync_at && (
-              <>
-                <span className="_detail-meta-sep">·</span>
-                <span>{new Date(selected.last_sync_at).toLocaleString()}</span>
-              </>
-            )}
-          </div>
+          {tab === 'graph' && selected.last_sync_at ? (
+            <details className="_codedetail-graph-info">
+              <summary>{t('code.detail.repoInfo')}</summary>
+              <span>{t('code.detail.branch', { branch: selBranch })}</span>
+              {selected.commit_hash && (
+                <span className="_codedetail-mono _codedetail-graph-commit">
+                  @ {selected.commit_hash}
+                </span>
+              )}
+              <span>{new Date(selected.last_sync_at).toLocaleString()}</span>
+            </details>
+          ) : (
+            <div className="_detail-meta-row">
+              <span>{t('code.detail.branch', { branch: selBranch })}</span>
+              {selected?.commit_hash && (
+                <>
+                  <span className="_detail-meta-sep">·</span>
+                  <span className="_codedetail-mono">@ {selected.commit_hash}</span>
+                </>
+              )}
+              {selected?.last_sync_at && (
+                <>
+                  <span className="_detail-meta-sep">·</span>
+                  <span>{new Date(selected.last_sync_at).toLocaleString()}</span>
+                </>
+              )}
+            </div>
+          )}
         </Card.Body>
       </Card>
 
@@ -124,7 +187,9 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
         ))}
       </div>
       <div
+        ref={graphPanelRef}
         role="tabpanel"
+        className="_codedetail-graph-panel"
         id="code-detail-panel-graph"
         aria-labelledby="code-detail-tab-graph"
         hidden={tab !== 'graph'}

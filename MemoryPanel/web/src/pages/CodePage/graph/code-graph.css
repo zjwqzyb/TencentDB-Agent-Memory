@@ -1,16 +1,56 @@
 ._codegraph-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
   color: var(--tea-color-text-primary);
   background: var(--tea-color-bg-primary-default);
   border: 1px solid var(--tea-color-border-primary-default);
   border-radius: 6px;
   overflow: hidden;
 }
-._codegraph-heading {
+._codegraph-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+._codegraph-control-row {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px;
+  gap: 4px 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-mode-controls,
+._codegraph-toolbar {
+  display: contents;
+}
+._codegraph-capabilities {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-capabilities summary {
+  cursor: pointer;
+  white-space: nowrap;
+}
+._codegraph-capabilities p {
+  margin: 6px 0;
+}
+._codegraph-capabilities[open] {
+  flex-basis: 100%;
+  padding: 4px 8px;
+  border-top: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-capabilities summary {
+  cursor: pointer;
 }
 ._codegraph-root h2,
 ._codegraph-root h3,
@@ -21,6 +61,7 @@
 }
 ._codegraph-root h2 {
   font-size: 16px;
+  margin: 0;
 }
 ._codegraph-root h3 {
   font-size: 14px;
@@ -32,7 +73,6 @@
   margin: 6px 0 12px;
   line-height: 1.6;
 }
-._codegraph-version,
 ._codegraph-note {
   font-size: 12px;
   color: var(--tea-color-text-secondary);
@@ -40,9 +80,9 @@
 }
 ._codegraph-root ._codegraph-capabilities {
   margin: 0;
-  padding: 0 16px 12px;
+  color: var(--tea-color-text-secondary);
+  font-size: 12px;
 }
-._codegraph-toolbar,
 ._codegraph-actions {
   display: flex;
   align-items: center;
@@ -50,9 +90,7 @@
   gap: 8px;
 }
 ._codegraph-toolbar {
-  padding: 12px 16px;
-  border-top: 1px solid var(--tea-color-border-secondary-default);
-  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+  padding: 0;
 }
 ._codegraph-toolbar label {
   display: flex;
@@ -62,14 +100,15 @@
 ._codegraph-layout {
   display: grid;
   grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) minmax(220px, 300px);
-  min-height: 520px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 ._codegraph-search,
 ._codegraph-source {
-  padding: 16px;
+  padding: 10px;
   min-width: 0;
   overflow: auto;
-  max-height: 760px;
+  min-height: 0;
   font-size: 13px;
   color: var(--tea-color-text-primary);
   background: var(--tea-color-bg-primary-default);
@@ -147,11 +186,16 @@
   color: var(--tea-color-text-secondary);
 }
 ._codegraph-main {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  padding: 12px;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
 }
 ._codegraph-expand {
-  padding-bottom: 12px;
+  flex: 0 0 auto;
+  padding-bottom: 8px;
 }
 ._codegraph-expand > span {
   color: var(--tea-color-text-secondary);
@@ -159,7 +203,9 @@
 }
 ._codegraph-canvas-wrap {
   position: relative;
-  height: 480px;
+  flex: 1 0 400px;
+  height: auto;
+  min-height: 400px;
   min-width: 0;
   background: var(--tea-color-bg-secondary-default);
   border-radius: 4px;
@@ -191,7 +237,7 @@
   padding: 12px 8px;
   background: var(--tea-color-bg-secondary-default);
   border-radius: 4px;
-  max-height: 480px;
+  max-height: min(480px, 55vh);
 }
 ._codegraph-line {
   display: inline-block;
@@ -234,8 +280,18 @@
   overflow-wrap: anywhere;
 }
 @media (max-width: 1100px) {
+  ._codegraph-root {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
   ._codegraph-layout {
     grid-template-columns: minmax(0, 1fr);
+    display: block;
+    overflow: visible;
+  }
+  ._codegraph-main {
+    overflow: visible;
   }
   ._codegraph-canvas-wrap {
     height: 420px;
@@ -251,19 +307,13 @@
   }
   ._codegraph-canvas-wrap {
     height: 360px;
-  }
-  ._codegraph-heading {
-    padding: 12px;
+    min-height: 360px;
+    flex: 0 0 360px;
   }
 }
 
 ._codegraph-mode-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 16px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--tea-color-border-secondary-default);
+  gap: 4px 8px;
 }
 ._codegraph-mode-controls label,
 ._codegraph-mode-controls form {
@@ -327,5 +377,15 @@
   }
   ._codegraph-mode-controls form label {
     width: 100%;
+  }
+}
+
+@media (min-width: 1101px) {
+  ._codegraph-root > [role='status'] {
+    flex: 0 0 auto;
+  }
+  ._codegraph-layout > ._codegraph-search,
+  ._codegraph-layout > ._codegraph-source {
+    overscroll-behavior: contain;
   }
 }

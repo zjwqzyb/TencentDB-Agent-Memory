@@ -97,6 +97,7 @@ export const codeGraphZh = {
   'code.graph.selectType': '请选择 class 或 interface 类型；当前符号不适用于继承视图。',
   'code.graph.analysisCoverage':
     '静态解析可能遗漏动态调用、外部依赖或当前语言未支持的结构；这里只展示索引中有证据的关系。',
+  'code.graph.viewDescription': '视图说明',
   'code.graph.unresolved': '外部或未解析关系（{{count}}）',
   'code.graph.unresolvedHint': '以下记录没有可验证的目标节点，不会补造节点、连线或目标源码。',
   'code.graph.sourceNode': '关系起点',
@@ -308,6 +309,7 @@ export const codeGraphEn = {
     'Select a class or interface. The current symbol is not a type hierarchy node.',
   'code.graph.analysisCoverage':
     'Static extraction may miss dynamic calls, external dependencies or unsupported language constructs. Only indexed relationships with evidence are shown.',
+  'code.graph.viewDescription': 'View description',
   'code.graph.unresolved': 'External or unresolved relations ({{count}})',
   'code.graph.unresolvedHint':
     'These records lack a verified target node. No target nodes, edges or source are fabricated.',

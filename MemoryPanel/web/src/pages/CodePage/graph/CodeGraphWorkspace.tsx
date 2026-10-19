@@ -509,113 +509,112 @@ export function CodeGraphWorkspace({
 
   return (
     <div className="_codegraph-root" data-testid="code-graph-workspace">
-      <div className="_codegraph-heading">
-        <div>
-          <h2>{t(`code.graph.mode.${mode}`)}</h2>
-          <p>{t(mode === 'calls' ? 'code.graph.directionHint' : `code.graph.direction.${mode}`)}</p>
-        </div>
-        <span className="_codegraph-version">
-          {meta?.branch ?? asset.branch} · {meta?.commit?.slice(0, 12) ?? '—'}
-          {meta?.indexedAt && <> · {new Date(meta.indexedAt).toLocaleString()}</>}
-        </span>
-      </div>
-      {meta && (
-        <p
-          className="_codegraph-capabilities _codegraph-note"
-          data-testid="code-graph-capabilities"
-        >
-          {t('code.graph.verifiedLanguages', {
-            languages:
-              meta.capabilities.languages.map(graphLanguageLabel).join(', ') ||
-              t('code.graph.noVerifiedLanguages'),
-          })}
-        </p>
-      )}
-      <CodeGraphModeControls
-        state={state}
-        onMode={(next) => {
-          clearHighlights();
-          setKind('');
-          setDistance('all');
-          state.changeMode(next);
-        }}
-      />
-      {mode === 'clusters' && (
-        <nav className="_codegraph-breadcrumbs" aria-label={t('code.graph.breadcrumbs')}>
-          {(
-            state.graph?.clustering?.breadcrumbs ?? [
-              { path: '', groupBy: 'directory' as const, label: '/' },
-            ]
-          ).map((crumb, index, crumbs) => (
-            <span key={`${crumb.path}:${crumb.groupBy}`}>
-              {index > 0 && <span aria-hidden="true"> / </span>}
-              <button
-                type="button"
-                disabled={state.loading || index === crumbs.length - 1}
-                aria-current={index === crumbs.length - 1 ? 'location' : undefined}
-                onClick={() =>
-                  state.configure({ scopePath: crumb.path, groupBy: crumb.groupBy }, true)
-                }
-              >
-                {crumb.label === '/' ? t('code.graph.repositoryRoot') : crumb.label}
-              </button>
-            </span>
-          ))}
-        </nav>
-      )}
-      <div className="_codegraph-toolbar">
-        {narrow && <Button onClick={() => openDrawer('search')}>{t('code.graph.search')}</Button>}
-        <Button disabled={!state.canBack || state.loading} onClick={state.back}>
-          {t('code.graph.back')}
-        </Button>
-        <Button
-          disabled={(mode === 'clusters' ? !state.canBack : !state.canCollapse) || state.loading}
-          onClick={mode === 'clusters' ? state.back : state.collapse}
-        >
-          {t(mode === 'clusters' ? 'code.graph.collapseGroup' : 'code.graph.collapse')}
-        </Button>
-        <Button
-          onClick={() => {
-            state.reset();
-            setKind('');
+      <h2 className="_codegraph-visually-hidden">{t(`code.graph.mode.${mode}`)}</h2>
+      <div className="_codegraph-control-row">
+        {meta && (
+          <details className="_codegraph-capabilities" data-testid="code-graph-capabilities">
+            <summary>{t('code.graph.viewDescription')}</summary>
+            <p>
+              {t('code.graph.verifiedLanguages', {
+                languages:
+                  meta.capabilities.languages.map(graphLanguageLabel).join(', ') ||
+                  t('code.graph.noVerifiedLanguages'),
+              })}
+            </p>
+            <p>
+              {t(mode === 'calls' ? 'code.graph.directionHint' : `code.graph.direction.${mode}`)}
+            </p>
+            <p className="_codegraph-note">{t('code.graph.analysisCoverage')}</p>
+          </details>
+        )}
+        <CodeGraphModeControls
+          state={state}
+          onMode={(next) => {
             clearHighlights();
+            setKind('');
             setDistance('all');
+            state.changeMode(next);
           }}
-        >
-          {t('code.graph.reset')}
-        </Button>
-        <label>
-          {t('code.graph.kind')}
-          <select value={kind} onChange={(event) => setKind(event.target.value)}>
-            <option value="">{t('code.graph.allKinds')}</option>
-            {kinds.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
+        />
+        {mode === 'clusters' && (
+          <nav className="_codegraph-breadcrumbs" aria-label={t('code.graph.breadcrumbs')}>
+            {(
+              state.graph?.clustering?.breadcrumbs ?? [
+                { path: '', groupBy: 'directory' as const, label: '/' },
+              ]
+            ).map((crumb, index, crumbs) => (
+              <span key={`${crumb.path}:${crumb.groupBy}`}>
+                {index > 0 && <span aria-hidden="true"> / </span>}
+                <button
+                  type="button"
+                  disabled={state.loading || index === crumbs.length - 1}
+                  aria-current={index === crumbs.length - 1 ? 'location' : undefined}
+                  onClick={() =>
+                    state.configure({ scopePath: crumb.path, groupBy: crumb.groupBy }, true)
+                  }
+                >
+                  {crumb.label === '/' ? t('code.graph.repositoryRoot') : crumb.label}
+                </button>
+              </span>
             ))}
-          </select>
-        </label>
-        {mode === 'impact' && (
+          </nav>
+        )}
+        <div className="_codegraph-toolbar">
+          {narrow && <Button onClick={() => openDrawer('search')}>{t('code.graph.search')}</Button>}
+          <Button disabled={!state.canBack || state.loading} onClick={state.back}>
+            {t('code.graph.back')}
+          </Button>
+          <Button
+            disabled={(mode === 'clusters' ? !state.canBack : !state.canCollapse) || state.loading}
+            onClick={mode === 'clusters' ? state.back : state.collapse}
+          >
+            {t(mode === 'clusters' ? 'code.graph.collapseGroup' : 'code.graph.collapse')}
+          </Button>
+          <Button
+            onClick={() => {
+              state.reset();
+              setKind('');
+              clearHighlights();
+              setDistance('all');
+            }}
+          >
+            {t('code.graph.reset')}
+          </Button>
           <label>
-            {t('code.graph.distanceFilter')}
-            <select
-              aria-label={t('code.graph.distanceFilter')}
-              value={distance}
-              onChange={(event) => {
-                setDistance(event.target.value);
-                setPathOnly(false);
-              }}
-            >
-              <option value="all">{t('code.graph.allDistances')}</option>
-              <option value="direct">{t('code.graph.direct')}</option>
-              <option value="indirect">{t('code.graph.indirect')}</option>
+            {t('code.graph.kind')}
+            <select value={kind} onChange={(event) => setKind(event.target.value)}>
+              <option value="">{t('code.graph.allKinds')}</option>
+              {kinds.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
             </select>
           </label>
-        )}
-        <Button disabled={unavailable} onClick={() => setListView(!listView)}>
-          {listView || unavailable ? t('code.graph.showCanvas') : t('code.graph.showList')}
-        </Button>
-        {narrow && <Button onClick={() => openDrawer('source')}>{t('code.graph.details')}</Button>}
+          {mode === 'impact' && (
+            <label>
+              {t('code.graph.distanceFilter')}
+              <select
+                aria-label={t('code.graph.distanceFilter')}
+                value={distance}
+                onChange={(event) => {
+                  setDistance(event.target.value);
+                  setPathOnly(false);
+                }}
+              >
+                <option value="all">{t('code.graph.allDistances')}</option>
+                <option value="direct">{t('code.graph.direct')}</option>
+                <option value="indirect">{t('code.graph.indirect')}</option>
+              </select>
+            </label>
+          )}
+          <Button disabled={unavailable} onClick={() => setListView(!listView)}>
+            {listView || unavailable ? t('code.graph.showCanvas') : t('code.graph.showList')}
+          </Button>
+          {narrow && (
+            <Button onClick={() => openDrawer('source')}>{t('code.graph.details')}</Button>
+          )}
+        </div>
       </div>
       {(status || recovery) && (
         <div role="status" aria-live="polite" aria-atomic="true" data-testid="code-graph-state">
