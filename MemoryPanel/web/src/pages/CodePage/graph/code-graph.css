@@ -250,6 +250,11 @@
   overflow: auto;
   max-height: 500px;
 }
+/* Keep the primary relation table reachable when a long analysis report follows it. */
+._codegraph-main > ._codegraph-table-wrap {
+  flex: 0 0 auto;
+  min-height: 0;
+}
 ._codegraph-table-wrap table {
   width: 100%;
   border-collapse: collapse;

@@ -259,6 +259,52 @@ async (page) => {
     });
     assert(listRect.height > 120 && listRect.top < 900, 'relation list receives a usable area', listRect);
     await page.getByRole('button', { name: '显示关系图', exact: true }).click();
+
+    // Synthetic DOM pressure only: keep a long analysis section after the list,
+    // reproducing flex shrink without claiming backend/API extraction evidence.
+    await page.setViewportSize({ width: 1366, height: 768 });
+    await modeSelect.selectOption('impact');
+    await page.getByLabel('搜索符号', { exact: true }).fill('entry');
+    await page.getByLabel('搜索符号', { exact: true }).press('Enter');
+    await page.getByRole('button', { name: 'entry function src/main.ts:2', exact: true }).click();
+    await page.locator('._codegraph-analysis').evaluate(el => {
+      const stress = document.createElement('div');
+      stress.dataset.testid = 'layout-long-analysis-stress';
+      stress.textContent = `UI layout stress only; not backend relationship evidence. ${'Long unresolved relationship analysis text. '.repeat(80)}`;
+      stress.style.cssText = 'height:3420px; flex:0 0 3420px; overflow-wrap:anywhere;';
+      el.append(stress);
+    });
+    await page.getByRole('button', { name: '关系列表', exact: true }).click();
+    const stressTable = page.getByTestId('code-graph-relations');
+    const stressMetrics = await stressTable.evaluate(el => {
+      const r=el.getBoundingClientRect(), main=el.closest('._codegraph-main'), mr=main.getBoundingClientRect();
+      const row=el.querySelector('tbody tr'), rr=row?.getBoundingClientRect();
+      const hit=rr ? document.elementFromPoint(rr.left+Math.min(20,rr.width/2),rr.top+Math.min(20,rr.height/2)) : null;
+      return { x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,
+        main:{top:mr.top,bottom:mr.bottom,scrollHeight:main.scrollHeight,clientHeight:main.clientHeight},
+        row:rr?{top:rr.top,bottom:rr.bottom,height:rr.height}:null,
+        rowHit:!!hit && (hit===row || row.contains(hit)), rows:el.querySelectorAll('tbody tr').length,
+        overflowY:getComputedStyle(el).overflowY, flexShrink:getComputedStyle(el).flexShrink };
+    });
+    assert(stressMetrics.height >= 120 && stressMetrics.width > 0 && stressMetrics.row?.height > 0 && stressMetrics.rowHit,
+      'long-analysis DOM stress leaves a visible, hit-testable relation row instead of shrinking the list to zero', stressMetrics);
+    const keyboardRow = stressTable.locator('tbody button').first();
+    await keyboardRow.focus();
+    assert(await keyboardRow.evaluate(el => document.activeElement === el),
+      'relation list remains keyboard focusable under long-analysis DOM stress');
+    await keyboardRow.press('Enter');
+    assert(await stressTable.locator('tbody tr[aria-selected="true"]').count() === 1,
+      'Enter selects a relation-list row under long-analysis DOM stress');
+    await stressTable.scrollIntoViewIfNeeded();
+    const scrolledStress = await stressTable.evaluate(el => {
+      const r=el.getBoundingClientRect(), main=el.closest('._codegraph-main'), mr=main.getBoundingClientRect();
+      return { top:r.top,bottom:r.bottom,mainTop:mr.top,mainBottom:mr.bottom,scrollTop:main.scrollTop };
+    });
+    measurements.push({ name:'long-analysis-relation-list-dom-stress', stressFixture:'synthetic DOM content only; not backend/API relationship data', ...stressMetrics, scrolled:scrolledStress });
+    assert(scrolledStress.bottom > scrolledStress.mainTop && scrolledStress.top < scrolledStress.mainBottom,
+      'relation list is reachable within its main-panel scrollport under long-analysis DOM stress', scrolledStress);
+    await page.getByTestId('layout-long-analysis-stress').evaluate(el => el.remove());
+    await page.getByRole('button', { name: '显示关系图', exact: true }).click();
     await modeSelect.selectOption('calls');
     await page.waitForFunction(() => document.querySelector('._codegraph-control-row select')?.value === 'calls');
 
