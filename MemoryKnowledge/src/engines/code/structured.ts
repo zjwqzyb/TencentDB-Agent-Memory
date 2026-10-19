@@ -67,11 +67,18 @@ function issueCursor(value: Cursor): string {
 }
 function snapshot(ctx: StructuredContext): string {
   // Include WAL/file state as well as store generation: even out-of-band SDK writes expire cursors.
-  const identity = (path: string) => {
-    try { const stat = statSync(path, { bigint: true }); return `${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeNs}:${stat.birthtimeNs}`; }
-    catch (error) { if (path.endsWith('-wal') && (error as NodeJS.ErrnoException).code === 'ENOENT') return 'none'; throw error; }
+  const identity = (path: string, wal = false) => {
+    try {
+      const stat = statSync(path, { bigint: true });
+      // A cold read-only WAL connection can create/remove an empty sidecar. It
+      // contains no frames, so this lifecycle must not change the graph version.
+      // Keep the full identity for nonempty WALs, including same-size WAL reuse.
+      if (wal && stat.size === 0n) return 'none';
+      return `${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeNs}:${stat.birthtimeNs}`;
+    }
+    catch (error) { if (wal && (error as NodeJS.ErrnoException).code === 'ENOENT') return 'none'; throw error; }
   };
-  return createHash('sha256').update(`${ctx.assetId}:${ctx.version}:${ctx.indexedAt}:${identity(ctx.databasePath)}:${identity(ctx.databasePath + '-wal')}`).digest('hex').slice(0, 32);
+  return createHash('sha256').update(`${ctx.assetId}:${ctx.version}:${ctx.indexedAt}:${identity(ctx.databasePath)}:${identity(ctx.databasePath + '-wal', true)}`).digest('hex').slice(0, 32);
 }
 function indexedColumns(db: Database.Database, name: string, expected: string[]): boolean {
   const columns = (db.prepare(`PRAGMA index_info(${name})`).all() as { seqno: number; name: string }[]).sort((a,b) => a.seqno-b.seqno).map(row => row.name);
