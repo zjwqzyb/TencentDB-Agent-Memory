@@ -74,7 +74,10 @@ function snapshot(ctx: StructuredContext): string {
       // contains no frames, so this lifecycle must not change the graph version.
       // Keep the full identity for nonempty WALs, including same-size WAL reuse.
       if (wal && stat.size === 0n) return 'none';
-      return `${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeNs}:${stat.birthtimeNs}`;
+      const dataIdentity = `${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeNs}`;
+      // Node may report ctime as birthtime when the filesystem lacks birthtime.
+      // SQLite can fchown a WAL on read-only open, changing only that metadata.
+      return wal ? dataIdentity : `${dataIdentity}:${stat.birthtimeNs}`;
     }
     catch (error) { if (wal && (error as NodeJS.ErrnoException).code === 'ENOENT') return 'none'; throw error; }
   };

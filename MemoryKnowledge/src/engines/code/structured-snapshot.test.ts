@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import fs, { chmodSync, existsSync, mkdtempSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { closeIndex, indexProject, structuredSdkInfo } from './bridge.js';
@@ -10,6 +11,7 @@ import { queryStructured, type StructuredContext } from './structured.js';
 const cleanups: (() => void)[] = [];
 afterEach(() => {
   vi.restoreAllMocks();
+  syncBuiltinESMExports();
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 });
 
@@ -88,6 +90,47 @@ describe('real SQLite WAL snapshot lifecycle', () => {
     const fresh = queryStructured(f.ctx, 'graph-search', {});
     expect(fresh.state).toBe('ready'); expect(fresh.indexVersion).not.toBe(first.indexVersion);
     expect(fresh.nodes[0].name).toBe('changed');
+  });
+
+  it('keeps a nonempty WAL stable when birthtime falls back to ctime changed by a read-only open', () => {
+    const f = walFixture();
+    const realStat = fs.statSync, prepare = Database.prototype.prepare;
+    const before = realStat(f.walPath, { bigint: true });
+    expect(before.size).toBeGreaterThan(0n);
+    const birthtimes: bigint[] = [];
+    vi.spyOn(fs, 'statSync').mockImplementation(((path, options) => {
+      const stat = realStat(path, options);
+      if (String(path) === f.walPath && 'ctimeNs' in stat) {
+        // Node uses ctime on filesystems without a native birthtime. Keep real
+        // file identity/data timestamps while reproducing that platform fallback.
+        Object.assign(stat, { birthtimeNs: stat.ctimeNs, birthtimeMs: stat.ctimeMs, birthtime: stat.ctime });
+        birthtimes.push(stat.ctimeNs);
+      }
+      return stat;
+    }) as typeof fs.statSync);
+    syncBuiltinESMExports();
+    let metadataChanged = false;
+    vi.spyOn(Database.prototype, 'prepare').mockImplementation(function (this: Database.Database, sql: string) {
+      if (this.readonly && !metadataChanged) {
+        metadataChanged = true;
+        // SQLite may fchown its WAL while opening it. A real chmod provides the
+        // same ctime-only change on hosts where reads do not do that naturally.
+        chmodSync(f.walPath, Number(before.mode & 0o777n) ^ 0o020);
+      }
+      return prepare.call(this, sql);
+    });
+    const first = queryStructured(f.ctx, 'graph-search', { limit: 2 });
+    const after = realStat(f.walPath, { bigint: true });
+    expect(metadataChanged).toBe(true); expect(after.ctimeNs).not.toBe(before.ctimeNs);
+    expect([after.dev, after.ino, after.size, after.mtimeNs]).toEqual([before.dev, before.ino, before.size, before.mtimeNs]);
+    expect(new Set(birthtimes).size).toBeGreaterThan(1);
+    expect(first.state).toBe('ready'); expect(first.nextCursor).toBeTruthy();
+    const page = queryStructured(f.ctx, 'graph-search', { limit: 2, cursor: first.nextCursor! });
+    expect(page.state).toBe('ready'); expect(page.indexVersion).toBe(first.indexVersion);
+    f.writer.prepare("UPDATE nodes SET name = 'changed' WHERE id = 'alpha'").run();
+    expect(queryStructured(f.ctx, 'graph-search', { limit: 2, cursor: first.nextCursor! }).state).toBe('version_expired');
+    const fresh = queryStructured(f.ctx, 'graph-search', { limit: 2 });
+    expect(fresh.state).toBe('ready'); expect(fresh.nodes[0].name).toBe('changed');
   });
 
   it('detects a committed WAL reuse even when its inode and size do not change', () => {
