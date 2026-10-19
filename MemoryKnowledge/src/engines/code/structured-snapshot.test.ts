@@ -166,12 +166,14 @@ describe('real SQLite WAL snapshot lifecycle', () => {
     const f = walFixture();
     const first = queryStructured(f.ctx, 'graph-search', { limit: 2 });
     const prepare = Database.prototype.prepare;
-    let committed = false;
+    let committed = false, searchReads = 0;
     vi.spyOn(Database.prototype, 'prepare').mockImplementation(function (this: Database.Database, sql: string) {
       // Both statements follow a node SELECT, so the reader already holds its
       // SQLite snapshot. A separate real WAL writer can still commit here.
-      const boundary = action === 'graph-search' ? 'SELECT rowid FROM nodes WHERE rowid > ? LIMIT 1' : 'SELECT content_hash FROM files WHERE path = ?';
-      if (this.readonly && sql === boundary && !committed) {
+      const boundary = action === 'graph-search'
+        ? sql.startsWith('WITH candidates') && ++searchReads === 2
+        : sql === 'SELECT content_hash FROM files WHERE path = ?';
+      if (this.readonly && boundary && !committed) {
         committed = true;
         f.writer.prepare("UPDATE nodes SET name = 'changed' WHERE id = 'alpha'").run();
       }

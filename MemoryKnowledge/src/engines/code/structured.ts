@@ -7,13 +7,14 @@ import type { StructuredModeContext, NodeRow, EdgeRow, UnresolvedRow } from './s
 import { queryAggregation, queryClusters } from './structured-aggregation.js';
 import { queryNeighborhood } from './structured-neighborhood.js';
 import { javaEdgeValidator } from './structured-java.js';
+import { querySearch, type SearchState } from './structured-search.js';
 import type { CodeGraphAction, CodeGraphCapabilities, CodeGraphEdge, CodeGraphNode, CodeGraphRequest, CodeGraphResponse } from '../../contracts/code-graph.js';
 
 export const GRAPH_LIMITS = { nodes: 100, edges: 300, maxNodes: 500, maxEdges: 1500, depth: 5, rows: 2000, sourceBytes: 2 * 1024 * 1024, sourceLines: 300 } as const;
 export interface StructuredContext { assetId: string; projectRoot: string; databasePath: string; sdkVersion: string; version: number; commit: string | null; indexedAt: string | null; branch: string; indexVersion?: string }
 interface QueueItem { id: string; depth: number; side: number; after: number }
 interface Walk { queue: QueueItem[]; seenNodes: string[]; seenEdges: number[] }
-interface Cursor { asset: string; version: string; fingerprint: string; expires: number; after?: number; walk?: Walk; modeState?: unknown }
+interface Cursor { asset: string; version: string; fingerprint: string; expires: number; searchState?: SearchState; walk?: Walk; modeState?: unknown }
 const cursors = new Map<string, Cursor>();
 const MAX_CURSORS = 128;
 const CURSOR_TTL = 10 * 60 * 1000;
@@ -153,33 +154,11 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
         return result;
       };
       if (action === 'graph-search' || action === 'graph-tree') {
-        let after = continuation?.after ?? 0;
-        const matches: CodeGraphNode[] = [];
-        const scope = request.scopePath?.replace(/\/$/, '') ?? '';
-        const needle = (request.query ?? '').toLocaleLowerCase();
-        let exhausted = false;
-        while (matches.length < limit && rowsRead < GRAPH_LIMITS.rows - 1) {
-          // Keyset scan windows bound work even on a nonselective search; no unbounded LIKE/ORDER scan.
-          const take = Math.min(100, GRAPH_LIMITS.rows - 1 - rowsRead);
-          const batch = db.prepare('SELECT rowid, * FROM nodes WHERE rowid > ? ORDER BY rowid LIMIT ?').all(after, take) as NodeRow[];
-          rowsRead += batch.length;
-          if (!batch.length) { exhausted = true; break; }
-          for (const row of batch) {
-            after = row.rowid!;
-            if (action === 'graph-tree' && row.kind !== 'file') continue;
-            if (scope && row.file_path !== scope && !row.file_path.startsWith(`${scope}/`)) continue;
-            if (request.nodeKinds?.length && !request.nodeKinds.includes(row.kind)) continue;
-            if (needle && !`${row.name} ${row.qualified_name} ${row.file_path}`.toLocaleLowerCase().includes(needle)) continue;
-            matches.push(node(ctx, row));
-            if (matches.length === limit) break;
-          }
-          if (batch.length < take && after === batch.at(-1)?.rowid) { exhausted = true; break; }
-        }
-        result.nodes = matches;
-        if (!exhausted) {
-          rowsRead++;
-          const more = db.prepare('SELECT rowid FROM nodes WHERE rowid > ? LIMIT 1').get(after);
-          if (more) { result.truncated = true; result.truncationReasons = [matches.length >= limit ? 'node_budget' : 'scan_budget']; result.nextCursor = next({ after }); }
+        const search = querySearch(db, action, request, continuation?.searchState, GRAPH_LIMITS.rows);
+        rowsRead += search.rowsRead;
+        result.nodes = search.rows.map(row => node(ctx, row));
+        if (search.continuation) {
+          result.truncated = true; result.truncationReasons = [search.reason!]; result.nextCursor = next({ searchState: search.continuation });
         }
         return finish();
       }

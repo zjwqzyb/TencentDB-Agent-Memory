@@ -219,16 +219,24 @@ export function CodeGraphWorkspace({
           ref={searchInput}
           data-testid="code-graph-search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            state.cancelBrowse(true);
+            setQuery(event.target.value);
+          }}
           placeholder={t('code.graph.searchHint')}
         />
         <label htmlFor="code-graph-scope">{t('code.graph.scope')}</label>
         <input
           id="code-graph-scope"
           value={scope}
-          onChange={(event) => setScope(event.target.value)}
-          placeholder="src/"
+          onChange={(event) => {
+            state.cancelBrowse(true);
+            setScope(event.target.value);
+          }}
+          placeholder={t('code.graph.scopeHint')}
+          aria-describedby="code-graph-scope-hint"
         />
+        <small id="code-graph-scope-hint">{t('code.graph.scopeHint')}</small>
         <div className="_codegraph-actions">
           <button type="submit" disabled={state.searching}>
             {t('code.graph.searchButton')}
@@ -242,10 +250,25 @@ export function CodeGraphWorkspace({
           </button>
         </div>
       </form>
-      {state.searching && <StatusTip status="loading" />}
+      {state.searching && (
+        <div className="_codegraph-search-status" role="status" aria-live="polite">
+          <StatusTip status="loading" />
+          <span>{t('code.graph.searchProgress', { count: state.catalog?.nodes.length ?? 0 })}</span>
+          <Button onClick={() => state.cancelBrowse(false)}>{t('code.graph.cancelSearch')}</Button>
+        </div>
+      )}
+      {!state.searching && state.searchPaused && (
+        <p className="_codegraph-note" role="status">
+          {t(state.catalog?.nextCursor ? 'code.graph.searchPaused' : 'code.graph.searchTimedOut')}
+        </p>
+      )}
       {state.catalogError && <Alert type="error">{message(state.catalogError)}</Alert>}
-      {state.catalog?.state === 'empty' && (
-        <p>{state.catalog.truncated ? t('code.graph.partialSearch') : t('code.graph.noResults')}</p>
+      {state.catalog?.state === 'empty' && !state.searchPaused && (
+        <p>
+          {state.catalog.truncated || state.catalog.nextCursor
+            ? t('code.graph.partialSearch')
+            : t('code.graph.noResults')}
+        </p>
       )}
       <ul className="_codegraph-results">
         {state.catalog?.nodes.map((node) => (
@@ -267,7 +290,7 @@ export function CodeGraphWorkspace({
           </li>
         ))}
       </ul>
-      {state.catalog?.truncated && (
+      {!!state.catalog?.nodes.length && state.catalog.truncated && !state.searchPaused && (
         <p className="_codegraph-note">{t('code.graph.partialSearch')}</p>
       )}
       {state.catalog?.nextCursor && (
@@ -275,7 +298,11 @@ export function CodeGraphWorkspace({
           disabled={state.searching || state.catalog.nodes.length >= 500}
           onClick={() => void state.browse('', '', true)}
         >
-          {t('code.graph.moreResults')}
+          {t(
+            state.searchPaused || state.catalog.truncationReasons.includes('scan_budget')
+              ? 'code.graph.moreResults'
+              : 'code.graph.loadMoreResults',
+          )}
         </Button>
       )}
     </section>

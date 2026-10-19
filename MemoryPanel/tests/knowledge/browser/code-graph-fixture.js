@@ -1,7 +1,7 @@
 // Playwright CLI run-code --filename. UI fixture only, not SDK evidence.
 async (page) => {
   const context = page.context();
-  const state = { version: 'v1', responseState: 'ready', actionState: {}, httpStatus: 200, delayByNode: {}, delayByAsset: {}, delayByAction: {}, requests: [], unknown: [], sourceUnavailable: false, truncated: false, sparseSearch: false, emptyContinuation: false, dependencyPartial: false, modePages: false };
+  const state = { version: 'v1', responseState: 'ready', actionState: {}, httpStatus: 200, delayByNode: {}, delayByAsset: {}, delayByAction: {}, delayByCursor: {}, requests: [], unknown: [], sourceUnavailable: false, truncated: false, sparseSearch: false, emptyContinuation: false, dependencyPartial: false, modePages: false, searchPages: null };
   const user = { user_id: 'user-browser', username: 'browser-tester', display_name: 'Browser Tester', user_type: 'normal', status: 'active' };
   const stamp = '2026-10-19T00:00:00Z';
   const team = { team_id: 'team-browser', name: 'CodeGraph Browser Fixture', owner_user_id: user.user_id, status: 'active', created_at: stamp, updated_at: stamp };
@@ -39,7 +39,19 @@ async (page) => {
     if (snapshot.actionState[action]) result.state = snapshot.actionState[action];
     if (result.state !== 'ready') return result;
     if (action === 'graph-tree') result.nodes = [...new Set(nodes.map(node => node.filePath))].map((filePath, index) => ({ id: prefix + 'file-' + index, name: filePath.split('/').pop(), qualifiedName: filePath, kind: 'file', filePath, language: snapshot.javaFixture ? 'java' : 'typescript', startLine: 1, endLine: 20 }));
-    if (action === 'graph-search') result.nodes = nodes.filter(node => (!request.query || `${node.name} ${node.filePath}`.toLowerCase().includes(request.query.toLowerCase())) && (!request.scopePath || node.filePath.startsWith(request.scopePath)) && (!request.nodeKinds?.length || request.nodeKinds.includes(node.kind)));
+    if (action === 'graph-search' && Array.isArray(snapshot.searchPages)) {
+      const pageIndex = request.cursor ? snapshot.searchPages.findIndex(page => page.nextCursor === request.cursor) + 1 : 0;
+      const page = snapshot.searchPages[pageIndex] || { count: 0, reason: null, nextCursor: null };
+      const priorCount = snapshot.searchPages.slice(0, pageIndex).reduce((sum, item) => sum + (item.count || 0), 0);
+      result.nodes = Array.from({ length: page.count || 0 }, (_, index) => {
+        const ordinal = priorCount + index;
+        return { id: `${prefix}search-${ordinal}`, name: `${request.query || 'needle'}-symbol-${ordinal}`, qualifiedName: `src/search-${ordinal}.ts:${request.query || 'needle'}-symbol-${ordinal}`, kind: 'function', filePath: `src/search-${ordinal}.ts`, language: 'typescript', startLine: ordinal + 1, endLine: ordinal + 2 };
+      }).filter(node => !request.scopePath || node.filePath.startsWith(request.scopePath));
+      result.nextCursor = page.nextCursor || null;
+      result.truncated = !!page.reason || !!page.nextCursor;
+      result.truncationReasons = page.reason ? [page.reason] : [];
+      result.state = result.nodes.length ? 'ready' : 'empty';
+    } else if (action === 'graph-search') result.nodes = nodes.filter(node => (!request.query || `${node.name} ${node.filePath}`.toLowerCase().includes(request.query.toLowerCase())) && (!request.scopePath || node.filePath.startsWith(request.scopePath)) && (!request.nodeKinds?.length || request.nodeKinds.includes(node.kind)));
     if (action === 'graph-search' && snapshot.sparseSearch && !request.cursor) { result.nodes = []; result.nextCursor = 'sparse-next'; result.truncated = true; result.truncationReasons = ['scan_budget']; }
     if (action === 'graph-search' && request.cursor === 'sparse-next') { result.nextCursor = null; result.truncated = false; result.truncationReasons = []; }
     if (action === 'graph-node' || action === 'graph-source') {
@@ -201,7 +213,7 @@ async (page) => {
     else if (/\/code-graph\/graph(?:-search|-tree|-node|-source)?$/.test(path)) {
       const snapshot = { ...state };
       const action = path.split('/').pop();
-      const delay = Number(snapshot.delayByAction[action] || snapshot.delayByNode[request.nodeId] || snapshot.delayByAsset[request.code_graph_id] || 0);
+      const delay = Number(snapshot.delayByAction[action] || snapshot.delayByNode[request.nodeId] || snapshot.delayByAsset[request.code_graph_id] || snapshot.delayByCursor[request.cursor] || 0);
       data = graph(request.code_graph_id, request, action, snapshot);
       if (delay) await new Promise(resolve => setTimeout(resolve, delay));
       status = snapshot.httpStatus;

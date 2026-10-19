@@ -124,6 +124,21 @@
   flex-direction: column;
   gap: 8px;
 }
+._codegraph-search form > small {
+  margin-top: -4px;
+  color: var(--tea-color-text-secondary);
+  line-height: 1.4;
+}
+._codegraph-search-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+._codegraph-search-status [role='status'] {
+  flex: 1 1 auto;
+}
 ._codegraph-root input,
 ._codegraph-root select,
 ._codegraph-search input {

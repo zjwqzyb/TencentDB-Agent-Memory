@@ -68,6 +68,7 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
   }, []);
   const [loading, setLoading] = useState(false),
     [searching, setSearching] = useState(false),
+    [searchPaused, setSearchPaused] = useState(false),
     [sourceLoading, setSourceLoading] = useState(false),
     [evidenceLoading, setEvidenceLoading] = useState(false);
   const [error, setError] = useState(''),
@@ -102,6 +103,7 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
     nodeController.current?.abort();
     setLoading(false);
     setSearching(false);
+    setSearchPaused(false);
     setSourceLoading(false);
     setEvidenceLoading(false);
   }, []);
@@ -131,30 +133,111 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
         ? { ...catalogRequest.current, cursor: catalog?.nextCursor ?? undefined }
         : { query, scopePath, limit: 100, ...(version ? { indexVersion: version } : {}) };
       catalogAction.current = action;
-      catalogRequest.current = request;
+      const previousCatalog = catalog;
+      const effectiveQuery = more ? catalogRequest.current.query : query;
+      const autoContinue = action === 'graphSearch' && !!effectiveQuery;
+      const deadline = Date.now() + 12_000;
+      const maxContinuationPages = 200;
+      const visitedCursors = new Set<string>();
+      if (request.cursor) visitedCursors.add(request.cursor);
+      let continuationPages = 0;
+      let pageRequest = request;
+      let lastPage: CodeGraphResponse | null = null;
+      let lastStopsAutomaticScan = false;
+      let accumulated = more ? previousCatalog : null;
+      const scanTarget = Math.min((accumulated?.nodes.length ?? 0) + 100, 500);
+      let budgetExpired = false;
+      const budgetTimer = autoContinue
+        ? setTimeout(() => {
+            budgetExpired = true;
+            controller.abort();
+          }, 12_000)
+        : undefined;
+      let shouldRequest = true;
+      setSearchPaused(false);
+      if (!more) setCatalog(null);
       try {
-        const result = await knowledgeApi.code[action](assetId, request, controller.signal);
-        if (sequence !== catalogSequence.current || controller.signal.aborted) return;
-        if (
-          result.state === 'version_expired' ||
-          (version && result.indexVersion && version !== result.indexVersion)
-        ) {
-          expire();
-          return;
+        while (shouldRequest) {
+          catalogRequest.current = pageRequest;
+          const result = await knowledgeApi.code[action](assetId, pageRequest, controller.signal);
+          if (sequence !== catalogSequence.current || controller.signal.aborted) return;
+          if (
+            result.state === 'version_expired' ||
+            (version && result.indexVersion && version !== result.indexVersion)
+          ) {
+            expire();
+            return;
+          }
+          lastPage = result;
+          const isPageState = ['ready', 'empty'].includes(result.state);
+          accumulated =
+            isPageState && accumulated && ['ready', 'empty'].includes(accumulated.state)
+              ? mergeGraph(accumulated, result)
+              : result;
+          setCatalog(accumulated);
+          if (!isPageState) break;
+          const nextCursor = result.nextCursor;
+          const reasonStopsAutomaticScan = result.truncationReasons.some((reason) =>
+            ['node_budget', 'result_budget', 'limit_reached', 'global_budget'].includes(reason),
+          );
+          lastStopsAutomaticScan = reasonStopsAutomaticScan;
+          const reachedPageTarget = accumulated.nodes.length >= scanTarget;
+          const reachedGlobalLimit = accumulated.nodes.length >= 500;
+          const canContinue =
+            autoContinue &&
+            !reasonStopsAutomaticScan &&
+            !reachedPageTarget &&
+            !reachedGlobalLimit &&
+            !!nextCursor &&
+            !visitedCursors.has(nextCursor) &&
+            continuationPages < maxContinuationPages - 1 &&
+            Date.now() < deadline;
+          if (!canContinue) {
+            shouldRequest = false;
+            break;
+          }
+
+          visitedCursors.add(nextCursor);
+          continuationPages++;
+          pageRequest = { ...request, cursor: nextCursor };
         }
-        setCatalog(
-          more && catalog && ['ready', 'empty'].includes(result.state)
-            ? mergeGraph(catalog, result)
-            : result,
+        const result = lastPage;
+        if (!result || sequence !== catalogSequence.current || controller.signal.aborted) return;
+        if (accumulated) setCatalog(accumulated);
+        const stoppedWithCursor = !!result.nextCursor && accumulated!.nodes.length < 500;
+        const stoppedBeforeTarget = accumulated!.nodes.length < scanTarget;
+        setSearchPaused(
+          stoppedWithCursor && autoContinue && stoppedBeforeTarget && !lastStopsAutomaticScan,
         );
       } catch (e) {
-        if (!controller.signal.aborted && sequence === catalogSequence.current)
+        if (budgetExpired && sequence === catalogSequence.current) {
+          setCatalog(accumulated);
+          setSearchPaused(true);
+        } else if (!controller.signal.aborted && sequence === catalogSequence.current) {
           setCatalogError(graphError(e));
+        } else if (sequence === catalogSequence.current && lastPage) {
+          setCatalog(accumulated ?? lastPage);
+        }
       } finally {
+        if (budgetTimer) clearTimeout(budgetTimer);
         if (sequence === catalogSequence.current) setSearching(false);
       }
     },
     [assetId, catalog, version, expire],
+  );
+
+  const cancelBrowse = useCallback(
+    (clearResults = true) => {
+      catalogSequence.current++;
+      catalogController.current?.abort();
+      setSearching(false);
+      setSearchPaused(!clearResults && (!!catalog?.nextCursor || !!catalogRequest.current.query));
+      if (clearResults) {
+        setCatalog(null);
+        setCatalogError('');
+      }
+    },
+    [catalog],
   );
 
   useEffect(() => {
@@ -508,12 +591,14 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
     setSelected,
     loading,
     searching,
+    searchPaused,
     sourceLoading,
     sourceLine,
     error,
     catalogError,
     sourceError,
     browse,
+    cancelBrowse,
     load,
     reset,
     back,
