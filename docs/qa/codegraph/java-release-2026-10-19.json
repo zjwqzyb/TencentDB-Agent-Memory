@@ -1,0 +1,1093 @@
+{
+  "status": "released_and_accepted",
+  "date": "2026-10-19",
+  "featureCommit": "39a53d24aac32fda77fa2f67fd9d024e25a299ec",
+  "branch": "feat/server_team",
+  "committedPaths": 22,
+  "runtimeBaseImage": "sha256:d1c93f2626553683912ed56c34012af4acfc0890ba7b1419fc3dd28382abce0f",
+  "candidateImage": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+  "verificationBundleSha256": "9cda3b4fbbe2d45ba7b22901a7f21da913af45a9dc240580b065049d170694d8",
+  "preservedOverlays": {
+    "count": 14,
+    "overlays": [
+      {
+        "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskWorkbench.tsx",
+        "sha256": "dc23c3e15b0116046dd43f29c9e9c3d6cb32f9a38f1d6fbb6c3bda543e32629e",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/IssueWorkbench.tsx",
+        "sha256": "9f9f311d972dff67b5ec94719a70e13c6c83d2030714a86c6434e0e5d6e1221e",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryPanel/web/src/pages/WorkbenchPage/styles/issue-workbench.css",
+        "sha256": "647146b5cc71d7483284b7d830c775972b097d3ab4eaf09050c92a0e8f6bf5ec",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryPanel/web/src/lib/api/issues.ts",
+        "sha256": "53094dad30119743c5aae9bd6687c9645bab75b1ba86bf987f99840be76a0d44",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryPanel/src/panel/api/meta-actions.ts",
+        "sha256": "0ed7e484c79ef0a556c004e8dd5f2e373a10cc2ad8af599f6abbe30f916df52d",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryPanel/src/panel/http/routes/knowledge/wiki-routes.ts",
+        "sha256": "abf4a24ad547796c2020a1561e12cfdc412dad364dd9321c74973d03d1c5b86b",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/src/code-source/providers/bjjh-git.ts",
+        "sha256": "73a03b832556d093181dd6024e465f58bd0e362e371d6210fee1011057706863",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/src/module.ts",
+        "sha256": "29542d6f2f4e166891ffc3fe0f154b51e4e5c265ca87b2c33d3c172077bb4147",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/src/engines/wiki/manager.ts",
+        "sha256": "e61d9e22b439cae2a93a7e89e3cca21c7528cfecbc6247d680c8a6b8c28cb899",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/llm.ts",
+        "sha256": "c8a8a20ea73d6ef7a5c1087ad45b276639c5434751062553fa9cdec7db3b0f81",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/overview.ts",
+        "sha256": "6a9b86472e5d11ef7f7c5040a630371c4eacb64c075c046f7e11148c20944dd8",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/docker-compose.yml",
+        "sha256": "e85cf44fa871f37fbd79e119df3be99beb9bfad2dfb9e08f878e5afb16168f7a",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/docker/env.example",
+        "sha256": "e0be5b08b708c2020803f8e777c43759920b0e6e584a66a2c7724f57022a3577",
+        "source": "reviewed prior release snapshot"
+      },
+      {
+        "path": "MemoryKnowledge/README.md",
+        "sha256": "7cb90f5d7f7b68a529640f543a30d09355c946fe4b4266c60e2d465582814692",
+        "source": "reviewed prior release snapshot"
+      }
+    ]
+  },
+  "validation": {
+    "cleanBuild": {
+      "localNode": "22.23.0",
+      "knowledgeTypecheck": "passed",
+      "knowledgeBuild": "passed",
+      "panelBuild": "passed",
+      "webBuild": "passed",
+      "knowledgeTests": {
+        "passed": 92,
+        "total": 92
+      },
+      "panelTests": {
+        "passed": 127,
+        "total": 127
+      }
+    },
+    "candidateHealth": {
+      "container": "/tdai-codegraph-java-health-39a53d2",
+      "image": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+      "network": "none",
+      "readonlyRoot": true,
+      "health": "healthy",
+      "mounts": []
+    },
+    "isolatedJava": {
+      "ok": true,
+      "assetId": "cg-rmlck25u",
+      "language": "java",
+      "node": "v22.23.3",
+      "sdk": "1.6.2",
+      "durationMs": 22811,
+      "copiedSources": 4517,
+      "sourceFailures": 0,
+      "checks": [
+        "namespace-calls-accurate-empty",
+        "namespace-hierarchy-accurate-empty",
+        "process-four-real-calls",
+        "process-same-index-source",
+        "process-budgeted-pagination-retains-four-calls",
+        "class-extends",
+        "interface-extends",
+        "wrong-log-info-omitted",
+        "heuristic-dispatch-omitted",
+        "impact-directed-real-evidence",
+        "dependencies-import-and-source-evidence",
+        "clusters-import-and-source-evidence"
+      ],
+      "observations": [
+        {
+          "name": "namespace-calls-accurate-empty",
+          "state": "empty",
+          "nodes": 1,
+          "edges": 0,
+          "warnings": [
+            "select_a_callable"
+          ],
+          "truncated": false
+        },
+        {
+          "name": "namespace-hierarchy-accurate-empty",
+          "state": "empty",
+          "nodes": 1,
+          "edges": 0,
+          "warnings": [
+            "select_a_type"
+          ],
+          "truncated": false
+        },
+        {
+          "name": "process-four-real-calls",
+          "state": "ready",
+          "nodes": 5,
+          "edges": 4,
+          "warnings": [
+            "java_static_analysis_incomplete"
+          ],
+          "truncated": false,
+          "relations": [
+            "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator::AbstractCodeGenerator::before",
+            "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::check",
+            "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::doProcess",
+            "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator::AbstractCodeGenerator::after"
+          ]
+        },
+        {
+          "name": "process-same-index-source",
+          "state": "ready",
+          "nodes": 1,
+          "edges": 0,
+          "warnings": [],
+          "truncated": false
+        },
+        {
+          "name": "class-extends",
+          "state": "ready",
+          "nodes": 2,
+          "edges": 1,
+          "warnings": [],
+          "truncated": false,
+          "relations": [
+            "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator>extends>com.jinhui.component.code.core.generator::AbstractCodeGenerator"
+          ]
+        },
+        {
+          "name": "interface-extends",
+          "state": "ready",
+          "nodes": 2,
+          "edges": 1,
+          "warnings": [],
+          "truncated": false,
+          "relations": [
+            "com.jinhui.component.data.protocol.trans.http.operator::HttpGetOperator>extends>com.jinhui.component.data.protocol.trans.http.operator::HttpBaseOperator"
+          ]
+        },
+        {
+          "name": "wrong-log-info-omitted",
+          "state": "ready",
+          "nodes": 2,
+          "edges": 1,
+          "warnings": [
+            "java_static_analysis_incomplete",
+            "java_ambiguous_relations_omitted"
+          ],
+          "truncated": false
+        },
+        {
+          "name": "heuristic-dispatch-omitted",
+          "state": "ready",
+          "nodes": 1,
+          "edges": 0,
+          "warnings": [
+            "java_static_analysis_incomplete",
+            "java_heuristic_relations_omitted"
+          ],
+          "truncated": false
+        },
+        {
+          "name": "impact-directed-real-evidence",
+          "state": "ready",
+          "nodes": 2,
+          "edges": 1,
+          "warnings": [
+            "static_analysis_potential_impact",
+            "unresolved_or_dynamic_relations_not_complete",
+            "java_static_analysis_incomplete",
+            "java_heuristic_relations_omitted"
+          ],
+          "truncated": false
+        },
+        {
+          "name": "dependencies-import-and-source-evidence",
+          "state": "ready",
+          "nodes": 15,
+          "edges": 14,
+          "warnings": [
+            "sdk_import_extraction_incomplete",
+            "partial_dependency_counts",
+            "cycles_only_in_observed_graph"
+          ],
+          "truncated": true,
+          "pages": 102,
+          "evidencePages": 50,
+          "evidenceItems": 1,
+          "sourceState": "ready",
+          "firstEvidence": {
+            "id": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:edge:98781",
+            "sourceId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:namespace:258a78cac91a02f6bc447e245dca9455",
+            "targetId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:interface:46337270bdcdf187a1b058a29d4aba78",
+            "sourceFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/generator/impl/DefaultCodeGenerator.java",
+            "targetFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/incr/Incremental.java",
+            "line": 3,
+            "column": 0,
+            "kind": "imports",
+            "resolution": "internal"
+          },
+          "completenessClaim": "bounded sample; full index completion is not asserted"
+        },
+        {
+          "name": "clusters-import-and-source-evidence",
+          "state": "ready",
+          "nodes": 3,
+          "edges": 3,
+          "warnings": [
+            "sdk_import_extraction_incomplete",
+            "partial_dependency_counts",
+            "cycles_only_in_observed_graph"
+          ],
+          "truncated": true,
+          "pages": 102,
+          "evidencePages": 102,
+          "evidenceItems": 13,
+          "sourceState": "ready",
+          "firstEvidence": {
+            "id": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:edge:98781",
+            "sourceId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:namespace:258a78cac91a02f6bc447e245dca9455",
+            "targetId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:interface:46337270bdcdf187a1b058a29d4aba78",
+            "sourceFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/generator/impl/DefaultCodeGenerator.java",
+            "targetFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/incr/Incremental.java",
+            "line": 3,
+            "column": 0,
+            "kind": "imports",
+            "resolution": "internal"
+          },
+          "completenessClaim": "bounded sample; full index completion is not asserted"
+        }
+      ]
+    },
+    "isolatedTypescript": {
+      "ok": true,
+      "assetId": "cg-4oc687yt",
+      "language": "typescript",
+      "node": "v22.23.3",
+      "sdk": "1.6.2",
+      "durationMs": 10853,
+      "copiedSources": 986,
+      "sourceFailures": 0,
+      "checks": [
+        "typescript-calls-baseline-23-31",
+        "typescript-source",
+        "typescript-hierarchy",
+        "typescript-impact",
+        "dependencies-import-and-source-evidence",
+        "clusters-import-and-source-evidence"
+      ],
+      "observations": [
+        {
+          "name": "typescript-calls-baseline-23-31",
+          "state": "ready",
+          "nodes": 23,
+          "edges": 31,
+          "warnings": [],
+          "truncated": false
+        },
+        {
+          "name": "typescript-source",
+          "state": "ready",
+          "nodes": 1,
+          "edges": 0,
+          "warnings": [],
+          "truncated": true
+        },
+        {
+          "name": "typescript-hierarchy",
+          "state": "ready",
+          "nodes": 2,
+          "edges": 1,
+          "warnings": [
+            "typescript_interface_extends_not_extracted"
+          ],
+          "truncated": false
+        },
+        {
+          "name": "typescript-impact",
+          "state": "ready",
+          "nodes": 9,
+          "edges": 16,
+          "warnings": [
+            "static_analysis_potential_impact",
+            "unresolved_or_dynamic_relations_not_complete"
+          ],
+          "truncated": false
+        },
+        {
+          "name": "dependencies-import-and-source-evidence",
+          "state": "ready",
+          "nodes": 28,
+          "edges": 27,
+          "warnings": [
+            "sdk_import_extraction_incomplete",
+            "partial_dependency_counts",
+            "cycles_only_in_observed_graph"
+          ],
+          "truncated": true,
+          "pages": 37,
+          "evidencePages": 22,
+          "evidenceItems": 1,
+          "sourceState": "ready",
+          "firstEvidence": {
+            "id": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:edge:34839",
+            "sourceId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/module.ts",
+            "targetId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/db/client.ts",
+            "sourceFile": "MemoryKnowledge/src/module.ts",
+            "targetFile": "MemoryKnowledge/src/db/client.ts",
+            "line": 14,
+            "column": 0,
+            "kind": "imports",
+            "resolution": "internal"
+          },
+          "completenessClaim": "bounded sample; full index completion is not asserted"
+        },
+        {
+          "name": "clusters-import-and-source-evidence",
+          "state": "ready",
+          "nodes": 2,
+          "edges": 2,
+          "warnings": [
+            "sdk_import_extraction_incomplete",
+            "partial_dependency_counts",
+            "cycles_only_in_observed_graph"
+          ],
+          "truncated": true,
+          "pages": 37,
+          "evidencePages": 37,
+          "evidenceItems": 31,
+          "sourceState": "ready",
+          "firstEvidence": {
+            "id": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:edge:34839",
+            "sourceId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/module.ts",
+            "targetId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/db/client.ts",
+            "sourceFile": "MemoryKnowledge/src/module.ts",
+            "targetFile": "MemoryKnowledge/src/db/client.ts",
+            "line": 14,
+            "column": 0,
+            "kind": "imports",
+            "resolution": "internal"
+          },
+          "completenessClaim": "bounded sample; full index completion is not asserted"
+        }
+      ]
+    },
+    "parentProductionApi": {
+      "status": "passed",
+      "java": {
+        "ok": true,
+        "asset": "cg-rmlck25u",
+        "version": "71afa6ffd985e14abb61f873a34e5d9a",
+        "checks": [
+          "screenshot-namespace-guidance",
+          "process-four-calls",
+          "process-source-same-index",
+          "class-inheritance",
+          "interface-inheritance",
+          "wrong-log-receiver-excluded",
+          "impact-real-call",
+          "dependencies-real-import-evidence",
+          "clusters-real-import-evidence"
+        ],
+        "observations": [
+          {
+            "name": "screenshot-namespace-guidance",
+            "state": "empty",
+            "warnings": [
+              "select_a_callable"
+            ],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": false,
+            "work": {
+              "rowsRead": 1,
+              "maxRows": 2000
+            },
+            "nodes": 1,
+            "edges": 0
+          },
+          {
+            "name": "process-four-calls",
+            "state": "ready",
+            "warnings": [
+              "java_static_analysis_incomplete"
+            ],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": false,
+            "work": {
+              "rowsRead": 23,
+              "maxRows": 2000
+            },
+            "nodes": 5,
+            "edges": 4
+          },
+          {
+            "name": "process-source-same-index",
+            "state": "ready",
+            "warnings": [],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": false,
+            "work": {
+              "rowsRead": 2,
+              "maxRows": 2000
+            },
+            "nodes": 1,
+            "edges": 0
+          },
+          {
+            "name": "class-inheritance",
+            "state": "ready",
+            "warnings": [],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": false,
+            "work": {
+              "rowsRead": 10,
+              "maxRows": 2000
+            },
+            "nodes": 2,
+            "edges": 1
+          },
+          {
+            "name": "interface-inheritance",
+            "state": "ready",
+            "warnings": [],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": false,
+            "work": {
+              "rowsRead": 8,
+              "maxRows": 2000
+            },
+            "nodes": 2,
+            "edges": 1
+          },
+          {
+            "name": "wrong-log-receiver-excluded",
+            "state": "ready",
+            "warnings": [
+              "java_static_analysis_incomplete",
+              "java_ambiguous_relations_omitted"
+            ],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": false,
+            "work": {
+              "rowsRead": 10,
+              "maxRows": 2000
+            },
+            "nodes": 2,
+            "edges": 1
+          },
+          {
+            "name": "impact-real-call",
+            "state": "ready",
+            "warnings": [
+              "static_analysis_potential_impact",
+              "unresolved_or_dynamic_relations_not_complete",
+              "java_static_analysis_incomplete",
+              "java_heuristic_relations_omitted"
+            ],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": false,
+            "work": {
+              "rowsRead": 25,
+              "maxRows": 2000
+            },
+            "nodes": 2,
+            "edges": 1
+          },
+          {
+            "name": "dependencies-real-import-evidence",
+            "state": "ready",
+            "warnings": [
+              "sdk_import_extraction_incomplete",
+              "partial_dependency_counts",
+              "cycles_only_in_observed_graph"
+            ],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": true,
+            "work": {
+              "rowsRead": 1998,
+              "maxRows": 2000
+            },
+            "nodes": 15,
+            "edges": 14,
+            "pages": 102
+          },
+          {
+            "name": "clusters-real-import-evidence",
+            "state": "ready",
+            "warnings": [
+              "sdk_import_extraction_incomplete",
+              "partial_dependency_counts",
+              "cycles_only_in_observed_graph"
+            ],
+            "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+            "truncated": true,
+            "work": {
+              "rowsRead": 1996,
+              "maxRows": 2000
+            },
+            "nodes": 3,
+            "edges": 3,
+            "pages": 102
+          }
+        ],
+        "aggregateCompleteness": "bounded sample; full index completion not asserted"
+      },
+      "typescript": {
+        "status": "passed",
+        "checks": 136,
+        "evidence": "output/deployment/codegraph-java-20261019/parent-typescript-production.json",
+        "observations": [
+          {
+            "check": "existing indexed asset",
+            "passed": true,
+            "assetId": "cg-4oc687yt",
+            "indexCommit": "e9a82935b527",
+            "assetVersion": "4",
+            "stats": {
+              "files": 1025,
+              "nodes": 28394,
+              "edges": 70367
+            }
+          },
+          {
+            "check": "calls mode",
+            "passed": true,
+            "state": "ready",
+            "nodes": 23,
+            "edges": 31,
+            "truncated": false,
+            "rowsRead": 56,
+            "sdkVersion": "1.6.2"
+          },
+          {
+            "check": "impact mode",
+            "passed": true,
+            "state": "ready",
+            "nodes": 4,
+            "edges": 3,
+            "truncated": false,
+            "rowsRead": 95,
+            "sdkVersion": "1.6.2"
+          },
+          {
+            "check": "hierarchy mode",
+            "passed": true,
+            "state": "ready",
+            "nodes": 2,
+            "edges": 1,
+            "truncated": false,
+            "rowsRead": 9,
+            "sdkVersion": "1.6.2"
+          },
+          {
+            "check": "dependencies real aggregate edges",
+            "passed": true,
+            "pages": 60,
+            "nodes": 11,
+            "edges": 4,
+            "truncated": true
+          },
+          {
+            "check": "clusters real aggregate edges",
+            "passed": true,
+            "pages": 60,
+            "nodes": 11,
+            "edges": 4,
+            "truncated": true
+          },
+          {
+            "check": "one snapshot",
+            "passed": true
+          }
+        ]
+      },
+      "concurrentCursorObservation": "The concurrent pagination failure is consistent with eviction from the 128-entry cursor cache. The original report did not preserve the specific warning; serial re-verification passed on the same index."
+    },
+    "parentProductionBrowser": {
+      "status": "passed",
+      "evidence": {
+        "passed": true,
+        "productionOrigin": "http://192.168.200.137:8125",
+        "browserAccess": "Authenticated production page and live API through SSH port forwarding (127.0.0.1:18126), no mocks",
+        "javascriptAsset": "main-DQRtf58I.js",
+        "assetId": "cg-rmlck25u",
+        "team": "营销产品部",
+        "checks": [
+          {
+            "name": "Java capability label",
+            "passed": true
+          },
+          {
+            "name": "process call graph and same-index source",
+            "nodes": 5,
+            "edges": 4,
+            "lines": [
+              69,
+              76
+            ],
+            "passed": true
+          },
+          {
+            "name": "relation list has before/check/doProcess/after with source lines71-74",
+            "passed": true
+          },
+          {
+            "name": "screenshot namespace has select callable guidance and no reload",
+            "passed": true
+          },
+          {
+            "name": "choose another symbol focuses search",
+            "passed": true
+          },
+          {
+            "name": "Java interface hierarchy includes extends HttpBaseOperator and3 implements",
+            "nodes": 5,
+            "edges": 4,
+            "passed": true
+          },
+          {
+            "name": "file dependencies with actual import evidence",
+            "pages": 102,
+            "nodes": 15,
+            "edges": 14,
+            "truncated": true,
+            "passed": true
+          },
+          {
+            "name": "file clusters with actual import evidence",
+            "pages": 102,
+            "nodes": 3,
+            "edges": 3,
+            "truncated": true,
+            "passed": true
+          },
+          {
+            "name": "impact before has process1-hop evidence path",
+            "nodes": 2,
+            "edges": 1,
+            "passed": true
+          }
+        ],
+        "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+        "canvasDpr": "Initial Java release exposed the Sigma DPR transition defect; the follow-up was deployed and passed final production DPR/API acceptance.",
+        "screenshots": [
+          "codegraph-java-production-calls.png",
+          "codegraph-java-production-namespace.png",
+          "codegraph-java-production-hierarchy.png",
+          "codegraph-java-production-dependencies.png",
+          "codegraph-java-production-clusters.png",
+          "codegraph-java-production-impact.png"
+        ]
+      },
+      "evidencePhase": "Java functional production acceptance before the canvas follow-up; final DPR acceptance is recorded under canvasFollowup"
+    }
+  },
+  "snapshotSummary": {
+    "java": {
+      "assetId": "cg-rmlck25u",
+      "sourceMode": "readonly Docker bind",
+      "sqliteVersion": "3.49.2",
+      "nodes": 103502,
+      "edges": 194125,
+      "languages": [
+        {
+          "language": "java",
+          "n": 102834
+        },
+        {
+          "language": "properties",
+          "n": 396
+        },
+        {
+          "language": "xml",
+          "n": 232
+        },
+        {
+          "language": "yaml",
+          "n": 40
+        }
+      ],
+      "files": 4707,
+      "copied": 4517,
+      "skipped": 190,
+      "failures": [],
+      "sourceDatabaseIdentity": {
+        "size": "326000640",
+        "mtimeNs": "1792377551161194736"
+      }
+    },
+    "typescript": {
+      "assetId": "cg-4oc687yt",
+      "sourceMode": "readonly Docker bind",
+      "sqliteVersion": "3.49.2",
+      "nodes": 28394,
+      "edges": 70367,
+      "languages": [
+        {
+          "language": "javascript",
+          "n": 179
+        },
+        {
+          "language": "python",
+          "n": 910
+        },
+        {
+          "language": "tsx",
+          "n": 1204
+        },
+        {
+          "language": "typescript",
+          "n": 26101
+        }
+      ],
+      "files": 1025,
+      "copied": 986,
+      "skipped": 39,
+      "failures": [],
+      "sourceDatabaseIdentity": {
+        "size": "86646784",
+        "mtimeNs": "1792337107191842372"
+      }
+    }
+  },
+  "production": {
+    "status": "deployed_and_healthy",
+    "host": "192.168.200.137",
+    "component": "Hub only",
+    "releaseDirectory": "/opt/tencent-agent-memory/releases/codegraph-canvasfix-20261019",
+    "coreUnchanged": true,
+    "environmentMatchesBackup": true,
+    "mountsMatchBaseline": true,
+    "attempts": [
+      {
+        "releaseDirectory": "/opt/tencent-agent-memory/releases/codegraph-java-20261019",
+        "status": "aborted_before_config_replacement_or_hub_rename_stop",
+        "reason": "host Python3 unavailable; reviewed replacement now uses awk/chmod/mv",
+        "previousHubHealth": "healthy"
+      }
+    ],
+    "audit": {
+      "hub": {
+        "containerId": "5a2dd4ae67efe41ae6b5efe583d16ade1f9034ed3d93f80cc4b4d65a3f3c6870",
+        "image": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+        "startedAt": "2026-10-19T05:08:11.379250939Z",
+        "health": "healthy",
+        "network": "tdai-memory-stack",
+        "mounts": [
+          {
+            "Destination": "/data/knowledge",
+            "Mode": "",
+            "Propagation": "rprivate",
+            "RW": true,
+            "Source": "/opt/tencent-agent-memory/data/knowledge",
+            "Type": "bind"
+          },
+          {
+            "Destination": "/app/panel/config/metadata-instances.json",
+            "Mode": "ro",
+            "Propagation": "rprivate",
+            "RW": false,
+            "Source": "/opt/tencent-agent-memory/releases/tasks-20261018-01/runtime/metadata-instances.json",
+            "Type": "bind"
+          }
+        ]
+      },
+      "core": {
+        "containerId": "a9fc71639bd5d83f5d49a3951dfdeff7163494297e99faa560d84de10d8c060c",
+        "image": "sha256:7ce6338db1e3b8575d660e259130bb522362e3e19f30f1f228449a9a8b4c0cd3",
+        "startedAt": "2026-10-18T15:45:14.184798694Z",
+        "health": "healthy"
+      },
+      "coreUnchanged": true,
+      "environmentMatchesBackup": true,
+      "mountsMatchBaseline": true,
+      "rollbackContainer": "tdai-memory-hub-rollback-canvasfix-20261019-130810",
+      "previousHub": {
+        "containerId": "137599bf61e0e579d18a7c4f90184a8933f13af18565da00e6f24d79aad4adc4",
+        "image": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+        "startedAt": "2026-10-19T04:45:59.653878462Z",
+        "status": "exited"
+      },
+      "panelHealth": {
+        "status": "ok"
+      },
+      "knowledgeHealth": {
+        "status": "ok",
+        "timestamp": "2026-10-19T05:09:14.199Z"
+      },
+      "runtime": {
+        "node": "v22.23.3",
+        "sdk": "1.6.2"
+      }
+    },
+    "artifacts": {
+      "matches": true,
+      "count": 8,
+      "sha256ByRuntimePath": {
+        "/app/codegraph-canvasfix-source-manifest.json": "f3472b9625a1db55d1e1e21b2403206803121bf671d8a3c7de69ec56bca3823c",
+        "/app/panel/web/dist/assets/KnowledgeGraph-CcEZ1alE.js": "7067885b6acd9f92cf94281c1f2a321361cc9e1781550c412fa6eeb801f8bbf0",
+        "/app/panel/web/dist/assets/KnowledgeGraph-DEqMBSbC.css": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+        "/app/panel/web/dist/assets/main-D4Z9h8vb.css": "6b7493934155e37c7ed30269bd995023667535e03c1c2434e82ab8868c32a3c2",
+        "/app/panel/web/dist/assets/main-vBIlMdwD.js": "b3ae4e3878a07000321f9c9bb6edf03c531f5603a2d2c917e3d486450524f6b2",
+        "/app/panel/web/dist/downloads/tdai-memory-agents.zip": "03abac690ab736eb8d3d6b9a284ebd71e2a5963df13b9abf8a324ce91be72fde",
+        "/app/panel/web/dist/index.html": "b4a7b0e683f2f2e3dfcefa7d065c9a0beb04335c582eac6794dcae8c990638ed",
+        "/app/panel/web/dist/logo.png": "c3b0ebc4a6749d626817a116b0299bf81136f573a4731f6217de530a0e46d0f7"
+      }
+    },
+    "javaIndexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+    "javaIndexVersionUnchanged": true,
+    "javaReleaseAudit": {
+      "hub": {
+        "image": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+        "startedAt": "2026-10-19T04:45:59.653878462Z",
+        "health": "healthy",
+        "network": "tdai-memory-stack",
+        "mounts": [
+          {
+            "Type": "bind",
+            "Source": "/opt/tencent-agent-memory/data/knowledge",
+            "Destination": "/data/knowledge",
+            "Mode": "",
+            "RW": true,
+            "Propagation": "rprivate"
+          },
+          {
+            "Type": "bind",
+            "Source": "/opt/tencent-agent-memory/releases/tasks-20261018-01/runtime/metadata-instances.json",
+            "Destination": "/app/panel/config/metadata-instances.json",
+            "Mode": "ro",
+            "RW": false,
+            "Propagation": "rprivate"
+          }
+        ]
+      },
+      "core": {
+        "image": "sha256:7ce6338db1e3b8575d660e259130bb522362e3e19f30f1f228449a9a8b4c0cd3",
+        "startedAt": "2026-10-18T15:45:14.184798694Z",
+        "health": "healthy"
+      },
+      "coreUnchanged": true,
+      "environmentMatchesBackup": true,
+      "mountsMatchBaseline": true,
+      "rollbackContainer": "tdai-memory-hub-rollback-java-20261019-124558",
+      "previousHub": {
+        "image": "sha256:d1c93f2626553683912ed56c34012af4acfc0890ba7b1419fc3dd28382abce0f",
+        "startedAt": "2026-10-19T03:25:09.759303838Z",
+        "status": "exited"
+      },
+      "panelHealth": {
+        "status": "ok"
+      },
+      "knowledgeHealth": {
+        "status": "ok",
+        "timestamp": "2026-10-19T04:47:01.102Z"
+      },
+      "runtime": {
+        "node": "v22.23.3",
+        "sdk": "1.6.2"
+      }
+    },
+    "javaArtifacts": {
+      "matches": true,
+      "count": 21,
+      "sha256ByRuntimePath": {
+        "/app/knowledge/dist/callback-BCkkJJAa.mjs": "fb1dc5eea77056d5b66098c92c140ac0a5e583de01bbd59683a32a2b04856985",
+        "/app/knowledge/dist/callback-DjcxSG96.mjs": "874b0bacfb24aca466f76d0c35ab3742bec5eaf2b1fea41da0388b279fc5ec67",
+        "/app/knowledge/dist/cascade-DDYvCNzz.mjs": "22e2cacb7a74536e9184f7c8fe401a143115a8e45fa148d2bf9aa57cdfbfa7ad",
+        "/app/knowledge/dist/frontmatter-Ce2kZn6q.mjs": "1e89c8f2fa4b632cb56b1e932a340a5e229eef5332c656704c64c8313d5a1ca6",
+        "/app/knowledge/dist/ingest-v2-DO9DJ5Z1.mjs": "e772bf3e10c1ebc8ffba07e7182685cdf7fb14ac44c27f5f2fe6a3b7f2285227",
+        "/app/knowledge/dist/llm-B7HSkSdx.mjs": "1942adbac98d6cd0e513860c9861a5066fb56e7f0b199be4cf8d897098b99d42",
+        "/app/knowledge/dist/llm-CGiD6drV.mjs": "54d66cb70980305969c5eeaa070e450613789c3de9113e713ed0e347848c079a",
+        "/app/knowledge/dist/logger-CcNfQhS0.mjs": "94ce45108b46f6c0437fa3e08abae9050a6846a798cbb3ef874c042fce58ec83",
+        "/app/knowledge/dist/mcp/server.mjs": "5159230ac54a428831cee80b321ac30385a563ab0da6aa139a5e6f32711d1c49",
+        "/app/knowledge/dist/overview-BCBicShu.mjs": "41e93c136972263acefb6ada714bd8ad631b83cbe5a39fa96719e2a8d80756eb",
+        "/app/knowledge/dist/server.mjs": "c3b9479e010ee5143cd1f08fe21b8609903ca6187553c4647f9cf3a9cd0a1f9f",
+        "/app/knowledge/dist/slug-D2KxInte.mjs": "e547b7317b8e1bf70375fedb382de0576dfd74b064f40172caebd4bf4ecb48ae",
+        "/app/knowledge/dist/template-BGLLCFYb.mjs": "7987a40ebc2938cf8730d724f416b98b44f0afe57e9b468f3e22b37dfc2b6c49",
+        "/app/codegraph-java-source-manifest.json": "b68affd19d0ce65da06dcd211d6ec007c97a4ec2f3b060aa52da48e565da51da",
+        "/app/panel/web/dist/assets/KnowledgeGraph-DEqMBSbC.css": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+        "/app/panel/web/dist/assets/KnowledgeGraph-DdQYx7aV.js": "d279dd671824a8030cd978baf6563f8e6fef4ede26947be72fd725e25936fdc3",
+        "/app/panel/web/dist/assets/main-D4Z9h8vb.css": "6b7493934155e37c7ed30269bd995023667535e03c1c2434e82ab8868c32a3c2",
+        "/app/panel/web/dist/assets/main-DQRtf58I.js": "3bafa4e737cdd5d97aaff1be165625b78db4276e1516d11756d2ccae0e81f36f",
+        "/app/panel/web/dist/downloads/tdai-memory-agents.zip": "03abac690ab736eb8d3d6b9a284ebd71e2a5963df13b9abf8a324ce91be72fde",
+        "/app/panel/web/dist/index.html": "f821d4f6a8d6d941916085442eb8ab0c90989f8b59e86c1f0a4b10a7ee224442",
+        "/app/panel/web/dist/logo.png": "c3b0ebc4a6749d626817a116b0299bf81136f573a4731f6217de530a0e46d0f7"
+      }
+    }
+  },
+  "rollback": {
+    "script": "/opt/tencent-agent-memory/releases/codegraph-canvasfix-20261019/ops/rollback-codegraph-canvasfix.sh",
+    "container": "tdai-memory-hub-rollback-canvasfix-20261019-130810",
+    "restores": "previous ee5e Java Hub and matching images.env only",
+    "javaReleaseRollback": "/opt/tencent-agent-memory/releases/codegraph-java-final-20261019/ops/rollback-codegraph-java.sh"
+  },
+  "limitations": [
+    "Java exposes SDK-extracted static relations that pass adapter validation; heuristic dispatch and unverifiable targets are omitted.",
+    "Dynamic calls, reflection and some wildcard-related calls may be absent; complete Java semantics and runtime impact are not promised.",
+    "Impact follows calls/imports/extends/implements/references and excludes instantiates.",
+    "Aggregate sampling remains explicitly truncated; full repository completion is not asserted."
+  ],
+  "evidenceDirectory": "output/deployment/codegraph-java-20261019",
+  "canvasFollowup": {
+    "commit": "c9f6645f1e8231c2fe37609c3ff6577ffb397630",
+    "pathsCommitted": 2,
+    "sourceManifest": "source-manifest.json",
+    "baseImage": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+    "candidateImage": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+    "inheritedFiles": {
+      "match": true,
+      "count": 436,
+      "inventorySha256": "b32c5d0d92f9d9979d660d7799e7831aae99872aa20838ab4612a7d9f269633e",
+      "scope": "Knowledge dist, Panel dist, both package manifests and Node binary"
+    },
+    "health": {
+      "container": "/tdai-codegraph-canvasfix-health-c9f6645",
+      "image": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+      "network": "none",
+      "readonlyRoot": true,
+      "health": "healthy",
+      "mounts": []
+    },
+    "browserRegression": {
+      "source": "../codegraph-java-20261019/parent-dpr-browser.json",
+      "checks": 114,
+      "passedByParent": true,
+      "method": "CDP changes DPR without dispatching OS media notifications. The listener path explicitly dispatches a media-query change event; the missed-event path is checked through fit. Physical-monitor OS event delivery is not covered."
+    },
+    "webBuild": {
+      "node": "22.23.0",
+      "typecheck": "passed",
+      "vite": "passed"
+    },
+    "productionSwitched": true,
+    "scriptDirectory": "/opt/tencent-agent-memory/releases/codegraph-canvasfix-20261019/ops",
+    "audit": {
+      "hub": {
+        "containerId": "5a2dd4ae67efe41ae6b5efe583d16ade1f9034ed3d93f80cc4b4d65a3f3c6870",
+        "image": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+        "startedAt": "2026-10-19T05:08:11.379250939Z",
+        "health": "healthy",
+        "network": "tdai-memory-stack",
+        "mounts": [
+          {
+            "Destination": "/data/knowledge",
+            "Mode": "",
+            "Propagation": "rprivate",
+            "RW": true,
+            "Source": "/opt/tencent-agent-memory/data/knowledge",
+            "Type": "bind"
+          },
+          {
+            "Destination": "/app/panel/config/metadata-instances.json",
+            "Mode": "ro",
+            "Propagation": "rprivate",
+            "RW": false,
+            "Source": "/opt/tencent-agent-memory/releases/tasks-20261018-01/runtime/metadata-instances.json",
+            "Type": "bind"
+          }
+        ]
+      },
+      "core": {
+        "containerId": "a9fc71639bd5d83f5d49a3951dfdeff7163494297e99faa560d84de10d8c060c",
+        "image": "sha256:7ce6338db1e3b8575d660e259130bb522362e3e19f30f1f228449a9a8b4c0cd3",
+        "startedAt": "2026-10-18T15:45:14.184798694Z",
+        "health": "healthy"
+      },
+      "coreUnchanged": true,
+      "environmentMatchesBackup": true,
+      "mountsMatchBaseline": true,
+      "rollbackContainer": "tdai-memory-hub-rollback-canvasfix-20261019-130810",
+      "previousHub": {
+        "containerId": "137599bf61e0e579d18a7c4f90184a8933f13af18565da00e6f24d79aad4adc4",
+        "image": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+        "startedAt": "2026-10-19T04:45:59.653878462Z",
+        "status": "exited"
+      },
+      "panelHealth": {
+        "status": "ok"
+      },
+      "knowledgeHealth": {
+        "status": "ok",
+        "timestamp": "2026-10-19T05:09:14.199Z"
+      },
+      "runtime": {
+        "node": "v22.23.3",
+        "sdk": "1.6.2"
+      }
+    },
+    "artifacts": {
+      "matches": true,
+      "count": 8,
+      "sha256ByRuntimePath": {
+        "/app/codegraph-canvasfix-source-manifest.json": "f3472b9625a1db55d1e1e21b2403206803121bf671d8a3c7de69ec56bca3823c",
+        "/app/panel/web/dist/assets/KnowledgeGraph-CcEZ1alE.js": "7067885b6acd9f92cf94281c1f2a321361cc9e1781550c412fa6eeb801f8bbf0",
+        "/app/panel/web/dist/assets/KnowledgeGraph-DEqMBSbC.css": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+        "/app/panel/web/dist/assets/main-D4Z9h8vb.css": "6b7493934155e37c7ed30269bd995023667535e03c1c2434e82ab8868c32a3c2",
+        "/app/panel/web/dist/assets/main-vBIlMdwD.js": "b3ae4e3878a07000321f9c9bb6edf03c531f5603a2d2c917e3d486450524f6b2",
+        "/app/panel/web/dist/downloads/tdai-memory-agents.zip": "03abac690ab736eb8d3d6b9a284ebd71e2a5963df13b9abf8a324ce91be72fde",
+        "/app/panel/web/dist/index.html": "b4a7b0e683f2f2e3dfcefa7d065c9a0beb04335c582eac6794dcae8c990638ed",
+        "/app/panel/web/dist/logo.png": "c3b0ebc4a6749d626817a116b0299bf81136f573a4731f6217de530a0e46d0f7"
+      }
+    },
+    "parentFinalDpr": {
+      "status": "passed",
+      "browser": {
+        "passed": true,
+        "checks": [
+          "production DPR2 canvas backing equals GL viewport",
+          "production DPR2 preserves Java5/4 graph",
+          "production DPR1 canvas backing equals GL viewport",
+          "production DPR1 preserves Java5/4 graph"
+        ],
+        "asset": "cg-rmlck25u",
+        "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+        "scripts": [
+          "http://127.0.0.1:18126/assets/main-vBIlMdwD.js"
+        ],
+        "evidence": "Real production UI/API via SSH tunnel; Chromium CDP DPR change followed by ordinary fit, no API mocks"
+      },
+      "apiSpotChecks": {
+        "passed": true,
+        "checks": [
+          "Java original index5nodes4calls",
+          "Java same-snapshot source",
+          "TypeScript baseline23nodes31calls"
+        ],
+        "javaIndexVersion": "71afa6ffd985e14abb61f873a34e5d9a"
+      },
+      "visualReview": "Parent visually inspected the local production DPR1 screenshot: nodes, arrows and labels align. Screenshot pixels/source contents are not included in this report."
+    },
+    "isolatedHealthContainer": "removed after completed checks; candidate image and release evidence retained"
+  },
+  "javaFeatureImage": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250"
+}
