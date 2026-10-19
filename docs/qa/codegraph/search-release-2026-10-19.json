@@ -1,0 +1,133 @@
+{
+  "date": "2026-10-19",
+  "status": "production-deployed-and-accepted",
+  "commit": "20b2d585132367a0ddb217c979b78c065a31af88",
+  "backend": {
+    "frozenFiles": 4,
+    "knowledgeTests": {
+      "passed": 75,
+      "failed": 0,
+      "files": 10,
+      "breakdown": {
+        "realSearchAndCore": 44,
+        "javaBudgetAggregationClusters": 31
+      }
+    },
+    "typecheck": "passed",
+    "freezeManifest": "output/deployment/codegraph-searchfix-20261019/freeze.json",
+    "validationLog": "output/deployment/codegraph-searchfix-20261019/validation.log"
+  },
+  "realIndex": {
+    "snapshotNodes": 355800,
+    "evidence": "output/deployment/codegraph-searchfix-20261019/real-search-validation.json",
+    "firstPage": {
+      "queries": ["SvcClaim", "svcclaim", "SVCCLAIM"],
+      "exactClassesFirst": 2,
+      "returnedNodes": 100,
+      "rowsRead": 103,
+      "backendElapsedMsApprox": 37,
+      "budgetReason": "node_budget",
+      "nextCursorPresent": true
+    },
+    "fullPagination": {
+      "pages": 274,
+      "uniqueResults": 11109,
+      "expectedResults": 11109,
+      "missingIds": 0,
+      "duplicateIds": 0,
+      "exhausted": true,
+      "totalElapsedMsApprox": 7517
+    },
+    "sourceSnapshot": {
+      "fullDatabaseCopied": true,
+      "exactClassFilesCopied": 2,
+      "otherSourceFilesCopied": 0,
+      "indexVersion": "46a6e50a5b48483ef0fd87bcef314e10",
+      "bothClassSourceAccessible": true,
+      "hierarchyRequestAccessible": true,
+      "completeRelationshipValidationClaimed": false
+    }
+  },
+  "fixtureBrowser": {
+    "status": "passed",
+    "frozenSuite": {
+      "passed": 26,
+      "failed": 0,
+      "sha256": "247d2691f161c249c32c02beac675180b12c48efbb7ab27581adbb548c07b99d",
+      "evidence": "output/playwright/codegraph-search-final-result.json"
+    },
+    "independentReview": {
+      "firstRequestTimeout": "passed: dedicated incomplete state visible and Search action restored",
+      "continuationTimeout": "passed: resumable incomplete state and Continue searching visible",
+      "englishPauseCopy": "passed: one localized incomplete status and Continue searching action",
+      "earlyRunFixtureIssue": "resolved before freeze; stale delayByAction had overridden delayByCursor",
+      "evidence": "output/playwright/codegraph-search-independent-review.json"
+    }
+  },
+  "productionBrowser": {
+    "status": "passed",
+    "usesRealProductionApi": true,
+    "routeMocks": false,
+    "primaryChecks": {
+      "passed": 28,
+      "failed": 0,
+      "evidence": "output/playwright/codegraph-search-production-result.json",
+      "threeCaseVariantsOneRequestEach": true,
+      "firstPageCount": 100,
+      "rowsRead": 103,
+      "firstTwoExactClasses": ["app SvcClaim", "svc SvcClaim"],
+      "hierarchyAndSourceShareIndexVersion": "159ad760d68321fcc17ca05ac3dbd0b2",
+      "desktopViewportsFit": [1440, 1366],
+      "fileScopeWorks": true,
+      "trueNoMatchWithoutPartialHint": true,
+      "uiElapsedMsIncludingNetworkAndBrowserWait": {
+        "min": 500,
+        "max": 2047,
+        "firstSvcClaim": 1596
+      }
+    },
+    "additionalChecks": {
+      "passed": 8,
+      "failed": 0,
+      "evidence": "output/playwright/codegraph-search-production-extra-result.json",
+      "englishLoadMoreDistinctFromContinueSearch": true,
+      "singlePartialHint": true,
+      "loadMoreAppendsTo": 200,
+      "narrowViewportWidth": 768,
+      "narrowViewportHeight": 900,
+      "searchAndSourceDrawersReachableAndFit": true,
+      "escapeReturnsKeyboardFocus": true
+    },
+    "screenshots": [
+      "output/playwright/codegraph-search-production.png",
+      "output/playwright/codegraph-search-production-narrow.png"
+    ],
+    "scopeNote": "Production browser checks cover search, inheritance view and source, file scope, true no-match, and narrow drawers; they do not claim every graph mode was individually production-tested."
+  },
+  "deployment": {
+    "status": "passed",
+    "productionUiVerified": true,
+    "productionReview": "output/deployment/codegraph-searchfix-20261019/production-review.json",
+    "hubImage": "sha256:48a42344a8a26e8868e2509629ac2e28defe5f54c9d77dfe07bbcb3372029762",
+    "coreImageUnchanged": true,
+    "hubAndCoreHealthy": true,
+    "panelHealth": "ok",
+    "knowledgeHealth": "ok",
+    "actualDistFiles": 20,
+    "unexpectedDistFiles": 0,
+    "inheritedHashesPassed": 435,
+    "artifactHashesPassed": 21,
+    "environmentMountsAndRuntimeUnchanged": true,
+    "originalIndexVersionUnchanged": true,
+    "supersededCandidate": {
+      "imageTag": "5ee5a490",
+      "reason": "AppleDouble files in candidate artifact; not deployed"
+    },
+    "rollback": {
+      "image": "sha256:4e14be68361b7aa9b3b7fb47decfcf84ab96c2603cfecaf98fa876d0838ada4f",
+      "script": "/opt/tencent-agent-memory/releases/codegraph-searchfix-20261019/ops/rollback-codegraph-searchfix.sh",
+      "configBackup": "/opt/tencent-agent-memory/releases/codegraph-searchfix-20261019/backup/config-images.env"
+    }
+  },
+  "pending": []
+}
