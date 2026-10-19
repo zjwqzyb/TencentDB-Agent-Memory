@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-19",
+  "status": "production-deployment-and-acceptance-passed",
+  "browser": "Chrome 155",
+  "runtime": "Node.js 22",
+  "checks": {
+    "layout": { "passed": 98, "failed": 0, "strictAncestorClipRecheck": "passed; independently rerun by parent", "longAnalysisRelationListStress": "passed; synthetic DOM only, not backend/API evidence", "evidence": "output/playwright/codegraph-layout-result.json" },
+    "relationshipModes": { "passed": 30, "failed": 0, "evidence": "output/playwright/codegraph-layout-modes-result.json" },
+    "englishAndThemes": { "passed": 4, "failed": 0, "evidence": "output/playwright/codegraph-layout-theme-result.json" }
+  },
+  "coverage": [
+    "default empty graph and repeated-scroll layout stability",
+    "long repository name, result path, and source code containment",
+    "1440x900, 1366x768, 1920x1080 desktop viewports",
+    "all five relationship modes, including hierarchy with a supported class focus",
+    "controls and canvas center hit-testing for occlusion",
+    "390px narrow layout after collapsing the global sidebar, including search and source drawers",
+    "125% and 150% equivalent CSS viewports (not actual browser zoom events)",
+    "English, light theme, and dark theme"
+  ],
+  "productionPreview": {
+    "source": "real erp-parent indexed data and API; no mocks",
+    "focus": "accTotalBalSubtractPoolTran",
+    "nodes": 9,
+    "edges": 13,
+    "calls1440x900": { "x": 465, "y": 283, "width": 644, "height": 472.8125 },
+    "impact1366x768": { "y": 338, "height": 400, "mainClipBottom": 753, "clipped": false },
+    "longAnalysisRelationListHotfix": { "realApiPreview": "passed by parent", "tableHeight": 500, "firstActionKeyboardFocusable": true, "hitTest": true, "mainPanelScrollable": true, "screenshot": "output/playwright/codegraph-layout-listfix-real-preview.png" },
+    "outerPageScrollRange": 0,
+    "screenshots": [
+      "output/playwright/codegraph-layout-real-review-final-1440.png",
+      "output/playwright/codegraph-layout-real-impact-1366.png"
+    ],
+    "verifiedBy": "parent agent",
+    "deploymentVerified": true
+  },
+  "fixtureGeometry": {
+    "1366x768ImpactCanvasY": 336.5,
+    "1366x768ImpactCanvasBottom": 736.5,
+    "1366x768MainClipBottom": 751,
+    "1152x720Canvas": "fully visible after scrolling within the main panel"
+  },
+  "independentReview": {
+    "strictLayoutChecks": { "passed": 98, "failed": 0, "evidence": "/tmp/codegraph-layout-parent-listfix.log" },
+    "relationshipModeChecks": { "passed": 30, "failed": 0, "evidence": "/tmp/codegraph-layout-parent-modes-final.log" },
+    "dprChecks": { "passed": 114, "failed": 0, "ratios": [1, 1.14, 2], "scope": "real WebGL pixel alignment and DPR transitions" },
+    "reviewer": "parent agent"
+  },
+  "productionAcceptance": {
+    "passed": 19,
+    "failed": 0,
+    "mock": false,
+    "repository": "cg-gvcy949i",
+    "indexVersion": "159ad760d68321fcc17ca05ac3dbd0b2",
+    "focus": "accTotalBalSubtractPoolTran",
+    "sourceLines": "205-255",
+    "calls1440x900": { "x": 465, "y": 283, "width": 644, "height": 472.8125, "outerScrollRange": 0 },
+    "calls1366x768": { "x": 465, "y": 283, "width": 570, "height": 400, "outerScrollRange": 0 },
+    "impact1366x768": { "x": 465, "y": 338, "width": 570, "height": 400, "clipBottom": 753, "canvasBottom": 738, "outerScrollRange": 0 },
+    "relationList": { "height": 500, "analysisHeight": 3420.28125, "firstRowHit": true, "keyboardFocused": true, "enterSelects": true, "analysisScrollTop": 3586, "analysisScrollRange": 3586 },
+    "sourceScrollRange": 249,
+    "evidence": "output/playwright/codegraph-layout-production-hotfix-result.json"
+  },
+  "deployment": {
+    "baseCommit": "23fe05b77f9c549b983568bf9cb32881c250190e",
+    "hotfixCommit": "2504bf86f73c4a4d373c6ec815bc01ae9babd6a6",
+    "image": "sha256:4e14be68361b7aa9b3b7fb47decfcf84ab96c2603cfecaf98fa876d0838ada4f",
+    "rollbackImage": "sha256:7f5a8f4bfb34febbff627dc647041adcad742918c23012aff94a3067ae906199",
+    "rollbackContainer": "tdai-memory-hub-rollback-layout-listfix-20261019-155400",
+    "rollbackScript": "/opt/tencent-agent-memory/releases/codegraph-layout-listfix-20261019/ops/rollback-codegraph-layout-listfix.sh",
+    "hubHealth": "healthy",
+    "coreHealth": "healthy",
+    "coreUnchanged": true,
+    "panelHealth": "ok",
+    "knowledgeHealth": "ok",
+    "runtime": { "node": "v22.23.3", "sdk": "1.6.2" },
+    "assets": ["main-BzSlednB.js", "main-Du-ZvOU_.css"],
+    "audit": "output/deployment/codegraph-layout-listfix-20261019/production-review.json"
+  },
+  "notes": [
+    "The browser pressure fixture appends a synthetic DOM block after the real analysis component and removes it after the scenario; it is not backend/API relationship evidence.",
+    "The application-wide top bar still overlaps at narrow widths after the global sidebar is collapsed; this remains outside the CodeGraph page shell."
+  ]
+}
