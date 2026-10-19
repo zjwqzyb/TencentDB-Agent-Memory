@@ -1,0 +1,284 @@
+{
+  "summary": {
+    "nodes": 100,
+    "edges": 300,
+    "coldMs": 122.5,
+    "warmSamples": 30,
+    "minMs": 87.9,
+    "medianMs": 89.35,
+    "p95Ms": 117.2,
+    "maxMs": 121.6,
+    "within1000ms": true
+  },
+  "samples": [
+    {
+      "index": 0,
+      "phase": "cold",
+      "responseEnd": 1897,
+      "interactive": 2019.5,
+      "selected": "mod5.n85",
+      "durationMs": 122.5
+    },
+    {
+      "index": 1,
+      "phase": "warm",
+      "responseEnd": 2064.2000000476837,
+      "interactive": 2152.600000023842,
+      "selected": "mod5.n85",
+      "durationMs": 88.4
+    },
+    {
+      "index": 2,
+      "phase": "warm",
+      "responseEnd": 2198.600000023842,
+      "interactive": 2302.600000023842,
+      "selected": "mod5.n85",
+      "durationMs": 104
+    },
+    {
+      "index": 3,
+      "phase": "warm",
+      "responseEnd": 2351.2000000476837,
+      "interactive": 2468.400000035763,
+      "selected": "mod5.n85",
+      "durationMs": 117.2
+    },
+    {
+      "index": 4,
+      "phase": "warm",
+      "responseEnd": 2513.100000023842,
+      "interactive": 2602.5,
+      "selected": "mod5.n85",
+      "durationMs": 89.4
+    },
+    {
+      "index": 5,
+      "phase": "warm",
+      "responseEnd": 2646.300000011921,
+      "interactive": 2735.800000011921,
+      "selected": "mod5.n85",
+      "durationMs": 89.5
+    },
+    {
+      "index": 6,
+      "phase": "warm",
+      "responseEnd": 2780.900000035763,
+      "interactive": 2868.800000011921,
+      "selected": "mod5.n85",
+      "durationMs": 87.9
+    },
+    {
+      "index": 7,
+      "phase": "warm",
+      "responseEnd": 2913.800000011921,
+      "interactive": 3002.7000000476837,
+      "selected": "mod5.n85",
+      "durationMs": 88.9
+    },
+    {
+      "index": 8,
+      "phase": "warm",
+      "responseEnd": 3046.800000011921,
+      "interactive": 3152.600000023842,
+      "selected": "mod5.n85",
+      "durationMs": 105.8
+    },
+    {
+      "index": 9,
+      "phase": "warm",
+      "responseEnd": 3197.100000023842,
+      "interactive": 3285.800000011921,
+      "selected": "mod5.n85",
+      "durationMs": 88.7
+    },
+    {
+      "index": 10,
+      "phase": "warm",
+      "responseEnd": 3329.7000000476837,
+      "interactive": 3418.2000000476837,
+      "selected": "mod5.n85",
+      "durationMs": 88.5
+    },
+    {
+      "index": 11,
+      "phase": "warm",
+      "responseEnd": 3466.7000000476837,
+      "interactive": 3569,
+      "selected": "mod5.n85",
+      "durationMs": 102.3
+    },
+    {
+      "index": 12,
+      "phase": "warm",
+      "responseEnd": 3613.5,
+      "interactive": 3702.5,
+      "selected": "mod5.n85",
+      "durationMs": 89
+    },
+    {
+      "index": 13,
+      "phase": "warm",
+      "responseEnd": 3747.400000035763,
+      "interactive": 3836,
+      "selected": "mod5.n85",
+      "durationMs": 88.6
+    },
+    {
+      "index": 14,
+      "phase": "warm",
+      "responseEnd": 3880,
+      "interactive": 3985.800000011921,
+      "selected": "mod5.n85",
+      "durationMs": 105.8
+    },
+    {
+      "index": 15,
+      "phase": "warm",
+      "responseEnd": 4030.300000011921,
+      "interactive": 4119.100000023842,
+      "selected": "mod5.n85",
+      "durationMs": 88.8
+    },
+    {
+      "index": 16,
+      "phase": "warm",
+      "responseEnd": 4164.200000047684,
+      "interactive": 4252.600000023842,
+      "selected": "mod5.n85",
+      "durationMs": 88.4
+    },
+    {
+      "index": 17,
+      "phase": "warm",
+      "responseEnd": 4297.100000023842,
+      "interactive": 4402.700000047684,
+      "selected": "mod5.n85",
+      "durationMs": 105.6
+    },
+    {
+      "index": 18,
+      "phase": "warm",
+      "responseEnd": 4447.600000023842,
+      "interactive": 4569.200000047684,
+      "selected": "mod5.n85",
+      "durationMs": 121.6
+    },
+    {
+      "index": 19,
+      "phase": "warm",
+      "responseEnd": 4613,
+      "interactive": 4703.200000047684,
+      "selected": "mod5.n85",
+      "durationMs": 90.2
+    },
+    {
+      "index": 20,
+      "phase": "warm",
+      "responseEnd": 4746.5,
+      "interactive": 4852.5,
+      "selected": "mod5.n85",
+      "durationMs": 106
+    },
+    {
+      "index": 21,
+      "phase": "warm",
+      "responseEnd": 4896.400000035763,
+      "interactive": 4984.800000011921,
+      "selected": "mod5.n85",
+      "durationMs": 88.4
+    },
+    {
+      "index": 22,
+      "phase": "warm",
+      "responseEnd": 5030.400000035763,
+      "interactive": 5119.300000011921,
+      "selected": "mod5.n85",
+      "durationMs": 88.9
+    },
+    {
+      "index": 23,
+      "phase": "warm",
+      "responseEnd": 5163.300000011921,
+      "interactive": 5269.100000023842,
+      "selected": "mod5.n85",
+      "durationMs": 105.8
+    },
+    {
+      "index": 24,
+      "phase": "warm",
+      "responseEnd": 5313.5,
+      "interactive": 5402.5,
+      "selected": "mod5.n85",
+      "durationMs": 89
+    },
+    {
+      "index": 25,
+      "phase": "warm",
+      "responseEnd": 5446.900000035763,
+      "interactive": 5535.800000011921,
+      "selected": "mod5.n85",
+      "durationMs": 88.9
+    },
+    {
+      "index": 26,
+      "phase": "warm",
+      "responseEnd": 5580.400000035763,
+      "interactive": 5686,
+      "selected": "mod5.n85",
+      "durationMs": 105.6
+    },
+    {
+      "index": 27,
+      "phase": "warm",
+      "responseEnd": 5731.5,
+      "interactive": 5835.900000035763,
+      "selected": "mod5.n85",
+      "durationMs": 104.4
+    },
+    {
+      "index": 28,
+      "phase": "warm",
+      "responseEnd": 5879.900000035763,
+      "interactive": 5969.200000047684,
+      "selected": "mod5.n85",
+      "durationMs": 89.3
+    },
+    {
+      "index": 29,
+      "phase": "warm",
+      "responseEnd": 6013,
+      "interactive": 6102.600000023842,
+      "selected": "mod5.n85",
+      "durationMs": 89.6
+    },
+    {
+      "index": 30,
+      "phase": "warm",
+      "responseEnd": 6146.800000011921,
+      "interactive": 6235.900000035763,
+      "selected": "mod5.n85",
+      "durationMs": 89.1
+    }
+  ],
+  "browser": "155.0.8059.82",
+  "browserEnvironment": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "hardwareConcurrency": 8,
+    "deviceMemory": 16,
+    "devicePixelRatio": 1,
+    "viewport": {
+      "width": 1600,
+      "height": 1000
+    },
+    "timeOrigin": 1792348827463.9
+  },
+  "method": "Actual structured adapter 100/300 response from a synthetic SQLite benchmark with 5,000 nodes and 15,000 edges with UI fixture asset/version IDs remapped. Browser ResourceTiming responseEnd to actual canvas node click updating its detail title plus two requestAnimationFrame callbacks. First graph mount cold, 30 subsequent graph remounts warm. Automation click latency included. No CPU throttling or animation override. Network/API extraction time excluded; this is not a live HTTP chain benchmark.",
+  "reviewer": "Parent Agent independent replay on 2026-10-19 Asia/Shanghai",
+  "hardware": {
+    "cpu": "Apple M1",
+    "memoryGiB": 16,
+    "logicalCpus": 8,
+    "os": "Darwin 25.6.0 arm64"
+  },
+  "limits": "First graph mount after app load; OS/browser caches not flushed; development host without isolation. Method text corrected to identify synthetic topology; sample values unchanged."
+}

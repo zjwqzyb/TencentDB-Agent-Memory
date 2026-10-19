@@ -28,6 +28,9 @@ import {
   type BatchDeleteResult,
 } from "../api-helpers.js";
 import type { CodeGraphInstancePool } from "../module.js";
+import { structuredSdkInfo } from "../engines/code/bridge.js";
+import { emptyResponse, queryStructured, validateStructuredRequest } from "../engines/code/structured.js";
+import type { CodeGraphAction } from "../contracts/code-graph.js";
 import { SSH_PROVIDER_ID } from "../code-source/providers/ssh.js";
 
 export interface CodeGraphRouteDeps {
@@ -367,6 +370,49 @@ export function createCodeGraphRoutes(deps: CodeGraphRouteDeps): Hono {
     }
     return c.json(wrapOk(result));
   });
+
+  // Structured viewer contract is additive: legacy text tools below are unchanged.
+  const structuredActions: CodeGraphAction[] = ['graph', 'graph-search', 'graph-tree', 'graph-node', 'graph-source'];
+  for (const action of structuredActions) {
+    app.post(`/${action}`, async (c) => {
+      let body: Record<string, unknown>;
+      try {
+        const parsed: unknown = await c.req.json();
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return c.json(wrapError(400, 'JSON object required'), 400);
+        body = parsed as Record<string, unknown>;
+      } catch { return c.json(wrapError(400, 'invalid JSON'), 400); }
+      const serviceId = c.req.header('x-tdai-service-id');
+      const cgId = body.code_graph_id;
+      if (!isValidIdSegment(serviceId) || !isValidIdSegment(cgId)) return c.json(wrapError(400, 'service header and code_graph_id required'), 400);
+      // Service ownership is checked before touching the filesystem or the instance pool.
+      const stored = cgService.getById(serviceId, cgId);
+      const row = stored ? { ...stored } : undefined;
+      if (!row) return c.json(wrapError(404, 'code graph not found'), 404);
+      const { code_graph_id: _id, ...input } = body;
+      let request;
+      try { request = validateStructuredRequest(action, input); }
+      catch (error) { return c.json(wrapError(400, error instanceof Error ? error.message : 'invalid graph request'), 400); }
+      const base = { assetId: cgId, sdkVersion: 'unknown', commit: row.commit_hash, indexedAt: row.last_sync_at, branch: row.branch };
+      if (row.status !== 'ready') return c.json(wrapOk(emptyResponse(base, row.status === 'failed' ? 'failed' : row.status === 'processing' || row.status === 'pending' ? 'building' : 'unindexed')));
+      const projectRoot = cgService.dirFor(serviceId, row.team_id, cgId);
+      try {
+        const sdk = await structuredSdkInfo(projectRoot);
+        const current = cgService.getById(serviceId, cgId);
+        if (!current) return c.json(wrapError(404, 'code graph not found'), 404);
+        if (current.status !== 'ready' || current.version !== row.version || current.last_sync_at !== row.last_sync_at) return c.json(wrapOk(emptyResponse(base, 'version_expired', 'index_changed_during_query')));
+        const result = queryStructured({ ...base, projectRoot, databasePath: sdk.databasePath, sdkVersion: sdk.version, version: row.version }, action, request);
+        const after = cgService.getById(serviceId, cgId);
+        if (!after) return c.json(wrapError(404, 'code graph not found'), 404);
+        if (after.status !== 'ready' || after.version !== row.version || after.last_sync_at !== row.last_sync_at) return c.json(wrapOk(emptyResponse(base, 'version_expired', 'index_changed_during_query')));
+        return c.json(wrapOk(result));
+      } catch (error) {
+        // No path/SQL details are exposed to clients. Missing index is not a successful empty graph.
+        const missing = error instanceof Error && ('code' in error && error.code === 'ENOENT' || error.message.includes('does not exist'));
+        const unsupported = error instanceof Error && /platform package|Cannot find package|Cannot find module|not installed/.test(error.message);
+        return c.json(wrapOk(emptyResponse(base, missing ? 'unindexed' : unsupported ? 'unsupported' : 'failed', missing ? 'index_missing' : unsupported ? 'structured_adapter_unavailable' : 'index_query_failed')));
+      }
+    });
+  }
 
   // ═══════════════════ Query (8 codegraph tools, all id-only) ═══════════════════
 

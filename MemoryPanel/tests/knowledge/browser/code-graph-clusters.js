@@ -1,0 +1,67 @@
+// Real CodePage + deterministic API fixture. Run after fixture initialization.
+async (page) => {
+ const checks=[]; const assert=(ok,message)=>{if(!ok)throw new Error(message);checks.push(message);};
+ const control=changes=>page.evaluate(changes=>fetch('/__codegraph-test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(changes)}).then(r=>r.json()),changes);
+ const requests=()=>page.evaluate(()=>fetch('/__codegraph-test').then(r=>r.json()).then(s=>s.requests));
+ const work=page.getByTestId('code-graph-workspace'), rows=page.getByTestId('code-graph-relations'), source=page.getByTestId('code-graph-source');
+ const mode=page.getByRole('combobox',{name:'关系视图',exact:true});
+ const nodeTable=()=>rows.locator('table').first(), edgeTable=()=>rows.locator('table').nth(1);
+ const queryDone=async(level,scope)=>{await page.waitForFunction(({level,scope})=>{ const s=document.querySelector('select[aria-label="聚合层级"]');return s?.value===level&&!s.disabled&&document.querySelector('input[aria-label="聚类范围（双向边界）"]')?.value===scope;},{level,scope});};
+ try {
+  await page.evaluate(()=>{localStorage.setItem('tdai-memory.lang','zh-CN');localStorage.removeItem('codegraph-test-no-webgl');});await page.reload(); await page.setViewportSize({width:1600,height:1050});
+  await page.getByRole('button',{name:'call-fixture-alpha',exact:true}).click();await page.getByRole('tab',{name:'关系图',exact:true}).click();await mode.selectOption('clusters');await queryDone('directory','');
+  await page.getByRole('button',{name:'关系列表',exact:true}).click();
+  assert(await nodeTable().locator('tbody tr').count()===3,'cluster overview starts with directory groups rather than repository symbols');
+  const initial=(await requests()).filter(r=>r.path.endsWith('/graph')).at(-1).body;
+  assert(initial.mode==='clusters'&&initial.groupBy==='directory'&&initial.limit===100&&initial.edgeLimit===300&&!initial.nodeId,'overview requests bounded directory aggregation without a fake focus');
+  await nodeTable().getByRole('button',{name:'src',exact:true}).focus();await page.keyboard.press('Enter');
+  assert((await source.innerText()).includes('2 个文件')&&(await source.innerText()).includes('2 个符号'),'keyboard group selection displays file and symbol counts');
+  await page.getByRole('button',{name:'下钻到文件',exact:true}).click();await queryDone('file','src');
+  assert(await edgeTable().locator('tbody tr').count()===2&&(await rows.innerText()).includes('跨组端点'),'file drilldown retains both incoming and outgoing external group endpoints');
+  assert((await page.getByTestId('code-graph-distinct-sites').innerText()).includes('3'),'cluster exposes unique-site total for reconciliation across aggregation levels');
+  assert((await edgeTable().innerText()).includes('×2')&&(await edgeTable().innerText()).includes('×1'),'cross-group counts remain traceable after expansion');
+  await nodeTable().getByRole('button',{name:'main.ts',exact:true}).click();await page.getByRole('button',{name:'查看文件内符号',exact:true}).click();await queryDone('symbol','src/main.ts');
+  await nodeTable().getByRole('button',{name:'entry',exact:true}).click();await source.locator('pre').waitFor();
+  assert((await source.innerText()).includes('cg-browser-a@v1:a'),'symbol level loads source only for real snapshot nodes');
+  assert((await page.getByRole('navigation',{name:'聚类浏览路径'}).innerText()).includes('main.ts'),'breadcrumbs retain directory and file context');
+  await page.getByRole('button',{name:'折叠当前层',exact:true}).focus();await page.keyboard.press('Enter');await queryDone('file','src');
+  assert(await nodeTable().getByRole('button',{name:'main.ts',exact:true}).count()===1,'keyboard collapse returns to files without duplicate groups');
+  await page.getByRole('navigation',{name:'聚类浏览路径'}).getByRole('button',{name:'仓库根目录',exact:true}).click();await queryDone('directory','');
+  assert(await nodeTable().locator('tbody tr').count()===3,'breadcrumb returns to the collapsed repository overview');
+  await page.getByLabel('搜索符号',{exact:true}).fill('utility');await page.getByLabel('搜索符号',{exact:true}).press('Enter');await page.getByRole('button',{name:'utility function lib/utils.ts:5',exact:true}).click();await queryDone('symbol','lib/utils.ts');
+  const locate=(await requests()).filter(r=>r.path.endsWith('/graph')).at(-1).body;
+  assert(locate.nodeId.endsWith(':utility')&&locate.scopePath==='lib/utils.ts'&&(await source.innerText()).includes('lib/utils.ts:utility'),'symbol search opens its owning file scope and prioritizes the true symbol ID');
+  await nodeTable().getByRole('button',{name:'src',exact:true}).click();assert((await source.innerText()).includes('当前范围外的折叠端点'),'boundary group is explicitly identified before drilling');
+  await page.getByRole('button',{name:'下钻到文件',exact:true}).click();await queryDone('file','src');
+  assert(true,'boundary endpoint can navigate into its own scope');
+  await control({clearRequests:true});await page.getByRole('button',{name:'应用范围',exact:true}).dblclick();
+  assert(!(await requests()).some(r=>r.path.endsWith('/graph')),'repeating the current cluster scope is idempotent');
+  await page.getByRole('button',{name:'显示关系图',exact:true}).click();await page.locator('canvas.sigma-nodes').waitFor();
+  await page.evaluate(()=>{window.__clusterCanvas=document.querySelector('canvas.sigma-nodes');});
+  await page.getByRole('button',{name:'放大',exact:true}).click();
+  await page.getByLabel('聚类范围（双向边界）',{exact:true}).fill('lib');await page.getByRole('button',{name:'应用范围',exact:true}).click();await queryDone('file','lib');
+  assert(await page.evaluate(()=>window.__clusterCanvas===document.querySelector('canvas.sigma-nodes')),'scope change preserves the live canvas and camera instead of remounting it');
+  await page.getByRole('button',{name:'关系列表',exact:true}).click();
+  await control({modePages:true});await page.getByRole('combobox',{name:'关系类型',exact:true}).selectOption('calls');await queryDone('file','lib');
+  await page.getByRole('button',{name:'加载更多关系',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-testid="code-graph-relations"]')?.textContent.includes('×3'));
+  assert(!((await rows.innerText()).includes('×5')),'cluster continuation replaces cumulative counts without double counting');
+  await control({modePages:false,delayByAction:{graph:600}});
+  await page.getByLabel('聚类范围（双向边界）',{exact:true}).fill('src');await page.getByRole('button',{name:'应用范围',exact:true}).click();await mode.selectOption('calls');await page.waitForTimeout(700);
+  assert(await page.getByRole('heading',{name:'调用关系图',exact:true}).count()===1&&!await page.getByRole('navigation',{name:'聚类浏览路径'}).count(),'late cluster scope response cannot overwrite a mode switch');
+  await control({delayByAction:{}});await mode.selectOption('clusters');await queryDone('directory','');
+  await page.getByLabel('聚类范围（双向边界）',{exact:true}).fill('empty');await page.getByRole('button',{name:'应用范围',exact:true}).click();await queryDone('directory','empty');
+  assert(await nodeTable().locator('tbody tr').count()===0,'empty scoped cluster returns an explicit empty view without fake groups');
+  await page.getByRole('navigation',{name:'聚类浏览路径'}).getByRole('button',{name:'仓库根目录',exact:true}).click();await queryDone('directory','');
+  await control({clusterCollapsed:true,clearRequests:true});await page.getByRole('combobox',{name:'关系类型',exact:true}).selectOption('calls');await queryDone('directory','');
+  await nodeTable().getByRole('button',{name:'remaining',exact:true}).click();
+  assert((await source.innerText()).includes('节点预算保持折叠')&&!await source.getByRole('button',{name:'下钻到文件',exact:true}).count(),'budget remainder is an explicit collapsed placeholder without a looping drill action');
+  assert(!(await requests()).some(r=>r.path.endsWith('/graph-source')),'collapsed budget placeholder never requests source');
+  await control({clusterCollapsed:false});
+  await control({actionState:{graph:'version_expired'}});await page.getByRole('combobox',{name:'目录深度',exact:true}).selectOption('2');
+  await page.getByText('索引版本已变化，旧图与源码已清除，请重新加载。',{exact:false}).waitFor();
+  assert(await nodeTable().locator('tbody tr').count()===0,'cluster version expiry clears old groups and source');
+  await control({actionState:{}});await page.getByRole('button',{name:'重置',exact:true}).click();await queryDone('directory','');
+  await page.screenshot({path:'/Users/zj/daydayup/TencentDB-Agent-Memory/output/playwright/codegraph-clusters.png',fullPage:true});
+  return {checks,browser:await page.context().browser().version()};
+ }catch(error){await page.screenshot({path:'/Users/zj/daydayup/TencentDB-Agent-Memory/output/playwright/codegraph-clusters-failure.png',fullPage:true});throw new Error(JSON.stringify({checks,error:String(error)}));}
+}

@@ -1,3 +1,5 @@
+import type { CodeGraphRequest, CodeGraphResponse } from "./code-graph-contract";
+export type { CodeGraphRequest, CodeGraphResponse, CodeGraphNode, CodeGraphEdge, CodeGraphMode } from "./code-graph-contract";
 /**
  * Knowledge Panel API 客户端（v1.0 冻结）
  *
@@ -42,7 +44,7 @@ export class KnowledgeApiError extends Error {
 
 // ========================= Base Request =========================
 
-async function panelPost<T>(path: string, body?: unknown): Promise<T> {
+async function panelPost<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const session = getPanelSession();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (session) {
@@ -51,6 +53,7 @@ async function panelPost<T>(path: string, body?: unknown): Promise<T> {
   }
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
+    signal,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
@@ -620,6 +623,21 @@ export const knowledgeApi = {
       panelPost('/code-graph/delete', { code_graph_ids: [codeGraphId] }),
 
     /** 代码搜索（返回 { text, isError } 文本块） */
+    graph: (codeGraphId: string, request: CodeGraphRequest = {}, signal?: AbortSignal): Promise<CodeGraphResponse> =>
+      panelPost('/code-graph/graph', { ...request, code_graph_id: codeGraphId }, signal),
+
+    graphSearch: (codeGraphId: string, request: CodeGraphRequest = {}, signal?: AbortSignal): Promise<CodeGraphResponse> =>
+      panelPost('/code-graph/graph-search', { ...request, code_graph_id: codeGraphId }, signal),
+
+    graphTree: (codeGraphId: string, request: CodeGraphRequest = {}, signal?: AbortSignal): Promise<CodeGraphResponse> =>
+      panelPost('/code-graph/graph-tree', { ...request, code_graph_id: codeGraphId }, signal),
+
+    graphNode: (codeGraphId: string, request: CodeGraphRequest = {}, signal?: AbortSignal): Promise<CodeGraphResponse> =>
+      panelPost('/code-graph/graph-node', { ...request, code_graph_id: codeGraphId }, signal),
+
+    graphSource: (codeGraphId: string, request: CodeGraphRequest = {}, signal?: AbortSignal): Promise<CodeGraphResponse> =>
+      panelPost('/code-graph/graph-source', { ...request, code_graph_id: codeGraphId }, signal),
+
     search: (opts: { codeGraphId: string; query: string; kind?: string; limit?: number }): Promise<{ text: string; isError: boolean }> =>
       panelPost('/code-graph/search', { code_graph_id: opts.codeGraphId, query: opts.query, ...(opts.kind && opts.kind !== 'any' ? { kind: opts.kind } : {}), limit: opts.limit ?? 10 }),
 

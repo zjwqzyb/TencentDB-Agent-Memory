@@ -1,3 +1,4 @@
+import type { CodeGraphAction, CodeGraphRequest, CodeGraphResponse } from "../contracts/code-graph.js";
 /**
  * Knowledge HTTP 客户端 — 调 core 的 /v3/wiki/* 和 /v3/code-graph/*.
  *
@@ -356,6 +357,10 @@ export class HttpKnowledgeClient implements KnowledgeClientPort {
 
   async codeGraphUpdateMeta(codeGraphId: string, patch: { repo_name?: string; summary?: string | null }): Promise<CodeGraphDetail> {
     return this.post('/v3/code-graph/update-meta', { code_graph_id: codeGraphId, ...patch });
+  }
+
+  async codeGraphStructured(codeGraphId: string, action: CodeGraphAction, request: CodeGraphRequest): Promise<CodeGraphResponse> {
+    return this.post(`/v3/code-graph/${action}`, { ...request, code_graph_id: codeGraphId });
   }
 
   async codeGraphQuery(codeGraphId: string, tool: string, params: Record<string, unknown>): Promise<CodeGraphToolResult> {

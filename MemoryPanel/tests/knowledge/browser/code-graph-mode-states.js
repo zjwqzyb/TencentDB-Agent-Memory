@@ -1,0 +1,64 @@
+// Run after fixture initialization in a fresh named browser session.
+async (page) => {
+  const checks = [];
+  const assert = (ok, message) => { if (!ok) throw new Error(message); checks.push(message); };
+  const control = changes => page.evaluate(changes => fetch('/__codegraph-test', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(changes) }).then(r => r.json()), changes);
+  const requests = () => page.evaluate(() => fetch('/__codegraph-test').then(r => r.json()).then(s => s.requests));
+  const work = page.getByTestId('code-graph-workspace'), source = page.getByTestId('code-graph-source');
+  const mode = page.getByRole('combobox', { name: '关系视图', exact: true });
+  const relations = page.getByTestId('code-graph-relations');
+  const edgeRows = () => relations.locator('table').nth(1).locator('tbody tr');
+  const waitRows = count => page.waitForFunction(count => document.querySelector('[data-testid="code-graph-relations"] table:nth-of-type(2) tbody')?.children.length === count, count);
+  const enter = async () => { await page.getByRole('button', {name:'call-fixture-alpha',exact:true}).click(); await page.getByRole('tab',{name:'关系图',exact:true}).click(); await page.waitForFunction(() => !document.querySelector('select[aria-label="关系视图"]')?.disabled); };
+  try {
+    await page.evaluate(() => { localStorage.setItem('tdai-memory.lang','zh-CN'); localStorage.removeItem('codegraph-test-no-webgl'); });
+    await page.reload();
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await enter(); await mode.selectOption('dependencies');
+    await page.getByRole('button',{name:'关系列表',exact:true}).click(); await waitRows(2);
+    assert(true, 'dependency overview loads without requiring a fabricated focus symbol');
+    await control({ extraWarnings: ['import_declaration_source_unavailable','import_declaration_anchor_unverified','unresolved_reference_index_unavailable','sdk_import_extraction_incomplete'], extraReasons: ['aggregation_site_budget'] });
+    await page.getByRole('combobox',{name:'目录深度',exact:true}).selectOption('2'); await waitRows(2);
+    const warningText=await work.innerText();
+    assert(warningText.includes('无法与同版本源码核对') && warningText.includes('未知依赖可能未列出') && warningText.includes('星号重导出'), 'dependency warnings explain unverified source, unknown coverage and extraction limits');
+    assert(warningText.includes('缩小源范围') && !await page.getByRole('button',{name:'加载更多关系',exact:true}).count(), 'terminal hard budget gives scope guidance without a fictitious continuation');
+    assert(!warningText.includes('aggregation_site_budget') && !warningText.includes('anchor_unverified'), 'internal warning codes are not exposed as user labels');
+    await control({ extraWarnings: [], extraReasons: null });
+    await page.getByLabel('依赖源范围',{exact:true}).fill('.'); await page.getByRole('button',{name:'应用范围',exact:true}).click(); await waitRows(0);
+    const rootRequest=(await requests()).filter(r=>r.path.endsWith('/graph')).at(-1).body;
+    assert(rootRequest.scopePath==='.' && (await relations.innerText()).includes('.'), 'root-direct module scope preserves dot and does not expand to the whole repository');
+    await page.getByRole('button',{name:'返回焦点',exact:true}).click(); await waitRows(2);
+    await control({ delayByAction: { graph: 700 }, clearRequests:true });
+    await edgeRows().first().getByRole('button').last().click();
+    await mode.selectOption('calls'); await page.waitForTimeout(800);
+    assert(!await page.getByTestId('code-graph-dependency-evidence').count() && !(await work.innerText()).includes('src/main.ts:2 → src/helper.ts'), 'late dependency evidence cannot revive after leaving its mode');
+    await control({ delayByAction: {} }); await mode.selectOption('dependencies'); await waitRows(2);
+    await control({ actionState: { graph:'version_expired' } });
+    await edgeRows().first().getByRole('button').last().click();
+    await page.getByText('索引版本已变化，旧图与源码已清除，请重新加载。',{exact:false}).waitFor();
+    assert(await edgeRows().count()===0 && await mode.isDisabled(), 'evidence snapshot expiry invalidates graph, catalog and selection together');
+    await control({ actionState:{} }); await page.getByRole('button',{name:'重置',exact:true}).click(); await waitRows(2);
+    assert(true, 'dependency overview recovers after explicit snapshot reset');
+    await page.setViewportSize({width:375,height:850});
+    await page.getByRole('button',{name:'目录与搜索',exact:true}).click();
+    const drawer=page.getByRole('dialog',{name:'目录与搜索',exact:true}); await drawer.waitFor();
+    await drawer.getByLabel('搜索符号',{exact:true}).fill('Derived'); await drawer.getByLabel('搜索符号',{exact:true}).press('Enter');
+    await drawer.getByRole('button',{name:'Derived class src/types.ts:21',exact:true}).click();
+    await mode.selectOption('hierarchy');
+    await page.getByRole('button',{name:'节点详情与源码',exact:true}).click();
+    await page.getByRole('dialog',{name:'节点详情与源码',exact:true}).getByText('src/types.ts:Derived',{exact:true}).waitFor();
+    await page.waitForTimeout(350);
+    assert(await page.getByRole('dialog').count()===1,'375px hierarchy keeps retained symbol available in accessible detail drawer');
+    await page.screenshot({path:'/Users/zj/daydayup/TencentDB-Agent-Memory/output/playwright/codegraph-modes-narrow.png',fullPage:true});
+    await page.keyboard.press('Escape');
+    assert(await page.getByRole('button',{name:'节点详情与源码',exact:true}).evaluate(el=>el===document.activeElement),'mode-specific narrow drawer restores keyboard focus');
+    await page.evaluate(()=>localStorage.setItem('tdai-memory.lang','en-US')); await page.reload();
+    await page.setViewportSize({width:1500,height:1000});
+    await page.getByRole('button',{name:'call-fixture-alpha',exact:true}).click(); await page.getByRole('tab',{name:'Repository graph',exact:true}).click();
+    await page.getByRole('combobox',{name:'Relation view',exact:true}).selectOption('dependencies');
+    await page.getByText('Index scan complete for this scope; source dependency extraction may still be incomplete.',{exact:true}).waitFor();
+    assert(await page.getByRole('combobox',{name:'Aggregation level',exact:true}).count()===1,'new mode controls and index completeness wording are translated into English');
+    await page.screenshot({path:'/Users/zj/daydayup/TencentDB-Agent-Memory/output/playwright/codegraph-modes-english.png',fullPage:true});
+    return {checks,browser:await page.context().browser().version()};
+  } catch(error) { await page.screenshot({path:'/Users/zj/daydayup/TencentDB-Agent-Memory/output/playwright/codegraph-mode-states-failure.png',fullPage:true}); throw new Error(JSON.stringify({checks,error:String(error)})); }
+}

@@ -171,3 +171,10 @@
   background: var(--tea-color-bg-secondary-default);
   padding: 16px;
 }
+
+/* Native keyboard tabs use the same Tea tokens as the repository detail shell. */
+._codedetail-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--tea-color-border-secondary-default); }
+._codedetail-tabs button { border: 0; border-bottom: 2px solid transparent; padding: 12px 0; background: transparent; color: var(--tea-color-text-secondary); cursor: pointer; }
+._codedetail-tabs button[aria-selected=true] { color: var(--tea-color-text-link-default); border-bottom-color: var(--tea-color-border-brand-default); }
+._codedetail-tabs button:focus-visible { outline: 2px solid var(--tea-color-border-brand-default); outline-offset: 2px; }
+#code-detail-panel-overview:not([hidden]) { display: flex; flex-direction: column; gap: 12px; }

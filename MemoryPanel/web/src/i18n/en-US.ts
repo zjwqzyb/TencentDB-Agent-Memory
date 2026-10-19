@@ -1,6 +1,8 @@
+import { codeGraphEn } from './code-graph';
 /** English translation — en-US */
 
 export const enUS = {
+  ...codeGraphEn,
   // ===== App =====
   'app.checkingSession': 'Checking session…',
 

@@ -1,0 +1,327 @@
+._codegraph-root {
+  color: var(--tea-color-text-primary);
+  background: var(--tea-color-bg-primary-default);
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 6px;
+  overflow: hidden;
+}
+._codegraph-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+}
+._codegraph-root h2,
+._codegraph-root h3,
+._codegraph-root h4 {
+  margin: 0 0 8px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+._codegraph-root h2 {
+  font-size: 16px;
+}
+._codegraph-root h3 {
+  font-size: 14px;
+}
+._codegraph-root h4 {
+  font-size: 13px;
+}
+._codegraph-root p {
+  margin: 6px 0 12px;
+  line-height: 1.6;
+}
+._codegraph-version,
+._codegraph-note {
+  font-size: 12px;
+  color: var(--tea-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+._codegraph-toolbar,
+._codegraph-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+._codegraph-toolbar {
+  padding: 12px 16px;
+  border-top: 1px solid var(--tea-color-border-secondary-default);
+  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+._codegraph-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) minmax(220px, 300px);
+  min-height: 520px;
+}
+._codegraph-search,
+._codegraph-source {
+  padding: 16px;
+  min-width: 0;
+  overflow: auto;
+  max-height: 760px;
+  font-size: 13px;
+  color: var(--tea-color-text-primary);
+  background: var(--tea-color-bg-primary-default);
+}
+._codegraph-search {
+  border-right: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-source {
+  border-left: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-search form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+._codegraph-root input,
+._codegraph-root select,
+._codegraph-search input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--tea-color-border-primary-default);
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-primary);
+  border-radius: 4px;
+}
+._codegraph-root select {
+  width: auto;
+  max-width: 140px;
+}
+._codegraph-root button:not(.tea-btn),
+._codegraph-search button:not(.tea-btn) {
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 4px;
+  padding: 6px 10px;
+  min-height: 32px;
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-link-default);
+  cursor: pointer;
+}
+._codegraph-root button:disabled,
+._codegraph-search button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+._codegraph-root :focus-visible,
+._codegraph-search :focus-visible,
+._codegraph-source :focus-visible {
+  outline: 2px solid var(--tea-color-border-brand-default);
+  outline-offset: 2px;
+}
+._codegraph-results {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+}
+._codegraph-results li {
+  margin: 0 0 6px;
+}
+._codegraph-results button {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+._codegraph-results small {
+  width: 100%;
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-results span {
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-main {
+  min-width: 0;
+  padding: 12px;
+}
+._codegraph-expand {
+  padding-bottom: 12px;
+}
+._codegraph-expand > span {
+  color: var(--tea-color-text-secondary);
+  font-size: 12px;
+}
+._codegraph-canvas-wrap {
+  position: relative;
+  height: 480px;
+  min-width: 0;
+  background: var(--tea-color-bg-secondary-default);
+  border-radius: 4px;
+}
+._codegraph-canvas {
+  width: 100%;
+  height: 100%;
+}
+._codegraph-camera {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 4px;
+}
+._codegraph-empty {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-location {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+}
+._codegraph-code {
+  overflow: auto;
+  font: 12px/1.8 var(--font-mono);
+  padding: 12px 8px;
+  background: var(--tea-color-bg-secondary-default);
+  border-radius: 4px;
+  max-height: 480px;
+}
+._codegraph-line {
+  display: inline-block;
+  min-width: 3em;
+  padding-right: 12px;
+  color: var(--tea-color-text-secondary);
+  user-select: none;
+}
+._codegraph-table-wrap {
+  overflow: auto;
+  max-height: 500px;
+}
+._codegraph-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+._codegraph-table-wrap caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 12px 4px;
+}
+._codegraph-table-wrap td,
+._codegraph-table-wrap th {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+  overflow-wrap: anywhere;
+}
+._codegraph-table-wrap th {
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-table-wrap tr[aria-selected='true'] {
+  background: var(--tea-color-bg-secondary-default);
+}
+._codegraph-evidence {
+  margin-top: 16px;
+  border-top: 1px solid var(--tea-color-border-secondary-default);
+  padding-top: 12px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1100px) {
+  ._codegraph-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  ._codegraph-canvas-wrap {
+    height: 420px;
+  }
+  ._codegraph-toolbar {
+    padding: 12px;
+  }
+}
+@media (max-width: 600px) {
+  ._codegraph-root button:not(.tea-btn),
+  ._codegraph-search button:not(.tea-btn) {
+    min-height: 44px;
+  }
+  ._codegraph-canvas-wrap {
+    height: 360px;
+  }
+  ._codegraph-heading {
+    padding: 12px;
+  }
+}
+
+._codegraph-mode-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-mode-controls label,
+._codegraph-mode-controls form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+._codegraph-mode-controls fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-mode-controls legend {
+  padding: 0 4px;
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-root input[type='checkbox'],
+._codegraph-source input[type='checkbox'] {
+  width: auto;
+  min-height: auto;
+}
+._codegraph-analysis {
+  margin-top: 16px;
+  font-size: 13px;
+}
+._codegraph-analysis details {
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+._codegraph-analysis summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+._codegraph-analysis ul,
+._codegraph-source ul,
+._codegraph-source ol {
+  padding-left: 20px;
+}
+._codegraph-analysis li,
+._codegraph-source li {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-breadcrumbs {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+._codegraph-group-count {
+  display: block;
+  color: var(--tea-color-text-secondary);
+}
+@media (max-width: 600px) {
+  ._codegraph-mode-controls form {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  ._codegraph-mode-controls form label {
+    width: 100%;
+  }
+}

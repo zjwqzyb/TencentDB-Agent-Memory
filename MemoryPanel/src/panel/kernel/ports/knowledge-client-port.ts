@@ -1,3 +1,4 @@
+import type { CodeGraphAction, CodeGraphRequest, CodeGraphResponse } from "../contracts/code-graph.js";
 /**
  * Knowledge RPC 端口 — Wiki（15 端点）+ Code-Graph（13 端点）。
  *
@@ -298,6 +299,7 @@ export interface KnowledgeClientPort {
   codeGraphSync(codeGraphId: string): Promise<CodeGraphSyncResult>;
   codeGraphDelete(codeGraphIds: string[]): Promise<BatchDeleteResult>;
   codeGraphUpdateMeta(codeGraphId: string, patch: { repo_name?: string; summary?: string | null }): Promise<CodeGraphDetail>;
+  codeGraphStructured(codeGraphId: string, action: CodeGraphAction, request: CodeGraphRequest): Promise<CodeGraphResponse>;
   codeGraphQuery(codeGraphId: string, tool: string, params: Record<string, unknown>): Promise<CodeGraphToolResult>;
 
   /**

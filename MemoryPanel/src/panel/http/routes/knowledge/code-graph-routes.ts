@@ -1,3 +1,4 @@
+import type { CodeGraphAction, CodeGraphRequest } from "../../../kernel/contracts/code-graph.js";
 /**
  * /api/v1/knowledge/code-graph/* —— Panel Code-Graph 业务路由（stateless）。
  *
@@ -210,6 +211,24 @@ export function registerKnowledgeCodeGraphRoutes(api: Hono, deps: PanelDeps): vo
       return result;
     });
   });
+
+  const structuredActions: CodeGraphAction[] = ['graph', 'graph-search', 'graph-tree', 'graph-node', 'graph-source'];
+  for (const action of structuredActions) {
+    api.post(`/knowledge/code-graph/${action}`, mw, async (c) => {
+      const ctx = buildCtx(c);
+      const body = await readJson(c);
+      const cgId = str(body, 'code_graph_id');
+      if (!cgId) return respondControlError(c, 400, 'MISSING_CODE_GRAPH_ID');
+      const gate = await requireKnowledgeRead(deps, c, ctx, cgId);
+      if ('error' in gate) return gate.error;
+      const { code_graph_id: _id, ...params } = body;
+      const allowed = new Set(['mode', 'nodeId', 'indexVersion', 'direction', 'depth', 'scopePath', 'query', 'nodeKinds', 'edgeKinds', 'limit', 'edgeLimit', 'cursor', 'groupBy', 'moduleDepth', 'evidenceFor', 'sourceLine']);
+      if (Object.keys(params).some(key => !allowed.has(key))) return respondControlError(c, 400, 'INVALID_GRAPH_REQUEST');
+      if (params.sourceLine !== undefined && (action !== 'graph-source' || typeof params.sourceLine !== 'number' || !Number.isSafeInteger(params.sourceLine) || params.sourceLine < 1 || params.sourceLine > 2 * 1024 * 1024 + 1)) return respondControlError(c, 400, 'INVALID_GRAPH_REQUEST');
+      const kc = deps.knowledgeClientFactory(ctx.instanceId);
+      return runKs(c, () => kc.codeGraphStructured(cgId, action, params as CodeGraphRequest));
+    });
+  }
 
   // C7 search — id-only
   api.post('/knowledge/code-graph/search', mw, async (c) => {

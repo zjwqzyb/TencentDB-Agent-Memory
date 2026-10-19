@@ -7,6 +7,8 @@
 
 import { createRequire } from "node:module";
 import { pathToFileURL } from "url";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { createLogger } from "../../logger.js";
 
 const log = createLogger("bridge");
@@ -74,6 +76,7 @@ function extractExports() {
     ToolHandler: tools.ToolHandler,
     isInitialized: cg.isInitialized,
     getCodeGraphDir: cg.getCodeGraphDir,
+    getDatabasePath: cg.getDatabasePath,
   };
 }
 
@@ -197,4 +200,12 @@ export function closeIndex(instance: CodeGraphInstance): void {
   } catch {
     // best-effort
   }
+}
+
+/** Public SDK path resolver; structured queries gate the actual installed platform schema. */
+export async function structuredSdkInfo(projectRoot: string): Promise<{ databasePath: string; version: string }> {
+  const { getDatabasePath } = await loadModules();
+  const packageRoot = dirname(dirname(dirname(dirname(resolveToolsPath()))));
+  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
+  return { databasePath: getDatabasePath(projectRoot), version: String(pkg.version) };
 }
