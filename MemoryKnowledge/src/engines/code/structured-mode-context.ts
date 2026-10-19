@@ -1,8 +1,9 @@
 import type Database from 'better-sqlite3';
 import type { CodeGraphEdge, CodeGraphNode, CodeGraphRequest, CodeGraphResponse } from '../../contracts/code-graph.js';
 import type { StructuredContext } from './structured.js';
+import type { JavaValidationBudget } from './structured-java.js';
 export interface NodeRow { id: string; kind: string; name: string; qualified_name: string; file_path: string; language: string; start_line: number; end_line: number; signature?: string | null; rowid?: number }
-export interface EdgeRow { id: number; source: string; target: string; kind: string; line: number | null; col: number | null; metadata?: string | null }
+export interface EdgeRow { id: number; source: string; target: string; kind: string; line: number | null; col: number | null; metadata?: string | null; provenance?: string | null }
 export interface UnresolvedRow { id: number; from_node_id: string; reference_name: string; reference_kind: string; file_path: string; line: number; col: number | null }
 /** Dispatcher owns snapshot/transaction/cursor. Mode implementations own only bounded query state. */
 export interface StructuredModeContext {
@@ -21,6 +22,10 @@ export interface StructuredModeContext {
   readUnresolved(after: number, limit: number): UnresolvedRow[];
   adjacent(id: string, side: 'source' | 'target', kind: string, after: number): EdgeRow | undefined;
   unresolvedFrom(id: string, after: number, limit: number): UnresolvedRow[];
+  /** False omits an unverified Java relation; diagnostics are added to result.warnings. */
+  acceptEdge(edge: EdgeRow, source: NodeRow, target: NodeRow): boolean;
+  /** A page budget stopped validation; preserve the current edge for continuation. */
+  edgeValidationDeferred(): JavaValidationBudget | null;
   hasUnresolved: boolean;
   toNode(row: NodeRow): CodeGraphNode;
   toEdge(row: EdgeRow, source: NodeRow): CodeGraphEdge;

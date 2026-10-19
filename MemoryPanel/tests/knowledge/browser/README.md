@@ -177,3 +177,26 @@ production service/account is modified. Send SIGTERM or SIGINT to the test
 server when finished; its handler closes listeners/index and removes the
 temporary repository. Regenerate the transient fixture after every server
 restart because ports and snapshot metadata change.
+
+## Java language capability and recovery
+
+`code-graph-java-recovery.js` drives the real CodePage UI with deterministic
+Java API responses. It checks all five views, package/method/type selection,
+same-snapshot source, capability language labels, Java coverage warnings,
+specific unsupported reasons, effective recovery actions, a 375px search
+and source drawer, live-region semantics, and English copy. It does not prove
+Java extraction correctness; the Knowledge SDK tests provide that evidence.
+
+```sh
+bash /Users/zj/.codex/skills/playwright/scripts/playwright_cli.sh -s=codegraph-java-ui open about:blank --headed
+bash /Users/zj/.codex/skills/playwright/scripts/playwright_cli.sh -s=codegraph-java-ui run-code --filename MemoryPanel/tests/knowledge/browser/code-graph-fixture.js --raw
+bash /Users/zj/.codex/skills/playwright/scripts/playwright_cli.sh -s=codegraph-java-ui snapshot
+bash /Users/zj/.codex/skills/playwright/scripts/playwright_cli.sh -s=codegraph-java-ui run-code --filename MemoryPanel/tests/knowledge/browser/code-graph-java-recovery.js --raw
+```
+
+The shared fixture accepts `javaFixture: true` to return Java symbols and
+capabilities. `actionWarnings` supplies warnings even for terminal responses,
+`capabilities` overrides reported capability fields, and `modeWarnings` adds
+coverage warnings to individual graph modes. Each test run resets these
+controls. State-recovery actions use the current response's reason rather
+than inferring language support from the node kind.

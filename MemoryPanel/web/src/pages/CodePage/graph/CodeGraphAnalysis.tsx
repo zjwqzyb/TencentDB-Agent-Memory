@@ -146,12 +146,10 @@ export function CodeGraphAnalysis({
           </div>
         </>
       )}
-      {graph?.warnings.includes('typescript_interface_extends_not_extracted') && (
-        <Alert>{t('code.graph.interfaceExtendsLimit')}</Alert>
-      )}
-      {state.mode === 'hierarchy' && graph?.warnings.includes('select_a_type') && (
-        <Alert>{t('code.graph.selectType')}</Alert>
-      )}
+      {graph?.state !== 'unsupported' &&
+        graph?.warnings.includes('typescript_interface_extends_not_extracted') && (
+          <Alert>{t('code.graph.interfaceExtendsLimit')}</Alert>
+        )}
       {(state.mode === 'hierarchy' || state.mode === 'impact') && (
         <p className="_codegraph-note">{t('code.graph.analysisCoverage')}</p>
       )}

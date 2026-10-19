@@ -7,15 +7,24 @@ import { canReadNodeSource, isAggregateMode, useCodeGraphWorkspace } from './use
 import { CodeGraphModeControls } from './CodeGraphModeControls';
 import { CodeGraphAnalysis } from './CodeGraphAnalysis';
 import { CodeGraphCanvas } from './CodeGraphCanvas';
-import { coverageNoticeKeys, findRelationPath, nodeLocation, sourceLink } from './graph-model';
+import {
+  coverageNoticeKeys,
+  findRelationPath,
+  graphLanguageLabel,
+  graphRecoveryNotice,
+  nodeLocation,
+  sourceLink,
+} from './graph-model';
 import './code-graph.css';
 
 export function CodeGraphWorkspace({
   asset,
   mode: initialMode = 'calls',
+  onTextQuery,
 }: {
   asset: CodeGraphDetail;
   mode?: CodeGraphMode;
+  onTextQuery?: () => void;
 }) {
   const { t } = useTranslation();
   const state = useCodeGraphWorkspace(asset.code_graph_id, initialMode);
@@ -34,6 +43,7 @@ export function CodeGraphWorkspace({
   const [cycleId, setCycleId] = useState<string | null>(null);
   const [drawerElement, setDrawerElement] = useState<HTMLDivElement | null>(null);
   const drawerTrigger = useRef<HTMLElement | null>(null);
+  const searchInput = useRef<HTMLInputElement | null>(null);
   function openDrawer(panel: 'search' | 'source') {
     drawerTrigger.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -49,9 +59,11 @@ export function CodeGraphWorkspace({
       'aria-label',
       t(drawer === 'search' ? 'code.graph.search' : 'code.graph.details'),
     );
-    const frame = requestAnimationFrame(() =>
-      drawerElement.querySelector<HTMLElement>('input, button, a[href], [tabindex="0"]')?.focus(),
-    );
+    const frame = requestAnimationFrame(() => {
+      if (drawer === 'search') searchInput.current?.focus();
+      else
+        drawerElement.querySelector<HTMLElement>('input, button, a[href], [tabindex="0"]')?.focus();
+    });
     const keydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -173,13 +185,24 @@ export function CodeGraphWorkspace({
     canReadNodeSource(state.selected) && state.selected
       ? sourceLink(asset.repo_url, meta?.commit ?? null, sourceNode!)
       : null;
+  const statusResponse = state.graph ?? state.catalog;
+  const recovery =
+    !state.error && !(!state.graph && state.catalogError)
+      ? graphRecoveryNotice(statusResponse, mode)
+      : null;
   const status =
     state.error ||
+    (!state.graph ? state.catalogError : '') ||
     (state.graph && !['ready', 'empty'].includes(state.graph.state)
       ? state.graph.state
       : !state.graph && state.catalog && !['ready', 'empty'].includes(state.catalog.state)
         ? state.catalog.state
         : '');
+  const canReload = ['network', 'version_expired', 'building'].includes(status);
+  const chooseSymbol = () => {
+    if (narrow) openDrawer('search');
+    else searchInput.current?.focus();
+  };
 
   const searchPanel = (
     <section className="_codegraph-search" aria-label={t('code.graph.search')}>
@@ -193,6 +216,7 @@ export function CodeGraphWorkspace({
         <label htmlFor="code-graph-query">{t('code.graph.symbol')}</label>
         <input
           id="code-graph-query"
+          ref={searchInput}
           data-testid="code-graph-search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -495,6 +519,18 @@ export function CodeGraphWorkspace({
           {meta?.indexedAt && <> · {new Date(meta.indexedAt).toLocaleString()}</>}
         </span>
       </div>
+      {meta && (
+        <p
+          className="_codegraph-capabilities _codegraph-note"
+          data-testid="code-graph-capabilities"
+        >
+          {t('code.graph.verifiedLanguages', {
+            languages:
+              meta.capabilities.languages.map(graphLanguageLabel).join(', ') ||
+              t('code.graph.noVerifiedLanguages'),
+          })}
+        </p>
+      )}
       <CodeGraphModeControls
         state={state}
         onMode={(next) => {
@@ -581,13 +617,37 @@ export function CodeGraphWorkspace({
         </Button>
         {narrow && <Button onClick={() => openDrawer('source')}>{t('code.graph.details')}</Button>}
       </div>
-      {status && (
-        <Alert type="warning">
-          {message(status)}{' '}
-          <Button type="link" onClick={state.reset}>
-            {t('code.graph.retry')}
-          </Button>
-        </Alert>
+      {(status || recovery) && (
+        <div role="status" aria-live="polite" aria-atomic="true" data-testid="code-graph-state">
+          <Alert type="warning">
+            <span>{recovery ? t(recovery.key, recovery.values) : message(status)}</span>{' '}
+            {canReload && (
+              <Button type="link" onClick={state.reset}>
+                {t('code.graph.retry')}
+              </Button>
+            )}
+            {(recovery?.action === 'chooseSymbol' || status === 'not_found') && (
+              <Button type="link" onClick={chooseSymbol}>
+                {t('code.graph.chooseSymbol')}
+              </Button>
+            )}
+            {recovery?.action === 'directory' && (
+              <Button type="link" onClick={() => state.configure({ groupBy: 'directory' })}>
+                {t('code.graph.useDirectory')}
+              </Button>
+            )}
+            {recovery?.action === 'imports' && (
+              <Button type="link" onClick={() => state.configure({ edgeKinds: ['imports'] })}>
+                {t('code.graph.useImports')}
+              </Button>
+            )}
+            {recovery?.action === 'textQuery' && onTextQuery && (
+              <Button type="link" onClick={onTextQuery}>
+                {t('code.graph.openTextQuery')}
+              </Button>
+            )}
+          </Alert>
+        </div>
       )}
       {unavailable && <Alert>{t('code.graph.noWebGL')}</Alert>}
       <div className="_codegraph-layout">
@@ -629,10 +689,11 @@ export function CodeGraphWorkspace({
           {!state.graph && !state.loading && (
             <div className="_codegraph-empty">{t('code.graph.selectHint')}</div>
           )}
-          {((state.graph?.state === 'empty' && !state.graph.truncated) ||
-            (state.graph?.state === 'ready' &&
-              state.graph.edges.length === 0 &&
-              !state.graph.truncated)) && <p>{t('code.graph.emptyRelations')}</p>}
+          {!recovery &&
+            ((state.graph?.state === 'empty' && !state.graph.truncated) ||
+              (state.graph?.state === 'ready' &&
+                state.graph.edges.length === 0 &&
+                !state.graph.truncated)) && <p>{t('code.graph.emptyRelations')}</p>}
           {state.graph && nodes.length === 0 && state.graph.nodes.length > 0 && (
             <p>{t('code.graph.filteredEmpty')}</p>
           )}

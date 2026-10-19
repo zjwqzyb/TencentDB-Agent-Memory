@@ -6,6 +6,7 @@ import { isAbsolute, relative, resolve, sep } from 'node:path';
 import type { StructuredModeContext, NodeRow, EdgeRow, UnresolvedRow } from './structured-mode-context.js';
 import { queryAggregation, queryClusters } from './structured-aggregation.js';
 import { queryNeighborhood } from './structured-neighborhood.js';
+import { javaEdgeValidator } from './structured-java.js';
 import type { CodeGraphAction, CodeGraphCapabilities, CodeGraphEdge, CodeGraphNode, CodeGraphRequest, CodeGraphResponse } from '../../contracts/code-graph.js';
 
 export const GRAPH_LIMITS = { nodes: 100, edges: 300, maxNodes: 500, maxEdges: 1500, depth: 5, rows: 2000, sourceBytes: 2 * 1024 * 1024, sourceLines: 300 } as const;
@@ -20,10 +21,10 @@ const CURSOR_TTL = 10 * 60 * 1000;
 export function capabilities(version: string): CodeGraphCapabilities {
   const verified = version === '1.6.2';
   return { sdkVersion: version, modes: {
-    calls: { supported: verified, ...(!verified ? { reason: 'unverified_sdk_version' } : {}) },
+    calls: { supported: verified, ...(verified ? { limitations: ['java_static_analysis_incomplete'] } : { reason: 'unverified_sdk_version' }) },
     impact: { supported: verified, ...(!verified ? { reason: 'unverified_sdk_version' } : {}) }, dependencies: { supported: verified, ...(!verified ? { reason: 'unverified_sdk_version' } : {}) },
     clusters: { supported: verified, ...(verified ? { limitations: ['directory_grouping_not_semantic_communities', 'static_import_extraction_incomplete'] } : { reason: 'unverified_sdk_version' }) }, hierarchy: { supported: verified, ...(verified ? { limitations: ['typescript_interface_extends_not_extracted'] } : { reason: 'unverified_sdk_version' }) },
-  }, languages: verified ? ['typescript', 'javascript'] : [], edgeKinds: verified ? ['calls', 'imports', 'extends', 'implements', 'references', 'contains'] : [] };
+  }, languages: verified ? ['typescript', 'javascript', 'java'] : [], edgeKinds: verified ? ['calls', 'imports', 'extends', 'implements', 'references', 'contains'] : [] };
 }
 export function emptyResponse(context: Pick<StructuredContext, 'assetId' | 'sdkVersion' | 'commit' | 'indexedAt' | 'branch'>, state: CodeGraphResponse['state'], warning?: string): CodeGraphResponse {
   return { state, assetId: context.assetId, indexVersion: null, commit: context.commit, indexedAt: context.indexedAt, branch: context.branch,
@@ -132,15 +133,23 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
     if (!validateSchema(db)) return { ...result, state: 'unsupported', capabilities: { ...result.capabilities, modes: Object.fromEntries(Object.keys(result.capabilities.modes).map(key => [key, { supported: false, reason: 'unsupported_index_schema' }])) as CodeGraphCapabilities['modes'] }, warnings: ['unsupported_index_schema'] };
     return db.transaction((): CodeGraphResponse => {
       let rowsRead = 0;
+      let javaSourceExpired = false;
+      const acceptEdge = javaEdgeValidator({
+        db, projectRoot: ctx.projectRoot, sourceBytes: GRAPH_LIMITS.sourceBytes,
+        takeRow() { if (rowsRead >= GRAPH_LIMITS.rows) return false; rowsRead++; return true; },
+        warn(warning) { if (!result.warnings.includes(warning)) result.warnings.push(warning); },
+        expire() { javaSourceExpired = true; },
+      });
       const getNode = (id: string): NodeRow | undefined => { rowsRead++; return db.prepare('SELECT * FROM nodes WHERE id = ?').get(id) as NodeRow | undefined; };
       const limit = request.limit ?? GRAPH_LIMITS.nodes;
       const next = (data: Partial<Cursor>) => issueCursor({ asset: ctx.assetId, version: indexVersion, fingerprint, expires: Date.now() + CURSOR_TTL, ...data });
       const finish = (): CodeGraphResponse => {
         result.work = { rowsRead, maxRows: GRAPH_LIMITS.rows };
-        if (snapshot(ctx) !== indexVersion) return { ...result, state: 'version_expired', nodes: [], edges: [], source: undefined, impactPaths: undefined, unresolved: undefined, aggregation: undefined, clustering: undefined, cycles: undefined, dependencyEvidence: undefined, nextCursor: null, warnings: ['index_changed_during_query'] };
+        if (javaSourceExpired || snapshot(ctx) !== indexVersion) return { ...result, state: 'version_expired', nodes: [], edges: [], source: undefined, impactPaths: undefined, unresolved: undefined, aggregation: undefined, clustering: undefined, cycles: undefined, dependencyEvidence: undefined, nextCursor: null, warnings: [javaSourceExpired ? 'source_changed_since_index' : 'index_changed_during_query'] };
         const unverified = [...new Set(result.nodes.filter(n => !n.aggregate).map(n => n.language).filter(language => !result.capabilities.languages.includes(language)))];
         if (unverified.length) result.warnings.push(...unverified.map(language => `unverified_language:${language}`));
         if (result.state === 'ready' && result.nodes.length === 0 && !result.dependencyEvidence?.length) result.state = 'empty';
+        result.warnings = [...new Set(result.warnings)];
         return result;
       };
       if (action === 'graph-search' || action === 'graph-tree') {
@@ -183,7 +192,7 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
         const consume = (count: number) => { if (count < 0 || count > remaining()) throw new Error('structured_work_budget_exceeded'); rowsRead += count; };
         const take = (wanted: number) => Math.max(0, Math.min(wanted, remaining()));
         const env: StructuredModeContext = {
-          db, ctx, request, result, root: modeRoot, state: continuation?.modeState, limits: GRAPH_LIMITS, remaining, consume, hasUnresolved,
+          db, ctx, request, result, root: modeRoot, state: continuation?.modeState, limits: GRAPH_LIMITS, remaining, consume, hasUnresolved, acceptEdge, edgeValidationDeferred: acceptEdge.deferred,
           lookup(id) { if (!remaining()) throw new Error('structured_work_budget_exceeded'); return getNode(id); },
           readNodes(after, wanted) { const count = take(wanted); if (!count) return []; const rows = db.prepare('SELECT rowid,* FROM nodes WHERE rowid > ? ORDER BY rowid LIMIT ?').all(after, count) as NodeRow[]; consume(rows.length || 1); return rows; },
           readEdges(after, wanted) { const count = take(wanted); if (!count) return []; const rows = db.prepare('SELECT * FROM edges WHERE id > ? ORDER BY id LIMIT ?').all(after, count) as EdgeRow[]; consume(rows.length || 1); return rows; },
@@ -252,6 +261,11 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
         queryNeighborhood(modeContext(root), mode);
         return finish();
       }
+      // Java classes and fields can own calls from static/field initializers.
+      if (root.language === 'java' && ['namespace', 'file', 'import'].includes(root.kind)) {
+        result.state = 'empty'; result.warnings.push('select_a_callable'); return finish();
+      }
+      if (root.language === 'java') result.warnings.push('java_static_analysis_incomplete');
       if (request.edgeKinds?.length && !request.edgeKinds.includes('calls')) { result.state = 'empty'; return finish(); }
       const direction = request.direction ?? 'both';
       const sides = direction === 'both' ? ['source', 'target'] : [direction === 'out' ? 'source' : 'target'];
@@ -263,6 +277,7 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
       const cache = new Map<string, NodeRow | undefined>([[rootId, root]]);
       const lookup = (id: string) => { if (!cache.has(id)) cache.set(id, getNode(id)); return cache.get(id); };
       let hardLimit = false;
+      let validationBudget: string | null = null;
       while (walk.queue.length && result.edges.length < edgeLimit && rowsRead < GRAPH_LIMITS.rows - 3) {
         const item = walk.queue[0];
         if (item.depth >= depth || item.side >= sides.length) { walk.queue.shift(); continue; }
@@ -274,6 +289,11 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
         if (emitted.has(edge.id)) { item.after = edge.id; continue; }
         const source = lookup(edge.source), target = lookup(edge.target);
         if (!source || !target) { item.after = edge.id; result.warnings.push('dangling_edge_omitted'); continue; }
+        if (!acceptEdge(edge, source, target)) {
+          validationBudget = acceptEdge.deferred();
+          if (validationBudget) break;
+          item.after = edge.id; continue;
+        }
         const neighbor = side === 'source' ? target : source;
         if ((request.scopePath && !neighbor.file_path.startsWith(request.scopePath.replace(/\/$/, '') + '/') && neighbor.file_path !== request.scopePath) || (request.nodeKinds?.length && !request.nodeKinds.includes(neighbor.kind))) { item.after = edge.id; continue; }
         const additions = [source, target].filter((n, i, all) => all.findIndex(x => x.id === n.id) === i && !pageNodes.has(wireId(idNamespace, n.id)));
@@ -289,7 +309,7 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
       while (walk.queue.length && (walk.queue[0].depth >= depth || walk.queue[0].side >= sides.length)) walk.queue.shift();
       if (walk.queue.length) {
         result.truncated = true;
-        result.truncationReasons = [hardLimit ? 'traversal_budget' : rowsRead >= GRAPH_LIMITS.rows - 3 ? 'scan_budget' : result.edges.length >= edgeLimit ? 'edge_budget' : 'node_budget'];
+        result.truncationReasons = [validationBudget ?? (hardLimit ? 'traversal_budget' : rowsRead >= GRAPH_LIMITS.rows - 3 ? 'scan_budget' : result.edges.length >= edgeLimit ? 'edge_budget' : 'node_budget')];
         if (!hardLimit) result.nextCursor = next({ walk: { ...walk, seenNodes: [...visited], seenEdges: [...emitted] } });
       }
       return finish();

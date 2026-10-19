@@ -21,7 +21,7 @@ async (page) => {
     await search('entry'); await root.click(); await source.locator('pre').filter({ hasText: '@v2:a' }).waitFor();
     const request = (await control({})).requests.find(r => r.path.endsWith('/graph')).body;
     assert(request.indexVersion === 'v2' && request.nodeId.includes('@v2:'), 'reset selects only fresh version node IDs and indexVersion');
-    for (const [state, text] of Object.entries({ empty: '当前范围没有匹配结果。', unindexed: '尚未建立索引，请同步仓库。', building: '索引正在构建，请稍后刷新。', failed: '索引构建失败，请查看仓库错误并重试同步。', unsupported: '当前索引或语言不支持此关系视图。', not_found: '资源已删除或节点不在当前索引中。' })) {
+    for (const [state, text] of Object.entries({ empty: '当前范围没有匹配结果。', unindexed: '尚未建立索引，请同步仓库。', building: '索引正在构建，请稍后刷新。', failed: '索引构建失败，请查看仓库错误并重试同步。', unsupported: '当前无法展示此关系视图。可选择其他视图，或使用概览与文本查询。', not_found: '资源已删除或节点不在当前索引中。' })) {
       await control({ ...defaults, responseState: state }); await page.getByRole('button', { name: '重置', exact: true }).click();
       await page.getByText(text, { exact: false }).first().waitFor();
       assert(await source.locator('pre').count() === 0, `${state} state has explicit message and no stale source`);

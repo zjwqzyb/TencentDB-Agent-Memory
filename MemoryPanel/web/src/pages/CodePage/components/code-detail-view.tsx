@@ -133,6 +133,12 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
           <CodeGraphWorkspace
             key={`${selected.code_graph_id}:${selected.version}:${selected.status}:${selected.last_sync_at}`}
             asset={selected}
+            onTextQuery={() => {
+              setTab('overview');
+              requestAnimationFrame(() =>
+                document.getElementById('code-detail-tab-overview')?.focus(),
+              );
+            }}
           />
         )}
       </div>

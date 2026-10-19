@@ -5,6 +5,7 @@ import { isBuiltin } from 'node:module';
 import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
 import type { CodeGraphEdge, CodeGraphNode, CodeGraphResponse } from '../../contracts/code-graph.js';
 import type { StructuredModeContext, NodeRow, EdgeRow, UnresolvedRow } from './structured-mode-context.js';
+import { parseJavaImports } from './java-import-declarations.js';
 
 type Resolution = 'internal' | 'external' | 'unresolved';
 type Evidence = NonNullable<CodeGraphResponse['dependencyEvidence']>[number];
@@ -142,13 +143,14 @@ function queryGrouped(env: StructuredModeContext, clusters: boolean): void {
   const resolvedImportAnchors = new Set(state.resolvedImportAnchors);
   const evidence: Evidence[] = [];
   let pageFull = false, sourceBytes = 0, sourceBudget = false, changedSource = false;
+  let validationBudget: ReturnType<StructuredModeContext['edgeValidationDeferred']> = null;
   const declarations = new Map<string, Declaration[] | null>();
   const warn = (message: string) => { if (!state.warnings.includes(message)) state.warnings.push(message); };
   const supportedLanguage = (language: string) => {
     if (result.capabilities.languages.includes(language)) return true;
     state.incomplete = true; warn(`unverified_language:${language}`); return false;
   };
-  function declaration(path: string, line: number, column: number | null): Declaration | undefined {
+  function declaration(path: string, line: number, column: number | null, language: string): Declaration | undefined {
     if (!declarations.has(path)) {
       env.consume(1);
       const indexed = env.db.prepare('SELECT content_hash FROM files WHERE path = ?').get(path) as { content_hash: string } | undefined;
@@ -174,7 +176,14 @@ function queryGrouped(env: StructuredModeContext, clusters: boolean): void {
         const content = buffer.subarray(0, length);
         const afterRead = fstatSync(fd);
         if (afterRead.size !== stat.size || afterRead.mtimeMs !== stat.mtimeMs || createHash('sha256').update(content).digest('hex') !== indexed.content_hash) { changedSource = true; return; }
-        declarations.set(path, dependencyDeclarations(content.toString('utf8')));
+        const source = content.toString('utf8');
+        declarations.set(path, language === 'java' ? parseJavaImports(source).map(item => {
+          const startOfLine = source.lastIndexOf('\n', item.start - 1) + 1;
+          const endOfLine = source.lastIndexOf('\n', item.end - 1) + 1;
+          return { line: item.line, column: Buffer.byteLength(source.slice(startOfLine, item.start)),
+            endLine: item.line + (source.slice(item.start, item.end).match(/\n/g)?.length ?? 0),
+            endColumn: Buffer.byteLength(source.slice(endOfLine, item.end)), specifier: item.specifier };
+        }) : dependencyDeclarations(source));
       } catch {
         declarations.set(path, null); state.incomplete = true; warn('import_declaration_source_unavailable'); return;
       } finally { if (fd !== undefined) closeSync(fd); }
@@ -272,7 +281,18 @@ function queryGrouped(env: StructuredModeContext, clusters: boolean): void {
     if (!safePath(source.file_path) || !safePath(target.file_path)) { state.incomplete = true; warn('unsafe_index_path_omitted'); return true; }
     if (!relationInScope(source.file_path, target.file_path, 'internal')) return true;
     if (!supportedLanguage(source.language) || !supportedLanguage(target.language)) return true;
-    const anchor = kind === 'imports' ? declaration(source.file_path, row.line ?? source.start_line, row.col) : undefined;
+    if (!env.acceptEdge(row, source, target)) {
+      validationBudget = env.edgeValidationDeferred();
+      // A request's validation allowance can end after reading this edge. Its
+      // cursor must stay before the edge so a fresh page can verify it in full.
+      if (validationBudget) return false;
+      state.incomplete = true;
+      // Rejections may precede the last scan page. Keep their explanation with
+      // the cumulative counts, rather than losing it when the request ends.
+      for (const warning of result.warnings) warn(warning);
+      return true;
+    }
+    const anchor = kind === 'imports' ? declaration(source.file_path, row.line ?? source.start_line, row.col, source.language) : undefined;
     if (changedSource || sourceBudget) return false;
     if (kind === 'imports' && !anchor) return true;
     if (anchor) {
@@ -289,7 +309,7 @@ function queryGrouped(env: StructuredModeContext, clusters: boolean): void {
     if (!source || !safePath(source.file_path)) { state.incomplete = true; warn('unresolved_source_unavailable'); return true; }
     if (!within(source.file_path, scope)) return true;
     if (!supportedLanguage(source.language)) return true;
-    const anchor = kind === 'imports' ? declaration(source.file_path, row.line, row.col) : undefined;
+    const anchor = kind === 'imports' ? declaration(source.file_path, row.line, row.col, source.language) : undefined;
     if (changedSource || sourceBudget) return false;
     if (kind === 'imports' && !anchor) return true;
     if (anchor && resolvedImportAnchors.has(hash(`${source.file_path}\0${anchor.line}\0${anchor.column}`))) {
@@ -305,12 +325,14 @@ function queryGrouped(env: StructuredModeContext, clusters: boolean): void {
     const target = anchor?.specifier ?? row.reference_name;
     // Bare specifiers may be package aliases; only a known Node builtin is
     // provably external without consulting unversioned package configuration.
-    const resolution = kind === 'imports' && isBuiltin(target) ? 'external' : 'unresolved';
+    // Java has no verified classpath/JDK resolution here. A dotted package name
+    // alone cannot prove whether it is external, absent or a missed local type.
+    const resolution = kind === 'imports' && source.language !== 'java' && isBuiltin(target) ? 'external' : 'unresolved';
     return accept({ id: env.id(`unresolved:${row.id}`), sourceId: env.id(source.id), sourceFile: source.file_path, targetFile: target,
       line: anchor?.line ?? row.line, ...(anchor ? { column: anchor.column } : row.col !== null ? { column: row.col } : {}), kind, resolution }, source.file_path, target, source);
   }
   if (clusters && groupBy === 'symbol' && env.root && within(env.root.file_path, scope)) group(env.root.file_path, 'internal', env.root, true);
-  while (state.phase !== 'done' && !state.stopped && !pageFull && !sourceBudget && !changedSource && env.remaining() >= 5) {
+  while (state.phase !== 'done' && !state.stopped && !pageFull && !sourceBudget && !validationBudget && !changedSource && env.remaining() >= 5) {
     if (state.phase === 'nodes') {
       const batch = env.readNodes(state.after, Math.min(100, env.remaining() - 3));
       if (!batch.length) { state.phase = 'edges'; state.after = 0; continue; }
@@ -363,7 +385,7 @@ function queryGrouped(env: StructuredModeContext, clusters: boolean): void {
   result.warnings.push(...state.warnings);
   if (!complete) {
     result.truncated = true;
-    result.truncationReasons = [state.stopped ?? (scanComplete ? 'unverified_import_sites' : sourceBudget ? 'source_scan_budget' : pageFull ? 'evidence_budget' : 'scan_budget')];
+    result.truncationReasons = [state.stopped ?? (scanComplete ? 'unverified_import_sites' : validationBudget ?? (sourceBudget ? 'source_scan_budget' : pageFull ? 'evidence_budget' : 'scan_budget'))];
     result.warnings.push('partial_dependency_counts', 'cycles_only_in_observed_graph');
     if (!state.stopped && !scanComplete) env.setContinuation(state);
   }

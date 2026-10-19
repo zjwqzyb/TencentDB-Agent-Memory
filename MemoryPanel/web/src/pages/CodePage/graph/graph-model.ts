@@ -1,4 +1,8 @@
-import type { CodeGraphNode, CodeGraphResponse } from '@/lib/api/code-graph-contract';
+import type {
+  CodeGraphMode,
+  CodeGraphNode,
+  CodeGraphResponse,
+} from '@/lib/api/code-graph-contract';
 
 export const VISIBLE_NODE_LIMIT = 500;
 export const VISIBLE_EDGE_LIMIT = 1500;
@@ -70,8 +74,64 @@ export function mergeGraph(
   };
 }
 
+export interface GraphRecoveryNotice {
+  key: string;
+  values?: { language: string };
+  action: 'chooseSymbol' | 'textQuery' | 'directory' | 'imports';
+}
+
+/** Explain only reasons present in this response; node kinds never override language gates. */
+export function graphRecoveryNotice(
+  data: CodeGraphResponse | null,
+  mode: CodeGraphMode,
+): GraphRecoveryNotice | null {
+  if (!data) return null;
+  const warnings = new Set(data.warnings);
+  if (data.state === 'empty') {
+    if (warnings.has('select_a_callable'))
+      return { key: 'code.graph.selectCallable', action: 'chooseSymbol' };
+    if (warnings.has('select_a_type'))
+      return { key: 'code.graph.selectType', action: 'chooseSymbol' };
+    return null;
+  }
+  if (data.state !== 'unsupported') return null;
+  const reason = data.capabilities.modes[mode].reason;
+  const has = (value: string) => warnings.has(value) || reason === value;
+  if (has('unsupported_index_schema'))
+    return { key: 'code.graph.unsupportedSchema', action: 'textQuery' };
+  if (has('unverified_sdk_version'))
+    return { key: 'code.graph.unverifiedSdk', action: 'textQuery' };
+  const language = data.warnings
+    .find((value) => value.startsWith('unverified_language:'))
+    ?.slice(20);
+  if (language)
+    return {
+      key: 'code.graph.unverifiedLanguage',
+      values: { language: graphLanguageLabel(language) },
+      action: 'textQuery',
+    };
+  if (warnings.has('unsupported_grouping'))
+    return { key: 'code.graph.unsupportedGrouping', action: 'directory' };
+  if (warnings.has('select_one_dependency_kind_imports_or_calls'))
+    return { key: 'code.graph.selectDependencyKind', action: 'imports' };
+  if (warnings.has('symbol_scope_required'))
+    return { key: 'code.graph.selectSymbolScope', action: 'chooseSymbol' };
+  if (mode === 'hierarchy' && warnings.has('typescript_interface_extends_not_extracted'))
+    return { key: 'code.graph.interfaceExtendsLimit', action: 'chooseSymbol' };
+  return { key: 'code.graph.unsupportedView', action: 'textQuery' };
+}
+
+export function graphLanguageLabel(language: string): string {
+  return (
+    (
+      { typescript: 'TypeScript', javascript: 'JavaScript', java: 'Java' } as Record<string, string>
+    )[language] ?? language
+  );
+}
+
 /** User-facing coverage reasons, independent of internal diagnostic codes. */
 export function coverageNoticeKeys(data: CodeGraphResponse): string[] {
+  if (!['ready', 'empty'].includes(data.state)) return [];
   const warnings = new Set(data.warnings),
     reasons = new Set(data.truncationReasons);
   const keys: string[] = [];
@@ -90,6 +150,18 @@ export function coverageNoticeKeys(data: CodeGraphResponse): string[] {
     warnings.has('unresolved_source_unavailable')
   )
     keys.push('code.graph.unknownCoverage');
+  for (const [warning, key] of [
+    ['java_heuristic_relations_omitted', 'javaHeuristicLimit'],
+    ['java_wildcard_relations_omitted', 'javaWildcardLimit'],
+    ['java_ambiguous_relations_omitted', 'javaAmbiguousLimit'],
+    ['java_relation_source_unverified', 'javaSourceUnverified'],
+    ['java_static_analysis_incomplete', 'javaStaticLimit'],
+  ])
+    if (warnings.has(warning)) keys.push(`code.graph.${key}`);
+  if (warnings.has('java_relation_source_budget'))
+    keys.push(
+      data.nextCursor ? 'code.graph.javaSourceBudgetContinue' : 'code.graph.javaSourceBudget',
+    );
   if (data.truncated) {
     if (data.nextCursor) keys.push('code.graph.continueScan');
     else if (

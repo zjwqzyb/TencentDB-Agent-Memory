@@ -7,7 +7,7 @@ async (page) => {
   const team = { team_id: 'team-browser', name: 'CodeGraph Browser Fixture', owner_user_id: user.user_id, status: 'active', created_at: stamp, updated_at: stamp };
   const agent = { agent_id: 'agent-browser', team_id: team.team_id, owner_user_id: user.user_id, name: 'Browser Agent', status: 'active', visibility: 'team', created_at: stamp, updated_at: stamp, metadata_json: '{}' };
   const asset = id => ({ knowledge_id: id, code_graph_id: id, asset_type: 'code_graph', name: id === 'cg-browser-a' ? 'call-fixture-alpha' : 'call-fixture-beta', repo_name: id === 'cg-browser-a' ? 'call-fixture-alpha' : 'call-fixture-beta', repo_url: `https://github.com/fixture/${id}.git`, branch: 'main', commit_hash: state.version === 'v1' ? '1111111111111111111111111111111111111111' : '2222222222222222222222222222222222222222', team_id: team.team_id, visibility: 'team', owner_user_id: user.user_id, meta_status: 'active', status: 'ready', version: state.version, stats: { files: 4, nodes: 6, edges: 7 }, last_sync_at: stamp, created_at: stamp, updated_at: stamp });
-  const shapes = [
+  const defaultShapes = [
     ['a', 'entry', 'function', 'src/main.ts', 2],
     ['b', 'helper', 'function', 'src/helper.ts', 5],
     ['c', 'upstream', 'function', 'src/caller.ts', 8],
@@ -21,13 +21,24 @@ async (page) => {
   ];
   function graph(id, request, action, snapshot) {
     const prefix = `${id}@${snapshot.version}:`;
-    const nodes = shapes.map(([key, name, kind, filePath, startLine]) => ({ id: prefix + key, name, qualifiedName: `${filePath}:${name}`, kind, filePath, language: 'typescript', startLine, endLine: startLine + 1 }));
+    const shapes = snapshot.javaFixture ? [
+      ['package', 'demo', 'namespace', 'src/main/java/demo/Service.java', 1],
+      ['a', 'run', 'method', 'src/main/java/demo/Service.java', 8],
+      ['b', 'helper', 'method', 'src/main/java/demo/Helper.java', 4],
+      ['c', 'main', 'method', 'src/main/java/demo/Main.java', 6],
+      ['d', 'run', 'method', 'src/main/java/demo/Other.java', 12],
+      ['derived', 'Service', 'class', 'src/main/java/demo/Service.java', 3],
+      ['base', 'BaseService', 'class', 'src/main/java/demo/BaseService.java', 2],
+      ['iface', 'RunnableService', 'interface', 'src/main/java/demo/RunnableService.java', 2],
+    ] : defaultShapes;
+    const nodes = shapes.map(([key, name, kind, filePath, startLine]) => ({ id: prefix + key, name, qualifiedName: `${filePath}:${name}`, kind, filePath, language: snapshot.javaFixture ? 'java' : 'typescript', startLine, endLine: startLine + 1 }));
     const edges = [['aa', 'a', 'a'], ['ab-1', 'a', 'b'], ['ab-2', 'a', 'b'], ['ba', 'b', 'a'], ['ca', 'c', 'a'], ['bd', 'b', 'd'], ['db', 'd', 'b']].map(([key, source, target], index) => ({ id: prefix + key, source: prefix + source, target: prefix + target, kind: 'calls', evidence: [{ filePath: nodes.find(node => node.id === prefix + source).filePath, line: index + 2 }] }));
-    const result = { state: snapshot.responseState, assetId: id, indexVersion: snapshot.version, commit: asset(id).commit_hash, indexedAt: stamp, branch: 'main', capabilities: { sdkVersion: '1.6.2', modes: { calls: { supported: true }, impact: { supported: true }, dependencies: { supported: true }, clusters: { supported: true }, hierarchy: { supported: true, limitations: ['typescript_interface_extends_not_extracted'] } }, languages: ['typescript', 'javascript'], edgeKinds: ['calls'] }, nodes: [], edges: [], focusId: request.nodeId || null, truncated: snapshot.truncated, truncationReasons: snapshot.truncated ? ['node_budget'] : [], nextCursor: snapshot.truncated ? 'fixture-next' : null, warnings: [] };
+    const result = { state: snapshot.responseState, assetId: id, indexVersion: snapshot.version, commit: asset(id).commit_hash, indexedAt: stamp, branch: 'main', capabilities: { sdkVersion: '1.6.2', modes: { calls: { supported: true }, impact: { supported: true }, dependencies: { supported: true }, clusters: { supported: true }, hierarchy: { supported: true, limitations: ['typescript_interface_extends_not_extracted'] } }, languages: ['typescript', 'javascript', ...(snapshot.javaFixture ? ['java'] : [])], edgeKinds: ['calls'] }, nodes: [], edges: [], focusId: request.nodeId || null, truncated: snapshot.truncated, truncationReasons: snapshot.truncated ? ['node_budget'] : [], nextCursor: snapshot.truncated ? 'fixture-next' : null, warnings: [...(snapshot.actionWarnings?.[action] || [])] };
+    if (snapshot.capabilities) result.capabilities = { ...result.capabilities, ...snapshot.capabilities, modes: { ...result.capabilities.modes, ...snapshot.capabilities.modes } };
     if (request.indexVersion && request.indexVersion !== snapshot.version) result.state = 'version_expired';
     if (snapshot.actionState[action]) result.state = snapshot.actionState[action];
     if (result.state !== 'ready') return result;
-    if (action === 'graph-tree') result.nodes = [...new Set(nodes.map(node => node.filePath))].map((filePath, index) => ({ id: prefix + 'file-' + index, name: filePath.split('/').pop(), qualifiedName: filePath, kind: 'file', filePath, language: 'typescript', startLine: 1, endLine: 20 }));
+    if (action === 'graph-tree') result.nodes = [...new Set(nodes.map(node => node.filePath))].map((filePath, index) => ({ id: prefix + 'file-' + index, name: filePath.split('/').pop(), qualifiedName: filePath, kind: 'file', filePath, language: snapshot.javaFixture ? 'java' : 'typescript', startLine: 1, endLine: 20 }));
     if (action === 'graph-search') result.nodes = nodes.filter(node => (!request.query || `${node.name} ${node.filePath}`.toLowerCase().includes(request.query.toLowerCase())) && (!request.scopePath || node.filePath.startsWith(request.scopePath)) && (!request.nodeKinds?.length || request.nodeKinds.includes(node.kind)));
     if (action === 'graph-search' && snapshot.sparseSearch && !request.cursor) { result.nodes = []; result.nextCursor = 'sparse-next'; result.truncated = true; result.truncationReasons = ['scan_budget']; }
     if (action === 'graph-search' && request.cursor === 'sparse-next') { result.nextCursor = null; result.truncated = false; result.truncationReasons = []; }
@@ -36,7 +47,10 @@ async (page) => {
       if (action === 'graph-source' && result.nodes[0]) {
         const node = result.nodes[0];
         if (snapshot.sourceUnavailable) { result.state = 'source_unavailable'; result.warnings = ['source_changed_since_index']; }
-        else result.source = { nodeId: node.id, filePath: node.filePath, startLine: request.sourceLine || node.startLine, endLine: (request.sourceLine || node.startLine) + 1, content: `// ${id} ${snapshot.version} ${node.name}\nfunction ${node.name}() { return "${node.id}"; }`, contentHash: '0'.repeat(64) };
+        else {
+          const javaDeclaration = node.kind === 'namespace' ? 'package demo;' : node.kind === 'class' ? `class ${node.name} {}` : node.kind === 'interface' ? `interface ${node.name} {}` : `void ${node.name}() { helper(); }`;
+          result.source = { nodeId: node.id, filePath: node.filePath, startLine: request.sourceLine || node.startLine, endLine: (request.sourceLine || node.startLine) + 1, content: snapshot.javaFixture ? `// ${id} ${snapshot.version} ${node.id}\n${javaDeclaration}` : `// ${id} ${snapshot.version} ${node.name}\nfunction ${node.name}() { return "${node.id}"; }`, contentHash: '0'.repeat(64) };
+        }
       }
     }
     if (action === 'graph' && request.nodeId && (!request.mode || request.mode === 'calls')) {
@@ -55,6 +69,7 @@ async (page) => {
       }
       result.nodes = nodes.filter(node => seen.has(node.id));
       result.edges = [...chosen.values()];
+      if (snapshot.javaFixture && ['namespace', 'file', 'import'].includes(result.nodes[0]?.kind)) { result.state = 'empty'; result.warnings.push('select_a_callable'); }
     }
     if (action === 'graph' && request.mode === 'impact' && request.nodeId) {
       const distance = new Map([[request.nodeId, 0]]);
@@ -86,9 +101,9 @@ async (page) => {
     if (action === 'graph' && request.mode === 'hierarchy' && request.nodeId) {
       const focal = nodes.find(node => node.id === request.nodeId);
       if (!['class', 'interface'].includes(focal?.kind)) { result.state = 'empty'; result.warnings = ['select_a_type']; return result; }
-      if (focal.kind === 'interface') result.warnings = ['typescript_interface_extends_not_extracted'];
+      if (!snapshot.javaFixture && focal.kind === 'interface') result.warnings = ['typescript_interface_extends_not_extracted'];
       if (focal.name === 'ExternalChild') result.unresolved = [{ sourceId: focal.id, name: 'UnknownBase', kind: 'extends', filePath: focal.filePath, line: focal.startLine }];
-      const typeEdges = [['derived-base', 'derived', 'base', 'extends'], ['derived-iface', 'derived', 'iface', 'implements']].map(([key, source, target, kind]) => ({ id: prefix + key, source: prefix + source, target: prefix + target, kind, evidence: [{ filePath: 'src/types.ts', line: 21 }] }));
+      const typeEdges = [['derived-base', 'derived', 'base', 'extends'], ['derived-iface', 'derived', 'iface', 'implements']].map(([key, source, target, kind]) => ({ id: prefix + key, source: prefix + source, target: prefix + target, kind, evidence: [{ filePath: snapshot.javaFixture ? 'src/main/java/demo/Service.java' : 'src/types.ts', line: snapshot.javaFixture ? 3 : 21 }] }));
       const seen = new Set([request.nodeId]), chosen = new Map();
       let frontier = [request.nodeId];
       for (let depth = 0; depth < (request.depth || 1); depth++) {
@@ -145,6 +160,7 @@ async (page) => {
       if(request.evidenceFor) {result.nodes=[];result.edges=[];result.dependencyEvidence=[{id:prefix+'cluster-site',sourceId:prefix+'a',targetId:prefix+'utility',sourceFile:'src/main.ts',targetFile:'lib/utils.ts',line:2,kind,resolution:'internal'}];result.nextCursor=null;result.truncated=false;}
     }
     if (snapshot.extraWarnings) result.warnings.push(...snapshot.extraWarnings);
+    if (snapshot.modeWarnings?.[request.mode]) result.warnings.push(...snapshot.modeWarnings[request.mode]);
     if (snapshot.extraReasons) { result.truncated = true; result.truncationReasons = snapshot.extraReasons; result.nextCursor = snapshot.extraCursor || null; }
     if (request.cursor && snapshot.emptyContinuation) { result.nodes = []; result.edges = []; result.state = 'empty'; result.nextCursor = null; }
     if (!result.nodes.length && !result.dependencyEvidence?.length && result.state === 'ready') result.state = 'empty';

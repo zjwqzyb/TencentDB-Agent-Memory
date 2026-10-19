@@ -18,13 +18,15 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
   if (mode === 'hierarchy' && !['class', 'interface'].includes(root.kind)) {
     result.state = 'empty'; result.warnings.push('select_a_type'); return;
   }
-  if (mode === 'hierarchy') {
+  const limitedInterface = root.language === 'typescript';
+  if (mode === 'hierarchy' && limitedInterface) {
     result.warnings.push('typescript_interface_extends_not_extracted');
     if (root.kind === 'interface' && (request.direction === 'out' || (request.edgeKinds?.length && request.edgeKinds.every(kind => kind === 'extends')))) {
       result.state = 'unsupported'; return;
     }
   }
   if (mode === 'impact') result.warnings.push('static_analysis_potential_impact', 'unresolved_or_dynamic_relations_not_complete');
+  if (mode === 'impact' && root.language === 'java') result.warnings.push('java_static_analysis_incomplete');
   if (!env.hasUnresolved) result.warnings.push('unresolved_coverage_unavailable');
   const requested = request.edgeKinds;
   const kinds = requested ? KINDS[mode].filter(k => requested.includes(k)) : KINDS[mode];
@@ -74,6 +76,11 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
     if (emitted.has(edge.id)) { current.after = edge.id; continue; }
     const source = lookup(edge.source), target = lookup(edge.target);
     if (!source || !target) { current.after = edge.id; result.warnings.push('dangling_edge_omitted'); continue; }
+    if (!env.acceptEdge(edge, source, target)) {
+      const deferred = env.edgeValidationDeferred();
+      if (deferred) { stopReason = deferred; break; }
+      current.after = edge.id; continue;
+    }
     const neighbor = side === 'source' ? target : source;
     if (mode === 'hierarchy' && !['class', 'interface'].includes(neighbor.kind)) { current.after = edge.id; result.warnings.push('non_type_relation_omitted'); continue; }
     if (!result.capabilities.languages.includes(neighbor.language)) { current.after = edge.id; result.warnings.push(`unverified_language:${neighbor.language}`); continue; }
@@ -112,6 +119,6 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
     result.truncated = true; result.truncationReasons = [stopReason || 'scan_budget'];
     if (!hardLimit) env.setContinuation({ ...state, edges: [...emitted] });
   }
-  if (!result.edges.length && !result.truncated) result.state = mode === 'hierarchy' && root.kind === 'interface' && direction === 'both' ? 'unsupported' : 'empty';
+  if (!result.edges.length && !result.truncated) result.state = mode === 'hierarchy' && limitedInterface && root.kind === 'interface' && direction === 'both' ? 'unsupported' : 'empty';
   result.warnings = [...new Set(result.warnings)];
 }

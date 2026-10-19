@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { coverageNoticeKeys, findRelationPath, mergeGraph, sourceLink, stablePositions } from '../web/src/pages/CodePage/graph/graph-model';
+import { coverageNoticeKeys, graphRecoveryNotice, findRelationPath, mergeGraph, sourceLink, stablePositions } from '../web/src/pages/CodePage/graph/graph-model';
 import type { CodeGraphNode, CodeGraphResponse } from '../../contracts/code-graph';
 
 const node = (id: string): CodeGraphNode => ({ id, name: id, qualifiedName: id, kind: 'function', filePath: 'src/a.ts', language: 'typescript', startLine: 1, endLine: 2 });
@@ -48,6 +48,40 @@ describe('CodeGraph browser model', () => {
     expect(coverageNoticeKeys({ ...graph, warnings: [], nextCursor: 'next', truncationReasons: ['source_scan_budget'] })).toEqual(['code.graph.continueScan']);
     expect(coverageNoticeKeys({ ...graph, warnings: [], truncationReasons: [] })).toEqual(['code.graph.incompleteNoCursor']);
     expect(coverageNoticeKeys({ ...graph, warnings: ['unresolved_diagnostic_budget'], truncationReasons: ['unverified_import_sites'] })).toEqual(['code.graph.diagnosticBudget']);
+  });
+  it('maps unsupported reasons to honest recovery actions, using the current response only', () => {
+    const graph = { ...response([]), state: 'unsupported' as const };
+    const cases = [
+      ['unverified_sdk_version', 'unverifiedSdk', 'textQuery'],
+      ['unsupported_index_schema', 'unsupportedSchema', 'textQuery'],
+      ['unsupported_grouping', 'unsupportedGrouping', 'directory'],
+      ['select_one_dependency_kind_imports_or_calls', 'selectDependencyKind', 'imports'],
+      ['symbol_scope_required', 'selectSymbolScope', 'chooseSymbol'],
+      ['future_reason', 'unsupportedView', 'textQuery'],
+    ];
+    for (const [warning, key, action] of cases)
+      expect(graphRecoveryNotice({ ...graph, warnings: [warning] }, 'calls'))
+        .toMatchObject({ key: `code.graph.${key}`, action });
+    expect(graphRecoveryNotice({ ...graph, warnings: ['unverified_language:java'] }, 'calls'))
+      .toEqual({ key: 'code.graph.unverifiedLanguage', values: { language: 'Java' }, action: 'textQuery' });
+    expect(graphRecoveryNotice({ ...graph, capabilities: { ...graph.capabilities, modes: { ...graph.capabilities.modes, calls: { supported: false, reason: 'unsupported_index_schema' } } } }, 'calls')?.key)
+      .toBe('code.graph.unsupportedSchema');
+    expect(graphRecoveryNotice({ ...graph, warnings: ['typescript_interface_extends_not_extracted'] }, 'hierarchy')?.key)
+      .toBe('code.graph.interfaceExtendsLimit');
+    expect(graphRecoveryNotice({ ...graph, warnings: ['unsupported_index_schema', 'unverified_language:java', 'select_a_callable'] }, 'calls')?.key)
+      .toBe('code.graph.unsupportedSchema');
+  });
+  it('distinguishes non-applicable focus, empty relations, and partial language coverage', () => {
+    const graph = { ...response([node('a')]), state: 'empty' as const };
+    expect(graphRecoveryNotice({ ...graph, warnings: ['select_a_callable'] }, 'calls')?.key).toBe('code.graph.selectCallable');
+    expect(graphRecoveryNotice({ ...graph, warnings: ['select_a_type'] }, 'hierarchy')?.key).toBe('code.graph.selectType');
+    expect(graphRecoveryNotice(graph, 'calls')).toBeNull();
+    expect(coverageNoticeKeys({ ...graph, state: 'unsupported', truncated: true, warnings: ['unverified_language:java'] })).toEqual([]);
+    expect(graphRecoveryNotice({ ...graph, state: 'ready', warnings: ['unverified_language:java', 'typescript_interface_extends_not_extracted'] }, 'hierarchy')).toBeNull();
+    const java = { ...graph, state: 'ready' as const, warnings: ['java_heuristic_relations_omitted', 'java_wildcard_relations_omitted', 'java_ambiguous_relations_omitted', 'java_relation_source_unverified', 'java_relation_source_budget', 'java_static_analysis_incomplete'] };
+    expect(graphRecoveryNotice(java, 'calls')).toBeNull();
+    expect(coverageNoticeKeys({ ...java, truncated: true, nextCursor: 'next' })).toContain('code.graph.javaSourceBudgetContinue');
+    expect(coverageNoticeKeys(java)).toEqual(['code.graph.javaHeuristicLimit', 'code.graph.javaWildcardLimit', 'code.graph.javaAmbiguousLimit', 'code.graph.javaSourceUnverified', 'code.graph.javaStaticLimit', 'code.graph.javaSourceBudget']);
   });
   it('lays out a 500 node chain and a 500 node SCC without recursion loops', () => {
     const nodes = Array.from({ length: 500 }, (_, index) => node(String(index)));

@@ -38,6 +38,10 @@
   color: var(--tea-color-text-secondary);
   overflow-wrap: anywhere;
 }
+._codegraph-root ._codegraph-capabilities {
+  margin: 0;
+  padding: 0 16px 12px;
+}
 ._codegraph-toolbar,
 ._codegraph-actions {
   display: flex;
