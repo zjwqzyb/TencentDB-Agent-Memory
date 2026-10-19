@@ -166,6 +166,8 @@ export function CodeGraphCanvas({
     if (!container.current) return;
     let sigma: Sigma | undefined;
     let resize: ResizeObserver | undefined, theme: MutationObserver | undefined;
+    let resolution: MediaQueryList | undefined;
+    let pixelRatioChanged: (() => void) | undefined;
     try {
       const graph = new MultiDirectedGraph({ allowSelfLoops: true });
       sigma = new Sigma(graph, container.current, {
@@ -212,7 +214,31 @@ export function CodeGraphCanvas({
       });
       const render = () =>
         drawRelations(sigma!, canvas, dataRef.current, selectedRef.current, highlightedRef.current);
+      // Sigma 3.0.3 skips backing-store resize when only DPR changes. Its next
+      // render updates the GL viewport but leaves the old canvas size and 2D
+      // transform, separating nodes from labels, relations and pointer picking.
+      sigma.on('beforeRender', () => {
+        const nodes = sigma!.getCanvases().nodes;
+        const { width, height } = sigma!.getDimensions();
+        const ratio = window.devicePixelRatio || 1;
+        if (
+          nodes.width !== Math.floor(width * ratio) ||
+          nodes.height !== Math.floor(height * ratio)
+        )
+          sigma!.resize(true);
+      });
       sigma.on('afterRender', render);
+      const watchPixelRatio = () => {
+        if (resolution && pixelRatioChanged)
+          resolution.removeEventListener('change', pixelRatioChanged);
+        resolution = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+        resolution.addEventListener('change', pixelRatioChanged!);
+      };
+      pixelRatioChanged = () => {
+        watchPixelRatio();
+        sigma?.scheduleRefresh();
+      };
+      watchPixelRatio();
       sigma.on('clickNode', ({ node }) => {
         const match = dataRef.current.nodes.find((item) => item.id === node);
         if (match) selectRef.current(match);
@@ -252,6 +278,8 @@ export function CodeGraphCanvas({
     return () => {
       resize?.disconnect();
       theme?.disconnect();
+      if (resolution && pixelRatioChanged)
+        resolution.removeEventListener('change', pixelRatioChanged);
       sigma?.kill();
       renderer.current = undefined;
     };
