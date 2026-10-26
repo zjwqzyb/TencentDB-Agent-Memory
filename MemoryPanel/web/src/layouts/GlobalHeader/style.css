@@ -223,7 +223,7 @@
 }
 
 /* ===== Narrow screens: keep every header action reachable ===== */
-@media (max-width: 720px) {
+@media (max-width: 560px) {
   ._memory-global-header {
     gap: 6px;
     padding: 0 8px;

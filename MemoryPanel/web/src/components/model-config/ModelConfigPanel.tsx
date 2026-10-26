@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -52,7 +52,7 @@ export function ModelConfigPanel({
   const [conflict, setConflict] = useState(false);
 
   const dirty = useMemo(
-    () => Boolean(config && isFormDirty(form, config)),
+    () => isFormDirty(form, config),
     [config, form],
   );
   const confirmKeyReuse = requiresKeyReuseConfirmation(form, config);
@@ -74,31 +74,41 @@ export function ModelConfigPanel({
     }
   }, [confirmKeyReuse, form.confirmReuseKey]);
 
-  useEffect(() => {
+  const loadConfig = useCallback(async (signal?: AbortSignal) => {
     const seq = ++requestSeq.current;
-    const controller = new AbortController();
     setLoading(true);
     setError('');
     setConflict(false);
     setFieldErrors([]);
-    void instanceUpstreamApi.get(controller.signal)
-      .then((next) => {
-        if (requestSeq.current !== seq) return;
-        setConfig(next);
-        setForm(formFromConfig(next));
-      })
-      .catch((err) => {
-        if (requestSeq.current !== seq || controller.signal.aborted) return;
-        setError(errorMessage(err));
-      })
-      .finally(() => {
-        if (requestSeq.current === seq && !controller.signal.aborted) setLoading(false);
-      });
+    try {
+      const next = await instanceUpstreamApi.get(signal);
+      if (requestSeq.current !== seq || signal?.aborted) return;
+      setConfig(next);
+      setForm(formFromConfig(next));
+    } catch (err) {
+      if (requestSeq.current !== seq || signal?.aborted) return;
+      setError(errorMessage(err));
+    } finally {
+      if (requestSeq.current === seq && !signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadConfig(controller.signal);
     return () => controller.abort();
-  }, [resetToken]);
+  }, [loadConfig, resetToken]);
 
   function updateForm(patch: Partial<ModelConfigForm>) {
-    setForm((prev) => ({ ...prev, ...patch }));
+    setForm((prev) => ({
+      ...prev,
+      ...patch,
+      ...(
+        'baseUrl' in patch || 'apiKey' in patch || 'replaceKey' in patch
+          ? { confirmReuseKey: false }
+          : {}
+      ),
+    }));
     setFieldErrors([]);
     setError('');
     setConflict(false);
@@ -152,23 +162,36 @@ export function ModelConfigPanel({
           <Text theme="label">{t('modelConfig.context.instance')}</Text>
           <strong>{instanceName || t('modelConfig.value.unknown')}</strong>
           <Tag theme={statusTheme} variant="soft" size="sm">{statusLabel}</Tag>
+          {activeManaged && managedDraft && (
+            <Tag theme="success" variant="soft" size="sm">{t('modelConfig.status.active')}</Tag>
+          )}
         </div>
         <Text theme="weak">{t('modelConfig.context.scope')}</Text>
+        {activeManaged && managedDraft && (
+          <Text theme="weak" parent="div" className="model-config-active-note">
+            {t('modelConfig.activeStill', {
+              provider: config.provider
+                ? t(`modelConfig.provider.${config.provider}`)
+                : t('modelConfig.value.unknown'),
+              model: config.model_id || t('modelConfig.value.unknown'),
+            })}
+          </Text>
+        )}
         <dl className="model-config-summary">
           <div>
             <dt>{t('modelConfig.summary.source')}</dt>
             <dd>{config?.source === 'panel' ? t('modelConfig.source.panel') : t('modelConfig.source.deployment')}</dd>
           </div>
           <div>
-            <dt>{t('modelConfig.summary.provider')}</dt>
+            <dt>{t(config?.draft ? 'modelConfig.summary.draftProvider' : 'modelConfig.summary.provider')}</dt>
             <dd>{currentProvider}</dd>
           </div>
           <div>
-            <dt>{t('modelConfig.summary.model')}</dt>
+            <dt>{t(config?.draft ? 'modelConfig.summary.draftModel' : 'modelConfig.summary.model')}</dt>
             <dd>{saved?.model_id || t('modelConfig.value.unknown')}</dd>
           </div>
           <div>
-            <dt>{t('modelConfig.summary.version')}</dt>
+            <dt>{t(config?.draft ? 'modelConfig.summary.draftVersion' : 'modelConfig.summary.version')}</dt>
             <dd>{config?.config_id ? `v${config.version}` : t('modelConfig.value.notManaged')}</dd>
           </div>
           <div>
@@ -187,26 +210,7 @@ export function ModelConfigPanel({
               <div className="model-config-alert-row">
                 <span>{error}</span>
                 {conflict && (
-                  <Button type="link" onClick={() => {
-                    setConfig(undefined);
-                    setForm(formFromConfig(undefined));
-                    setLoading(true);
-                    const seq = ++requestSeq.current;
-                    void instanceUpstreamApi.get()
-                      .then((next) => {
-                        if (requestSeq.current !== seq) return;
-                        setConfig(next);
-                        setForm(formFromConfig(next));
-                        setConflict(false);
-                        setError('');
-                      })
-                      .catch((err) => {
-                        if (requestSeq.current === seq) setError(errorMessage(err));
-                      })
-                      .finally(() => {
-                        if (requestSeq.current === seq) setLoading(false);
-                      });
-                  }}>
+                  <Button type="link" onClick={() => void loadConfig()}>
                     {t('modelConfig.conflict.reload')}
                   </Button>
                 )}
@@ -220,9 +224,7 @@ export function ModelConfigPanel({
               </ul>
             </Alert>
           )}
-          {!activeManaged && (
-            <Alert type="info">{t('modelConfig.draftNotice')}</Alert>
-          )}
+          <Alert type="info">{t('modelConfig.draftNotice')}</Alert>
 
           <div className="model-config-grid">
             <Form.Item label={t('modelConfig.field.provider')} required>

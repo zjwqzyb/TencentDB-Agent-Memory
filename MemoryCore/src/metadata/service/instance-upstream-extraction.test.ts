@@ -183,7 +183,7 @@ describe("instance extraction admin API", () => {
           api_key_configured: true,
           api_key_masked: "••••••••",
           model_id: "deepseek-chat",
-          enabled: false,
+          enabled: true,
           version: 1,
         },
       },
@@ -221,7 +221,7 @@ describe("instance extraction admin API", () => {
         code: 0,
         data: {
           provider: "glm",
-          enabled: false,
+          enabled: true,
           api_key_configured: true,
           version: created.json.data.version + 1,
         },
@@ -401,6 +401,8 @@ describe("instance extraction admin API", () => {
       api_key: "draft-only-secret",
       model_id: "deepseek-chat",
     });
+    const internal = await service.listInstanceUpstreamGroupsInternal([]);
+    expect(internal.items.find((item) => item.group_type === "extraction")?.draft_json).toBe("");
   });
 
   it("updates only draft fields and preserves active values and server-side keys", async () => {
@@ -497,6 +499,43 @@ describe("instance extraction admin API", () => {
       model_id: "stale-model",
     }, headers);
     expect(stale).toMatchObject({ status: 409, json: { code: 409 } });
+  });
+
+  it("does not expose a corrupt draft as a usable configuration", async () => {
+    const service = makeService("corrupt-draft-admin", "system_admin");
+    service.rawStore.createInstanceUpstreamGroup({
+      group_type: "extraction",
+      name: "抽取模型",
+      mode: "custom_unified",
+      provider: "glm",
+      base_url: "",
+      api_key: "",
+      model_id: "",
+      draft_json: JSON.stringify({
+        provider: "glm",
+        base_url: "https://open.bigmodel.cn/api/paas/v4",
+      }),
+    });
+    harness = await startHarness({ instance_corrupt: service });
+
+    const response = await post(
+      harness.baseUrl,
+      "instance-upstream/extraction/get",
+      {},
+      { instance: "instance_corrupt", key: "corrupt-draft-admin" },
+    );
+    expect(response).toMatchObject({
+      status: 200,
+      json: {
+        code: 0,
+        data: {
+          configured: false,
+          managed: false,
+          draft: null,
+          source: "deployment",
+        },
+      },
+    });
   });
 
   it("requires explicit confirmation before reusing a key for another endpoint", async () => {

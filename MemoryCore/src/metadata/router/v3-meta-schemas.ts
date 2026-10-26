@@ -523,6 +523,7 @@ export const upstreamExtractionCreateSchema = z.object({
   api_key: z.string().min(1),
   model_id: z.string().optional(),
   provider: upstreamProvider.optional(),
+  enabled: z.boolean().optional(),
   description: z.string().optional(),
   draft: z.boolean().optional(),
 });
@@ -533,6 +534,7 @@ export const upstreamExtractionUpdateSchema = z.object({
   api_key: z.string().optional(),
   model_id: z.string().optional(),
   provider: upstreamProvider.optional(),
+  enabled: z.boolean().optional(),
   confirm_reuse_api_key: z.boolean().optional(),
   description: z.string().optional(),
   draft: z.boolean().optional(),

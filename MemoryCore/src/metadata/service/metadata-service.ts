@@ -323,13 +323,14 @@ function parseExtractionDraft(row: InstanceUpstreamConfigEntity): ExtractionDraf
     const provider = typeof value.provider === "string" && UPSTREAM_PROVIDER_SET.has(value.provider as UpstreamProvider)
       ? value.provider as UpstreamProvider
       : DEFAULT_UPSTREAM_PROVIDER;
-    return {
+    const draft = {
       provider,
       base_url: typeof value.base_url === "string" ? value.base_url : "",
       api_key: typeof value.api_key === "string" ? value.api_key : "",
       model_id: typeof value.model_id === "string" ? value.model_id : "",
       description: typeof value.description === "string" ? value.description : "",
     };
+    return draft.base_url && draft.api_key && draft.model_id ? draft : null;
   } catch {
     return null;
   }
@@ -2316,7 +2317,9 @@ export class MetadataService {
     supportedAgents: SupportedAgent[],
   ): Promise<{ items: InstanceUpstreamConfigEntity[] }> {
     const rows = await this.store.listInstanceUpstreamGroups(undefined, supportedAgents);
-    return { items: rows };
+    // 内部 Proxy 只需要 active 转发字段。draft_json 含待提交 Key，不能随内部
+    // 列表进入请求/响应日志或跨越到不需要草稿的消费者。
+    return { items: rows.map((row) => ({ ...row, draft_json: "" })) };
   }
 
   /** Panel B2: 新建 custom 组。 */
@@ -2531,6 +2534,7 @@ export class MetadataService {
       api_key: string;
       model_id?: string;
       provider?: UpstreamProvider;
+      enabled?: boolean;
       description?: string;
       draft?: boolean;
     },
@@ -2581,7 +2585,7 @@ export class MetadataService {
         group_type: "extraction",
         name: EXTRACTION_GROUP_NAME,
         agents: [],
-        enabled: false,
+        enabled: input.enabled !== false,
         mode: "custom_unified",
         provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
         base_url: baseUrl,
@@ -2608,6 +2612,7 @@ export class MetadataService {
       api_key?: string;
       model_id?: string;
       provider?: UpstreamProvider;
+      enabled?: boolean;
       confirm_reuse_api_key?: boolean;
       description?: string;
       expected_version: number;
@@ -2714,6 +2719,7 @@ export class MetadataService {
         base_url: baseUrl,
         api_key: submittedApiKey,
         model_id: input.model_id,
+        enabled: input.enabled,
         description: input.description,
       });
       return this.toPublicExtraction(row);

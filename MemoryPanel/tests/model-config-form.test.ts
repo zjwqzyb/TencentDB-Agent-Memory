@@ -141,6 +141,7 @@ describe('model configuration form model', () => {
     expect(isFormDirty(baseline, configured)).toBe(false);
     expect(isFormDirty(form({ description: 'changed' }), configured)).toBe(true);
     expect(isFormDirty(form({ replaceKey: true }), configured)).toBe(true);
+    expect(isFormDirty({ ...formFromConfig(undefined), modelId: 'offline-edit' }, undefined)).toBe(true);
   });
 
   it('whitelists only the model-config actions required by this ticket', () => {

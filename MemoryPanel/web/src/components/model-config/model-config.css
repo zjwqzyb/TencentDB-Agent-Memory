@@ -34,6 +34,11 @@
   margin: 12px 0 0;
 }
 
+.model-config-active-note {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
 .model-config-summary div {
   min-width: 0;
 }
