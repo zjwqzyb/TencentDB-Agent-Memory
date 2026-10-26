@@ -458,6 +458,7 @@ export const userSessionDefaultDeleteSchema = z.object({
 const upstreamGroupType = z.enum(["default", "custom", "extraction"]);
 const upstreamGroupTypeConvOnly = z.enum(["default", "custom"]); // update/delete/toggle 用
 const upstreamMode = z.enum(["official", "custom_unified", "custom_passthrough"]);
+const upstreamProvider = z.enum(["glm", "deepseek", "openai-compatible"]);
 
 // ── supported-agents & internal list ──
 
@@ -477,6 +478,7 @@ export const upstreamGroupsCreateSchema = z.object({
   agents: z.array(z.string().min(1)).min(1),
   enabled: z.boolean().optional(),
   mode: z.enum(["custom_unified", "custom_passthrough"]),
+  provider: upstreamProvider.optional(),
   base_url: z.string().min(1),
   api_key: z.string().optional(),
   model_id: z.string().optional(),
@@ -492,6 +494,7 @@ export const upstreamGroupsUpdateSchema = z.object({
   agents: z.array(z.string().min(1)).optional(),
   enabled: z.boolean().optional(),
   mode: upstreamMode.optional(),
+  provider: upstreamProvider.optional(),
   base_url: z.string().optional(),
   api_key: z.string().optional(),
   model_id: z.string().optional(),
@@ -518,22 +521,24 @@ export const upstreamExtractionCreateSchema = z.object({
   base_url: z.string().min(1),
   api_key: z.string().min(1),
   model_id: z.string().optional(),
+  provider: upstreamProvider.optional(),
   enabled: z.boolean().optional(),
   description: z.string().optional(),
 });
 
 export const upstreamExtractionUpdateSchema = z.object({
-  expected_version: z.number().int().nonnegative().optional(),
+  expected_version: z.number().int().nonnegative(),
   base_url: z.string().optional(),
   api_key: z.string().optional(),
   model_id: z.string().optional(),
+  provider: upstreamProvider.optional(),
   enabled: z.boolean().optional(),
   description: z.string().optional(),
 });
 
 export const upstreamExtractionToggleSchema = z.object({
   enabled: z.boolean(),
-  expected_version: z.number().int().nonnegative().optional(),
+  expected_version: z.number().int().nonnegative(),
 });
 
 export const upstreamExtractionDeleteSchema = z.object({}).catchall(z.unknown());

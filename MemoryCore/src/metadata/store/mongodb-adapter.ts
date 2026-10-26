@@ -71,8 +71,13 @@ import type {
   SupportedAgent,
   GroupType,
   UpstreamMode,
+  UpstreamProvider,
 } from "../types.js";
-import { DEFAULT_GROUP_NAME, InstanceUpstreamWriteConflictError } from "../types.js";
+import {
+  DEFAULT_GROUP_NAME,
+  DEFAULT_UPSTREAM_PROVIDER,
+  InstanceUpstreamWriteConflictError,
+} from "../types.js";
 import { DEFAULT_PAGINATION } from "../pagination.js";
 import { buildChatMemoryAssetId } from "../utils/chat-memory-asset.js";
 import { DuplicateUserKeyError } from "./interface.js";
@@ -1591,10 +1596,11 @@ export class MongoMetadataStore implements IMetadataStore {
   }
 
   async getInstanceUpstreamGroup(groupId: string): Promise<InstanceUpstreamConfigEntity | null> {
-    return this.col<InstanceUpstreamConfigEntity>("meta_instance_upstream_config").findOne(
+    const doc = await this.col("meta_instance_upstream_config").findOne(
       { group_id: groupId } as Document,
       PROJECT_NO_ID,
-    ) as Promise<InstanceUpstreamConfigEntity | null>;
+    );
+    return doc ? this.mapMongoGroup(doc as Document) : null;
   }
 
   async listInstanceUpstreamGroups(
@@ -1654,6 +1660,7 @@ export class MongoMetadataStore implements IMetadataStore {
         agents: agentsList,
         enabled: true,
         mode: "official",
+        provider: DEFAULT_UPSTREAM_PROVIDER,
         base_url: "",
         api_key: "",
         model_id: "",
@@ -1712,6 +1719,7 @@ export class MongoMetadataStore implements IMetadataStore {
         agents,
         enabled: input.enabled === false ? false : true,
         mode: input.mode,
+        provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
         base_url: input.base_url ?? "",
         api_key: input.api_key ?? "",
         model_id: input.model_id ?? "",
@@ -1786,6 +1794,7 @@ export class MongoMetadataStore implements IMetadataStore {
       if (input.agents !== undefined) setDoc.agents = input.agents;
       if (input.enabled !== undefined) setDoc.enabled = input.enabled;
       if (input.mode !== undefined) setDoc.mode = input.mode;
+      if (input.provider !== undefined) setDoc.provider = input.provider;
       if (input.base_url !== undefined) setDoc.base_url = input.base_url;
       if (input.api_key !== undefined) setDoc.api_key = input.api_key;
       if (input.model_id !== undefined) setDoc.model_id = input.model_id;
@@ -2064,6 +2073,7 @@ export class MongoMetadataStore implements IMetadataStore {
       agents: Array.isArray(doc.agents) ? (doc.agents as string[]) : [],
       enabled: Boolean(doc.enabled),
       mode: String(doc.mode) as UpstreamMode,
+      provider: String(doc.provider ?? DEFAULT_UPSTREAM_PROVIDER) as UpstreamProvider,
       base_url: String(doc.base_url ?? ""),
       api_key: String(doc.api_key ?? ""),
       model_id: String(doc.model_id ?? ""),

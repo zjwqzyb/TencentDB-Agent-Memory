@@ -20,7 +20,12 @@ import {
 } from "./relation-id-insert.js";
 import { generateUserKey } from "../utils/crypto.js";
 import { isUserKeyExpired } from "../utils/user-key.js";
-import { DEFAULT_GROUP_NAME, EXTRACTION_GROUP_NAME, InstanceUpstreamWriteConflictError } from "../types.js";
+import {
+  DEFAULT_GROUP_NAME,
+  DEFAULT_UPSTREAM_PROVIDER,
+  EXTRACTION_GROUP_NAME,
+  InstanceUpstreamWriteConflictError,
+} from "../types.js";
 import type {
   UserEntity,
   UserKeyEntity,
@@ -68,6 +73,7 @@ import type {
   SupportedAgent,
   GroupType,
   UpstreamMode,
+  UpstreamProvider,
 } from "../types.js";
 import { DEFAULT_PAGINATION } from "../pagination.js";
 import { buildChatMemoryAssetId } from "../utils/chat-memory-asset.js";
@@ -341,10 +347,9 @@ export class SqliteMetadataStore implements IMetadataStore {
       CREATE INDEX IF NOT EXISTS idx_meta_user_session_defaults_task
         ON meta_user_session_defaults(task_id);
 
-      -- v2 (模型组) 结构。v1 未真正投产,直接 DROP + 重建,不留兼容 shim。
+      -- v2 (模型组) 结构。后续演进必须做非破坏性迁移，不能清空用户配置。
       -- 详见 docs/design/2026-08-25-instance-upstream-config.md §5.1。
-      DROP TABLE IF EXISTS meta_instance_upstream_config;
-      CREATE TABLE meta_instance_upstream_config (
+      CREATE TABLE IF NOT EXISTS meta_instance_upstream_config (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_id TEXT NOT NULL,
         group_type TEXT NOT NULL CHECK (group_type IN ('default','custom','extraction')),
@@ -352,6 +357,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         agents TEXT NOT NULL DEFAULT '[]',
         enabled INTEGER NOT NULL DEFAULT 1,
         mode TEXT NOT NULL DEFAULT 'official' CHECK (mode IN ('official','custom_unified','custom_passthrough')),
+        provider TEXT NOT NULL DEFAULT 'openai-compatible',
         base_url TEXT NOT NULL DEFAULT '',
         api_key TEXT NOT NULL DEFAULT '',
         model_id TEXT NOT NULL DEFAULT '',
@@ -369,6 +375,7 @@ export class SqliteMetadataStore implements IMetadataStore {
     `);
     this.migrateUserTypeColumn();
     this.migrateLegacyUserKeys();
+    this.migrateInstanceUpstreamProviderColumn();
   }
 
   private migrateUserTypeColumn(): void {
@@ -383,6 +390,18 @@ export class SqliteMetadataStore implements IMetadataStore {
       }
     }
     this.db.exec(`DROP INDEX IF EXISTS ux_meta_users_single_system_admin`);
+  }
+
+  /** 存量 extraction/default/custom 行补齐 provider；保留所有历史字段与版本。 */
+  private migrateInstanceUpstreamProviderColumn(): void {
+    const columns = this.all<{ name: string }>(
+      "SELECT name FROM pragma_table_info('meta_instance_upstream_config')",
+    );
+    if (columns.some((column) => column.name === "provider")) return;
+    this.db.exec(
+      "ALTER TABLE meta_instance_upstream_config " +
+        "ADD COLUMN provider TEXT NOT NULL DEFAULT 'openai-compatible'",
+    );
   }
 
   /** 存量库：若 meta_users 仍有 user_key 列，回填 meta_user_keys 后不再写入该列。 */
@@ -2065,11 +2084,12 @@ export class SqliteMetadataStore implements IMetadataStore {
         const agentsList = Array.from(new Set(supported.map((a) => a.agent_source))).sort();
         this.run(
           `INSERT INTO meta_instance_upstream_config
-            (group_id, group_type, name, agents, enabled, mode, base_url, api_key, model_id, description, version, supported_agents_snapshot, created_at, updated_at)
-           VALUES (?, 'default', ?, ?, 1, 'official', '', '', '', '', 1, ?, ?, ?)`,
+            (group_id, group_type, name, agents, enabled, mode, provider, base_url, api_key, model_id, description, version, supported_agents_snapshot, created_at, updated_at)
+           VALUES (?, 'default', ?, ?, 1, 'official', ?, '', '', '', '', 1, ?, ?, ?)`,
           this.newGroupId("default"),
           DEFAULT_GROUP_NAME,
           JSON.stringify(agentsList),
+          DEFAULT_UPSTREAM_PROVIDER,
           JSON.stringify(agentsList),   // seed 时 snapshot = agents
           now,
           now,
@@ -2204,14 +2224,15 @@ export class SqliteMetadataStore implements IMetadataStore {
       // 3. INSERT(custom/extraction 的 snapshot 恒 [];default 由 seed 路径独立处理,不走此 create 分支)
       this.run(
         `INSERT INTO meta_instance_upstream_config
-          (group_id, group_type, name, agents, enabled, mode, base_url, api_key, model_id, description, version, supported_agents_snapshot, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, '[]', ?, ?)`,
+          (group_id, group_type, name, agents, enabled, mode, provider, base_url, api_key, model_id, description, version, supported_agents_snapshot, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, '[]', ?, ?)`,
         groupId,
         input.group_type,
         input.name ?? "",
         JSON.stringify(agents),
         input.enabled === false ? 0 : 1,
         input.mode,
+        input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
         input.base_url ?? "",
         input.api_key ?? "",
         input.model_id ?? "",
@@ -2280,6 +2301,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         agents: nextAgents,
         enabled: input.enabled ?? current.enabled,
         mode: input.mode ?? current.mode,
+        provider: input.provider ?? current.provider,
         base_url: input.base_url ?? current.base_url,
         api_key: input.api_key ?? current.api_key,
         model_id: input.model_id ?? current.model_id,
@@ -2288,12 +2310,13 @@ export class SqliteMetadataStore implements IMetadataStore {
       const now = nowIso();
       this.run(
         `UPDATE meta_instance_upstream_config
-         SET name = ?, agents = ?, enabled = ?, mode = ?, base_url = ?, api_key = ?, model_id = ?, description = ?, version = version + 1, updated_at = ?
+         SET name = ?, agents = ?, enabled = ?, mode = ?, provider = ?, base_url = ?, api_key = ?, model_id = ?, description = ?, version = version + 1, updated_at = ?
          WHERE group_id = ?`,
         merged.name,
         JSON.stringify(merged.agents),
         merged.enabled ? 1 : 0,
         merged.mode,
+        merged.provider,
         merged.base_url,
         merged.api_key,
         merged.model_id,
@@ -2457,6 +2480,7 @@ export class SqliteMetadataStore implements IMetadataStore {
       agents,
       enabled: Number(r.enabled) === 1,
       mode: String(r.mode) as UpstreamMode,
+      provider: String(r.provider ?? DEFAULT_UPSTREAM_PROVIDER) as UpstreamProvider,
       base_url: String(r.base_url ?? ""),
       api_key: String(r.api_key ?? ""),
       model_id: String(r.model_id ?? ""),

@@ -100,9 +100,11 @@ import type {
   SupportedAgent,
   GroupType,
   UpstreamMode,
+  UpstreamProvider,
 } from "../types.js";
 import {
   DEFAULT_GROUP_NAME,
+  DEFAULT_UPSTREAM_PROVIDER,
   EXTRACTION_GROUP_NAME,
   InstanceUpstreamWriteConflictError,
 } from "../types.js";
@@ -254,6 +256,43 @@ export const DEFAULT_METADATA_QUOTA_LIMITS: MetadataQuotaLimits = {
   maxUsersPerInstance: 500,
   maxTeamsPerInstance: 100,
 };
+
+const UPSTREAM_PROVIDERS = new Set<UpstreamProvider>([
+  "glm",
+  "deepseek",
+  "openai-compatible",
+]);
+
+function assertUpstreamProvider(provider: string): asserts provider is UpstreamProvider {
+  if (!UPSTREAM_PROVIDERS.has(provider as UpstreamProvider)) {
+    throw new MetadataError(
+      "INVALID_PROVIDER",
+      `provider must be one of: ${[...UPSTREAM_PROVIDERS].join(", ")}`,
+    );
+  }
+}
+
+/** Normalize the API root used by provider presets and runtime routing. */
+function normalizeUpstreamBaseUrl(raw: string): string {
+  const value = raw.trim();
+  if (!value) throw new MetadataError("MISSING_BASE_URL", "base_url must be non-empty");
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new MetadataError("INVALID_BASE_URL", "base_url must be an absolute HTTP(S) URL");
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new MetadataError("INVALID_BASE_URL", "base_url must use http or https");
+  }
+  if (parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw new MetadataError(
+      "INVALID_BASE_URL",
+      "base_url cannot contain credentials, query parameters or fragments",
+    );
+  }
+  return parsed.toString().replace(/\/+$/, "");
+}
 
 export class MetadataService {
   private readonly quota: MetadataQuotaLimits;
@@ -2246,6 +2285,7 @@ export class MetadataService {
       agents: string[];
       enabled?: boolean;
       mode: UpstreamMode;
+      provider?: UpstreamProvider;
       base_url: string;
       api_key?: string;
       model_id?: string;
@@ -2262,6 +2302,8 @@ export class MetadataService {
     if (input.mode === "custom_unified" && !input.api_key?.trim()) {
       throw new MetadataError("MISSING_API_KEY", "api_key is required for custom_unified mode");
     }
+    if (input.provider !== undefined) assertUpstreamProvider(input.provider);
+    const baseUrl = normalizeUpstreamBaseUrl(input.base_url);
     // 存量实例首个请求可能不是 list 而是直接 create,兜底 seed default
     // 防止 assertAgentsNotOverlap 见空表 → INSERT custom → 只有 1 行 custom
     // 无 default → 后续 hermes 请求 AGENT_NOT_CONFIGURED (design §5.5 存量兜底)
@@ -2273,7 +2315,8 @@ export class MetadataService {
         agents: input.agents,
         enabled: input.enabled !== false,
         mode: input.mode,
-        base_url: input.base_url.trim(),
+        provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
+        base_url: baseUrl,
         api_key: input.api_key ?? "",
         model_id: input.model_id ?? "",
         description: input.description ?? "",
@@ -2293,6 +2336,7 @@ export class MetadataService {
       agents?: string[];
       enabled?: boolean;
       mode?: UpstreamMode;
+      provider?: UpstreamProvider;
       base_url?: string;
       api_key?: string;
       model_id?: string;
@@ -2313,6 +2357,7 @@ export class MetadataService {
       if (input.base_url !== undefined) rejected.push("base_url");
       if (input.api_key !== undefined) rejected.push("api_key");
       if (input.model_id !== undefined) rejected.push("model_id");
+      if (input.provider !== undefined) rejected.push("provider");
       if (input.description !== undefined) rejected.push("description");
       if (rejected.length > 0) {
         throw new MetadataError(
@@ -2328,10 +2373,12 @@ export class MetadataService {
       if (input.name !== undefined) this.assertGroupName(input.name);
       if (input.agents !== undefined) this.assertAgents(input.agents, supportedAgents, "custom");
       if (input.mode !== undefined) this.assertModeForGroupType("custom", input.mode);
-      if (input.base_url !== undefined && !input.base_url.trim()) {
-        throw new MetadataError("MISSING_BASE_URL", "base_url must be non-empty");
-      }
+      if (input.provider !== undefined) assertUpstreamProvider(input.provider);
     }
+
+    const baseUrl = input.base_url !== undefined
+      ? normalizeUpstreamBaseUrl(input.base_url)
+      : undefined;
 
     // 存量兜底 seed (同 create 分支说明)
     await this.store.ensureDefaultSeeded(supportedAgents);
@@ -2344,7 +2391,8 @@ export class MetadataService {
         agents: input.agents,
         enabled: input.enabled,
         mode: input.mode,
-        base_url: input.base_url?.trim(),
+        provider: input.provider,
+        base_url: baseUrl,
         api_key: input.api_key,
         model_id: input.model_id,
         description: input.description,
@@ -2415,16 +2463,25 @@ export class MetadataService {
     await this.store.ensureDefaultSeeded(supportedAgents);
     const rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
     const ext = rows[0];
-    if (!ext) return { configured: false, enabled: false };
-    return {
-      configured: true,
-      enabled: ext.enabled,
-      base_url: ext.base_url,
-      api_key_masked: ext.api_key ? maskKeyValue(ext.api_key) : "",
-      model_id: ext.model_id,
-      description: ext.description,
-      updated_at: ext.updated_at,
-    };
+    if (!ext) {
+      return {
+        configured: false,
+        managed: false,
+        source: "deployment",
+        config_id: null,
+        provider: null,
+        protocol: "openai-chat",
+        base_url: "",
+        api_key_configured: false,
+        api_key_masked: "",
+        model_id: null,
+        description: "",
+        enabled: null,
+        version: 0,
+        updated_at: null,
+      };
+    }
+    return this.toPublicExtraction(ext);
   }
 
   async createInstanceUpstreamExtraction(
@@ -2432,6 +2489,7 @@ export class MetadataService {
       base_url: string;
       api_key: string;
       model_id?: string;
+      provider?: UpstreamProvider;
       enabled?: boolean;
       description?: string;
     },
@@ -2443,6 +2501,8 @@ export class MetadataService {
     if (!input.api_key?.trim()) {
       throw new MetadataError("MISSING_API_KEY", "api_key is required for extraction");
     }
+    if (input.provider !== undefined) assertUpstreamProvider(input.provider);
+    const baseUrl = normalizeUpstreamBaseUrl(input.base_url);
     // 存量兜底 seed:Panel 首个请求可能直接 extraction/create,不走 list/groups
     await this.store.ensureDefaultSeeded(supportedAgents);
     try {
@@ -2452,7 +2512,8 @@ export class MetadataService {
         agents: [],
         enabled: input.enabled !== false,
         mode: "custom_unified",
-        base_url: input.base_url.trim(),
+        provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
+        base_url: baseUrl,
         api_key: input.api_key.trim(),
         model_id: input.model_id ?? "",
         description: input.description ?? "",
@@ -2475,9 +2536,10 @@ export class MetadataService {
       base_url?: string;
       api_key?: string;
       model_id?: string;
+      provider?: UpstreamProvider;
       enabled?: boolean;
       description?: string;
-      expected_version?: number;
+      expected_version: number;
     },
     supportedAgents: SupportedAgent[],
   ): Promise<Record<string, unknown>> {
@@ -2488,9 +2550,10 @@ export class MetadataService {
         "api_key cannot be cleared via update; use /extraction/delete instead",
       );
     }
-    if (input.base_url !== undefined && !input.base_url.trim()) {
-      throw new MetadataError("MISSING_BASE_URL", "base_url must be non-empty");
-    }
+    if (input.provider !== undefined) assertUpstreamProvider(input.provider);
+    const baseUrl = input.base_url !== undefined
+      ? normalizeUpstreamBaseUrl(input.base_url)
+      : undefined;
 
     // 存量兜底 seed
     await this.store.ensureDefaultSeeded(supportedAgents);
@@ -2507,7 +2570,8 @@ export class MetadataService {
         group_id: ext.group_id,
         expected_group_type: "extraction",
         expected_version: input.expected_version,
-        base_url: input.base_url?.trim(),
+        provider: input.provider,
+        base_url: baseUrl,
         api_key: input.api_key?.trim(),
         model_id: input.model_id,
         enabled: input.enabled,
@@ -2522,7 +2586,7 @@ export class MetadataService {
   async toggleInstanceUpstreamExtraction(
     input: {
       enabled: boolean;
-      expected_version?: number;
+      expected_version: number;
     },
     supportedAgents: SupportedAgent[],
   ): Promise<Record<string, unknown>> {
@@ -2542,7 +2606,7 @@ export class MetadataService {
         enabled: input.enabled,
         expected_version: input.expected_version,
       });
-      return { enabled: row.enabled, updated_at: row.updated_at };
+      return this.toPublicExtraction(row);
     } catch (e) {
       throw this.translateUpstreamConflict(e);
     }
@@ -2626,6 +2690,7 @@ export class MetadataService {
       agents: row.agents,
       enabled: row.enabled,
       mode: row.mode,
+      provider: row.provider,
       base_url: row.base_url,
       api_key_masked: row.api_key ? maskKeyValue(row.api_key) : "",
       model_id: row.model_id,
@@ -2638,8 +2703,14 @@ export class MetadataService {
   private toPublicExtraction(row: InstanceUpstreamConfigEntity): Record<string, unknown> {
     return {
       configured: true,
+      managed: true,
+      source: "panel",
+      config_id: row.group_id,
+      provider: row.provider,
+      protocol: "openai-chat",
       enabled: row.enabled,
       base_url: row.base_url,
+      api_key_configured: Boolean(row.api_key),
       api_key_masked: row.api_key ? maskKeyValue(row.api_key) : "",
       model_id: row.model_id,
       description: row.description,

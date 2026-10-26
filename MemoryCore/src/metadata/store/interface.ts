@@ -235,7 +235,9 @@ export interface IMetadataStore {
   //   4. version 字段乐观锁:update / toggle 传入 expected_version,不匹配抛
   //      InstanceUpstreamWriteConflictError("version_mismatch")。SQLite 侧
   //      同时用 BEGIN IMMEDIATE 加事务锁,双重保护。
-  //   5. seed 幂等:listGroups 见空表触发 ensureDefaultSeeded;两个并发写入
+  //   5. provider 持久化:provider 属于配置内容,更新时递增 version；历史行缺省
+  //      为 openai-compatible。
+  //   6. seed 幂等:listGroups 见空表触发 ensureDefaultSeeded;两个并发写入
   //      靠 default 单例 UNIQUE 约束兜底。
 
   /** 按 group_id 精确获取一行(不存在返 null)。 */

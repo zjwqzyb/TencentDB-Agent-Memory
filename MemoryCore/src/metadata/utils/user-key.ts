@@ -11,8 +11,7 @@ export const USER_KEY_PREFIX = "sk-mem-";
  */
 export function maskKeyValue(keyValue: string): string {
   if (!keyValue) return "";
-  if (keyValue.length <= 8) return `${keyValue}…`;
-  return `${keyValue.slice(0, 8)}…`;
+  return "••••••••";
 }
 
 /**

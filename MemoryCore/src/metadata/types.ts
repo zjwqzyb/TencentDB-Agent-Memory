@@ -609,6 +609,11 @@ export interface UpsertUserSessionDefaultInput {
 
 export type GroupType = "default" | "custom" | "extraction";
 export type UpstreamMode = "official" | "custom_unified" | "custom_passthrough";
+/** 受管后台模型的供应商预设。 */
+export type UpstreamProvider = "glm" | "deepseek" | "openai-compatible";
+
+/** 未显式提供 provider 的历史行按 OpenAI Chat Completions 兼容服务解释。 */
+export const DEFAULT_UPSTREAM_PROVIDER: UpstreamProvider = "openai-compatible";
 
 /** default 组 name 固定值（用户不可改）。 */
 export const DEFAULT_GROUP_NAME = "官方内置";
@@ -642,13 +647,14 @@ export interface InstanceUpstreamConfigEntity {
    */
   enabled: boolean;
   mode: UpstreamMode;
+  provider: UpstreamProvider;
   base_url: string;
   api_key: string;
   model_id: string;
   description: string;
   created_at: string;
   updated_at: string;
-  /** 乐观锁版本号。MongoDB 每次写入 $inc:1；SQLite 忽略此字段（依赖 BEGIN IMMEDIATE 事务）。 */
+  /** 乐观锁版本号。SQLite 与 MongoDB 每次写入均递增，并在显式 expected_version 下做 CAS。 */
   version: number;
   /**
    * 仅 default 组有值:上次 listGroups 时看到的 supported-agents 全集快照(去重 + 排序)。
@@ -678,6 +684,7 @@ export interface CreateInstanceUpstreamGroupInput {
   agents?: string[];
   enabled?: boolean;
   mode: UpstreamMode;
+  provider?: UpstreamProvider;
   base_url?: string;
   api_key?: string;
   model_id?: string;
@@ -698,6 +705,7 @@ export interface UpdateInstanceUpstreamGroupInput {
   agents?: string[];
   enabled?: boolean;
   mode?: UpstreamMode;
+  provider?: UpstreamProvider;
   base_url?: string;
   api_key?: string;
   model_id?: string;
