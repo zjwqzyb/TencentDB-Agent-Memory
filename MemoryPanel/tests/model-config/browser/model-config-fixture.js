@@ -28,6 +28,7 @@ async (page) => {
     version: 0,
     draft: null,
     conflictOnce: false,
+    createDelayMs: 0,
     role: 'system_admin',
     requests: [],
   };
@@ -80,6 +81,7 @@ async (page) => {
     else if (path.endsWith('/meta/config/user/get')) data = { user_id: user.user_id, module: 'asset_type', module_description: '', items: [] };
     else if (path.endsWith('/meta/instance-upstream/extraction/get')) data = config();
     else if (path.endsWith('/meta/instance-upstream/extraction/create')) {
+      if (state.createDelayMs) await new Promise((resolve) => setTimeout(resolve, state.createDelayMs));
       state.managed = true;
       state.config_id = 'ext-browser';
       state.version = 1;

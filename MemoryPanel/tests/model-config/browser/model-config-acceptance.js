@@ -16,10 +16,15 @@ async (page) => {
 
   await page.getByPlaceholder('例如 deepseek-chat').fill('deepseek-chat');
   await page.getByPlaceholder('仅提交到服务端，不写入浏览器存储').fill('fixture-secret');
-  await page.getByRole('button', { name: '创建草稿' }).click();
+  await fixture({ createDelayMs: 350 });
+  const createButton = page.getByRole('button', { name: '创建草稿' });
+  await createButton.click();
+  assert(await createButton.isDisabled(), 'save button is disabled while a request is in flight');
   await page.getByText('草稿 · 未启用', { exact: true }).waitFor();
   const afterCreate = await requests();
-  const createReq = afterCreate.requests.find((request) => request.path.endsWith('/meta/instance-upstream/extraction/create'));
+  const createRequests = afterCreate.requests.filter((request) => request.path.endsWith('/meta/instance-upstream/extraction/create'));
+  assert(createRequests.length === 1, 'double submission creates only one draft request');
+  const createReq = createRequests[0];
   assert(createReq?.body.provider === 'deepseek' && createReq.body.api_key === 'fixture-secret', 'create request uses form provider and key');
   assert(createReq.body.draft === true && !('enabled' in createReq.body), 'create request saves a draft without activation');
   assert(afterCreate.enabled === false && afterCreate.version === 1, 'created config remains an inactive draft');
