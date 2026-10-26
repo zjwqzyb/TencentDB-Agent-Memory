@@ -610,7 +610,8 @@ export interface UpsertUserSessionDefaultInput {
 export type GroupType = "default" | "custom" | "extraction";
 export type UpstreamMode = "official" | "custom_unified" | "custom_passthrough";
 /** 受管后台模型的供应商预设。 */
-export type UpstreamProvider = "glm" | "deepseek" | "openai-compatible";
+export const UPSTREAM_PROVIDERS = ["glm", "deepseek", "openai-compatible"] as const;
+export type UpstreamProvider = (typeof UPSTREAM_PROVIDERS)[number];
 
 /** 未显式提供 provider 的历史行按 OpenAI Chat Completions 兼容服务解释。 */
 export const DEFAULT_UPSTREAM_PROVIDER: UpstreamProvider = "openai-compatible";

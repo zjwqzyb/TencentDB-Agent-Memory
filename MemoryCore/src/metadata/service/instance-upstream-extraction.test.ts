@@ -155,6 +155,13 @@ describe("instance extraction admin API", () => {
       model_id: "model",
     }, headers)).toMatchObject({ status: 400, json: { code: 400 } });
 
+    expect(await post(harness.baseUrl, "instance-upstream/extraction/create", {
+      provider: "openai-compatible",
+      base_url: "https://api.example.com/v1",
+      api_key: "••••••••",
+      model_id: "model",
+    }, headers)).toMatchObject({ status: 400, json: { code: 400 } });
+
     const created = await post(harness.baseUrl, "instance-upstream/extraction/create", {
       provider: "deepseek",
       base_url: "https://api.deepseek.com/v1/",
@@ -219,9 +226,35 @@ describe("instance extraction admin API", () => {
     });
   });
 
+  it("normalizes legacy stored endpoints only in the management response", async () => {
+    const service = makeService("legacy-admin", "system_admin");
+    const legacy = service.rawStore.createInstanceUpstreamGroup({
+      group_type: "extraction",
+      name: "抽取模型",
+      mode: "custom_unified",
+      base_url: "  https://legacy.example/v1/  ",
+      api_key: "legacy-secret",
+      model_id: "legacy-model",
+      provider: "openai-compatible",
+    });
+    harness = await startHarness({ instance_legacy: service });
+
+    expect(await post(
+      harness.baseUrl,
+      "instance-upstream/extraction/get",
+      {},
+      { instance: "instance_legacy", key: "legacy-admin" },
+    )).toMatchObject({
+      status: 200,
+      json: { code: 0, data: { base_url: "https://legacy.example/v1" } },
+    });
+    expect(service.rawStore.getInstanceUpstreamGroup(legacy.group_id)?.base_url)
+      .toBe("  https://legacy.example/v1/  ");
+  });
+
   it("enforces system_admin and instance isolation through the direct HTTP API", async () => {
-    const adminA = makeService("shared-admin", "system_admin");
-    const adminB = makeService("shared-admin", "system_admin");
+    const adminA = makeService("admin-a", "system_admin");
+    const adminB = makeService("admin-b", "system_admin");
     const member = makeService("member-key", "normal");
     harness = await startHarness({
       instance_a: adminA,
@@ -234,28 +267,44 @@ describe("instance extraction admin API", () => {
       base_url: "https://open.bigmodel.cn/api/paas/v4",
       api_key: "glm-secret",
       model_id: "glm-4-plus",
-    }, { instance: "instance_a", key: "shared-admin" });
+    }, { instance: "instance_a", key: "admin-a" });
 
     const otherInstance = await post(
       harness.baseUrl,
       "instance-upstream/extraction/get",
       {},
-      { instance: "instance_b", key: "shared-admin" },
+      { instance: "instance_b", key: "admin-b" },
     );
     expect(otherInstance).toMatchObject({
       status: 200,
       json: { code: 0, data: { configured: false, source: "deployment" } },
     });
 
-    const denied = await post(
+    const foreignKey = await post(
       harness.baseUrl,
       "instance-upstream/extraction/get",
       {},
-      { instance: "instance_member", key: "member-key" },
+      { instance: "instance_b", key: "admin-a" },
     );
-    expect(denied).toMatchObject({
-      status: 403,
-      json: { code: 403 },
-    });
+    expect(foreignKey).toMatchObject({ status: 401, json: { code: 401 } });
+
+    const memberHeaders = { instance: "instance_member", key: "member-key" };
+    const deniedRequests = [
+      ["instance-upstream/extraction/get", {}],
+      ["instance-upstream/extraction/create", {
+        base_url: "https://member.example/v1",
+        api_key: "member-secret",
+        model_id: "member-model",
+      }],
+      ["instance-upstream/extraction/update", { expected_version: 1, description: "x" }],
+      ["instance-upstream/extraction/toggle", { enabled: false, expected_version: 1 }],
+      ["instance-upstream/extraction/delete", {}],
+    ] as const;
+    for (const [action, body] of deniedRequests) {
+      expect(await post(harness.baseUrl, action, body, memberHeaders)).toMatchObject({
+        status: 403,
+        json: { code: 403 },
+      });
+    }
   });
 });

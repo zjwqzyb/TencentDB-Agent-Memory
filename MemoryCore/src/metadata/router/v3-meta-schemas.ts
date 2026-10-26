@@ -5,6 +5,7 @@
  * 路由 handler 用 `schema.safeParse(body)` 校验后再调用 MetadataService。
  */
 import { z } from "zod";
+import { UPSTREAM_PROVIDERS } from "../types.js";
 import { paginationInputSchema } from "./pagination.js";
 
 // ── 枚举 ──
@@ -458,7 +459,7 @@ export const userSessionDefaultDeleteSchema = z.object({
 const upstreamGroupType = z.enum(["default", "custom", "extraction"]);
 const upstreamGroupTypeConvOnly = z.enum(["default", "custom"]); // update/delete/toggle 用
 const upstreamMode = z.enum(["official", "custom_unified", "custom_passthrough"]);
-const upstreamProvider = z.enum(["glm", "deepseek", "openai-compatible"]);
+const upstreamProvider = z.enum(UPSTREAM_PROVIDERS);
 
 // ── supported-agents & internal list ──
 

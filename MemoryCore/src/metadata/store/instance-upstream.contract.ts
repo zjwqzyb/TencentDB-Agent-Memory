@@ -128,6 +128,30 @@ export function runInstanceUpstreamStoreContract(
       });
     });
 
+    it("allows only one write when two callers race on the same version", async () => {
+      const created = await createExtraction();
+      const results = await Promise.allSettled([
+        (async () => store.updateInstanceUpstreamGroup({
+          group_id: created.group_id,
+          expected_group_type: "extraction",
+          expected_version: created.version,
+          description: "first writer",
+        }))(),
+        (async () => store.updateInstanceUpstreamGroup({
+          group_id: created.group_id,
+          expected_group_type: "extraction",
+          expected_version: created.version,
+          description: "second writer",
+        }))(),
+      ]);
+      expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+      const rejected = results.find((result) => result.status === "rejected");
+      expect(rejected).toMatchObject({
+        status: "rejected",
+        reason: expect.objectContaining({ reason: "version_mismatch" }),
+      });
+    });
+
     it("uses the OpenAI-compatible provider for legacy rows that omit provider", async () => {
       const created = await createExtraction({ provider: undefined });
       expect(created.provider).toBe("openai-compatible");

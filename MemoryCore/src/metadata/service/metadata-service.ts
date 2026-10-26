@@ -27,6 +27,7 @@ import {
 } from "./permission-checker.js";
 import {
   maskUserKey, maskKeyValue, isUserKeyExpired, DEFAULT_MAX_ACTIVE_USER_KEYS,
+  MASKED_KEY_VALUE,
 } from "../utils/user-key.js";
 import {
   lookupMemorySystemUser,
@@ -107,6 +108,7 @@ import {
   DEFAULT_UPSTREAM_PROVIDER,
   EXTRACTION_GROUP_NAME,
   InstanceUpstreamWriteConflictError,
+  UPSTREAM_PROVIDERS,
 } from "../types.js";
 import { formatListResult, paginateArray, resolvePagination, wrapPaginated, DEFAULT_PAGINATION } from "../pagination.js";
 import { generateId, ID_PREFIX } from "../utils/id-generator.js";
@@ -257,19 +259,23 @@ export const DEFAULT_METADATA_QUOTA_LIMITS: MetadataQuotaLimits = {
   maxTeamsPerInstance: 100,
 };
 
-const UPSTREAM_PROVIDERS = new Set<UpstreamProvider>([
-  "glm",
-  "deepseek",
-  "openai-compatible",
-]);
+const UPSTREAM_PROVIDER_SET = new Set<UpstreamProvider>(UPSTREAM_PROVIDERS);
 
 function assertUpstreamProvider(provider: string): asserts provider is UpstreamProvider {
-  if (!UPSTREAM_PROVIDERS.has(provider as UpstreamProvider)) {
+  if (!UPSTREAM_PROVIDER_SET.has(provider as UpstreamProvider)) {
     throw new MetadataError(
       "INVALID_PROVIDER",
-      `provider must be one of: ${[...UPSTREAM_PROVIDERS].join(", ")}`,
+      `provider must be one of: ${UPSTREAM_PROVIDERS.join(", ")}`,
     );
   }
+}
+
+function normalizeSubmittedApiKey(raw: string): string {
+  const value = raw.trim();
+  if (!value || value === MASKED_KEY_VALUE) {
+    throw new MetadataError("INVALID_API_KEY", "a non-masked API key is required");
+  }
+  return value;
 }
 
 /** Normalize the API root used by provider presets and runtime routing. */
@@ -292,6 +298,14 @@ function normalizeUpstreamBaseUrl(raw: string): string {
     );
   }
   return parsed.toString().replace(/\/+$/, "");
+}
+
+function normalizeStoredBaseUrl(raw: string): string {
+  try {
+    return normalizeUpstreamBaseUrl(raw);
+  } catch {
+    return raw;
+  }
 }
 
 export class MetadataService {
@@ -2303,7 +2317,6 @@ export class MetadataService {
       throw new MetadataError("MISSING_API_KEY", "api_key is required for custom_unified mode");
     }
     if (input.provider !== undefined) assertUpstreamProvider(input.provider);
-    const baseUrl = normalizeUpstreamBaseUrl(input.base_url);
     // 存量实例首个请求可能不是 list 而是直接 create,兜底 seed default
     // 防止 assertAgentsNotOverlap 见空表 → INSERT custom → 只有 1 行 custom
     // 无 default → 后续 hermes 请求 AGENT_NOT_CONFIGURED (design §5.5 存量兜底)
@@ -2316,7 +2329,7 @@ export class MetadataService {
         enabled: input.enabled !== false,
         mode: input.mode,
         provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
-        base_url: baseUrl,
+        base_url: input.base_url.trim(),
         api_key: input.api_key ?? "",
         model_id: input.model_id ?? "",
         description: input.description ?? "",
@@ -2376,9 +2389,9 @@ export class MetadataService {
       if (input.provider !== undefined) assertUpstreamProvider(input.provider);
     }
 
-    const baseUrl = input.base_url !== undefined
-      ? normalizeUpstreamBaseUrl(input.base_url)
-      : undefined;
+    if (input.base_url !== undefined && !input.base_url.trim()) {
+      throw new MetadataError("MISSING_BASE_URL", "base_url must be non-empty");
+    }
 
     // 存量兜底 seed (同 create 分支说明)
     await this.store.ensureDefaultSeeded(supportedAgents);
@@ -2392,7 +2405,7 @@ export class MetadataService {
         enabled: input.enabled,
         mode: input.mode,
         provider: input.provider,
-        base_url: baseUrl,
+        base_url: input.base_url?.trim(),
         api_key: input.api_key,
         model_id: input.model_id,
         description: input.description,
@@ -2503,6 +2516,7 @@ export class MetadataService {
     }
     if (input.provider !== undefined) assertUpstreamProvider(input.provider);
     const baseUrl = normalizeUpstreamBaseUrl(input.base_url);
+    const apiKey = normalizeSubmittedApiKey(input.api_key);
     // 存量兜底 seed:Panel 首个请求可能直接 extraction/create,不走 list/groups
     await this.store.ensureDefaultSeeded(supportedAgents);
     try {
@@ -2514,7 +2528,7 @@ export class MetadataService {
         mode: "custom_unified",
         provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
         base_url: baseUrl,
-        api_key: input.api_key.trim(),
+        api_key: apiKey,
         model_id: input.model_id ?? "",
         description: input.description ?? "",
       });
@@ -2543,13 +2557,9 @@ export class MetadataService {
     },
     supportedAgents: SupportedAgent[],
   ): Promise<Record<string, unknown>> {
-    if (input.api_key !== undefined && input.api_key.trim() === "") {
-      // extraction 必须有 key,清空要走 delete
-      throw new MetadataError(
-        "MISSING_API_KEY",
-        "api_key cannot be cleared via update; use /extraction/delete instead",
-      );
-    }
+    const apiKey = input.api_key !== undefined
+      ? normalizeSubmittedApiKey(input.api_key)
+      : undefined;
     if (input.provider !== undefined) assertUpstreamProvider(input.provider);
     const baseUrl = input.base_url !== undefined
       ? normalizeUpstreamBaseUrl(input.base_url)
@@ -2572,7 +2582,7 @@ export class MetadataService {
         expected_version: input.expected_version,
         provider: input.provider,
         base_url: baseUrl,
-        api_key: input.api_key?.trim(),
+        api_key: apiKey,
         model_id: input.model_id,
         enabled: input.enabled,
         description: input.description,
@@ -2709,7 +2719,7 @@ export class MetadataService {
       provider: row.provider,
       protocol: "openai-chat",
       enabled: row.enabled,
-      base_url: row.base_url,
+      base_url: normalizeStoredBaseUrl(row.base_url),
       api_key_configured: Boolean(row.api_key),
       api_key_masked: row.api_key ? maskKeyValue(row.api_key) : "",
       model_id: row.model_id,
