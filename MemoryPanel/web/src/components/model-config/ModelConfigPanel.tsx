@@ -50,13 +50,15 @@ export function ModelConfigPanel({
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<string[]>([]);
   const [conflict, setConflict] = useState(false);
+  const [conflictVersions, setConflictVersions] = useState<{ expected?: number; actual?: number } | null>(null);
 
   const dirty = useMemo(
     () => isFormDirty(form, config),
     [config, form],
   );
   const confirmKeyReuse = requiresKeyReuseConfirmation(form, config);
-  const managedDraft = Boolean(config?.draft) || (config?.configured === true && config.enabled !== true);
+  const managedDraft = Boolean(config?.draft);
+  const disabledManaged = config?.configured === true && config.enabled !== true && !managedDraft;
   const activeManaged = config?.configured === true && config.enabled === true;
   const saved = savedModelConfig(config);
 
@@ -79,6 +81,7 @@ export function ModelConfigPanel({
     setLoading(true);
     setError('');
     setConflict(false);
+    setConflictVersions(null);
     setFieldErrors([]);
     try {
       const next = await instanceUpstreamApi.get(signal);
@@ -112,6 +115,7 @@ export function ModelConfigPanel({
     setFieldErrors([]);
     setError('');
     setConflict(false);
+    setConflictVersions(null);
   }
 
   function handleProviderChange(provider: UpstreamProvider) {
@@ -119,6 +123,7 @@ export function ModelConfigPanel({
     setFieldErrors([]);
     setError('');
     setConflict(false);
+    setConflictVersions(null);
   }
 
   async function saveDraft() {
@@ -127,6 +132,7 @@ export function ModelConfigPanel({
     setFieldErrors(errors);
     setError('');
     setConflict(false);
+    setConflictVersions(null);
     if (errors.length > 0) return;
 
     setSaving(true);
@@ -139,6 +145,13 @@ export function ModelConfigPanel({
       notifySaved();
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) setConflict(true);
+      if (err instanceof ApiError && err.status === 409 && err.data && typeof err.data === 'object') {
+        const detail = err.data as { expected?: unknown; actual?: unknown };
+        setConflictVersions({
+          expected: typeof detail.expected === 'number' ? detail.expected : undefined,
+          actual: typeof detail.actual === 'number' ? detail.actual : undefined,
+        });
+      }
       setError(errorMessage(err));
     } finally {
       setSaving(false);
@@ -149,8 +162,10 @@ export function ModelConfigPanel({
     ? t('modelConfig.status.draft')
     : activeManaged
       ? t('modelConfig.status.active')
-      : t('modelConfig.status.deployment');
-  const statusTheme = activeManaged && !managedDraft ? 'success' : managedDraft ? 'warning' : 'default';
+      : disabledManaged
+        ? t('modelConfig.status.disabled')
+          : t('modelConfig.status.deployment');
+  const statusTheme = activeManaged ? 'success' : managedDraft ? 'warning' : 'default';
   const currentProvider = saved
     ? t(`modelConfig.provider.${saved.provider}`)
     : t('modelConfig.value.unknown');
@@ -219,6 +234,14 @@ export function ModelConfigPanel({
                   </Button>
                 )}
               </div>
+              {conflict && conflictVersions && (
+                <Text theme="weak" parent="div">
+                  {t('modelConfig.conflict.versions', {
+                    expected: conflictVersions.expected ?? '—',
+                    actual: conflictVersions.actual ?? '—',
+                  })}
+                </Text>
+              )}
             </Alert>
           )}
           {fieldErrors.length > 0 && (

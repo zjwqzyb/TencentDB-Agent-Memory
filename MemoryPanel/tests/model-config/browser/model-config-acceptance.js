@@ -60,6 +60,7 @@ async (page) => {
   await page.getByRole('button', { name: '保存草稿' }).click();
   await page.getByRole('button', { name: '重新读取最新配置' }).waitFor();
   assert((await page.getByPlaceholder('例如 deepseek-chat').inputValue()) === 'glm-4-plus', '409 conflict preserves local draft');
+  assert(await page.getByText('提交版本 v2，服务端当前版本 v3。', { exact: true }).isVisible(), '409 exposes comparable versions');
   await page.getByRole('button', { name: '重新读取最新配置' }).click();
   await page.waitForFunction(() => document.querySelector('input[placeholder="例如 deepseek-chat"]')?.value === 'deepseek-chat');
   assert(true, 'conflict reload restores the latest server config');
