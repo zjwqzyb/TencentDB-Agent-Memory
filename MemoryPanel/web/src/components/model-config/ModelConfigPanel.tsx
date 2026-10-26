@@ -174,6 +174,10 @@ export function ModelConfigPanel({
                 ? t(`modelConfig.provider.${config.provider}`)
                 : t('modelConfig.value.unknown'),
               model: config.model_id || t('modelConfig.value.unknown'),
+              endpoint: config.base_url || t('modelConfig.value.unknown'),
+              key: config.api_key_configured
+                ? t('modelConfig.key.configured')
+                : t('modelConfig.key.notConfigured'),
             })}
           </Text>
         )}

@@ -145,7 +145,7 @@ export const zhCN = {
   'modelConfig.context.label': '实例与适用范围',
   'modelConfig.context.instance': '当前 Memory Instance',
   'modelConfig.context.scope': '这份配置适用于当前实例的记忆 L1/L2/L3、Skill 抽取和 Wiki 生成。',
-  'modelConfig.activeStill': '当前生效：{{provider}} / {{model}}（已启用）',
+  'modelConfig.activeStill': '当前生效：{{provider}} / {{model}}；地址 {{endpoint}}；{{key}}。',
   'modelConfig.status.deployment': '部署配置',
   'modelConfig.status.draft': '草稿 · 未启用',
   'modelConfig.status.active': '已启用',

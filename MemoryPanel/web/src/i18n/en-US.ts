@@ -149,7 +149,7 @@ export const enUS = {
   'modelConfig.context.label': 'Instance and scope',
   'modelConfig.context.instance': 'Current Memory Instance',
   'modelConfig.context.scope': 'This configuration applies to memory L1/L2/L3, Skill extraction and Wiki generation in this instance.',
-  'modelConfig.activeStill': 'Currently active: {{provider}} / {{model}} (enabled)',
+  'modelConfig.activeStill': 'Currently active: {{provider}} / {{model}}; endpoint {{endpoint}}; {{key}}.',
   'modelConfig.status.deployment': 'Deployment config',
   'modelConfig.status.draft': 'Draft · not enabled',
   'modelConfig.status.active': 'Enabled',

@@ -20,6 +20,7 @@ async (page) => {
   const createButton = page.getByRole('button', { name: '创建草稿' });
   await createButton.click();
   assert(await createButton.isDisabled(), 'save button is disabled while a request is in flight');
+  await createButton.evaluate((button) => { button.click(); button.click(); });
   await page.getByText('草稿 · 未启用', { exact: true }).waitFor();
   const afterCreate = await requests();
   const createRequests = afterCreate.requests.filter((request) => request.path.endsWith('/meta/instance-upstream/extraction/create'));
@@ -83,6 +84,12 @@ async (page) => {
   assert(await page.getByText('Memhub Browser Instance', { exact: true }).isVisible(), 'English narrow dark view renders instance context');
   assert((await page.getByPlaceholder('For example, deepseek-chat').inputValue()) === 'deepseek-chat', 'saved draft is restored after full reload');
   await page.waitForTimeout(400);
+  const geometry = await page.evaluate(() => {
+    const box = document.querySelector('.settings-dialog .tea-dialog__inner')?.getBoundingClientRect();
+    const root = document.querySelector('.settings-dialog');
+    return { left: box?.left ?? -1, right: box && root ? root.clientWidth - box.right : -1 };
+  });
+  assert(geometry.left >= 7 && geometry.right >= 7 && Math.abs(geometry.left - geometry.right) <= 2, 'narrow dialog is centered with balanced margins');
   const metrics = await page.evaluate(() => ({
     width: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
