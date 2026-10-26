@@ -88,6 +88,33 @@ export function runInstanceUpstreamStoreContract(
       expect(replaced.provider).toBe("glm");
     });
 
+    it("round-trips draft_json without changing active extraction fields", async () => {
+      const created = await createExtraction();
+      const draftJson = JSON.stringify({
+        provider: "glm",
+        base_url: "https://open.bigmodel.cn/api/paas/v4",
+        api_key: "draft-secret",
+        model_id: "glm-4-plus",
+        description: "draft only",
+      });
+      const updated = await store.updateInstanceUpstreamGroup({
+        group_id: created.group_id,
+        expected_group_type: "extraction",
+        expected_version: created.version,
+        draft_json: draftJson,
+      });
+      expect(updated).toMatchObject({
+        provider: created.provider,
+        base_url: created.base_url,
+        api_key: created.api_key,
+        model_id: created.model_id,
+        description: created.description,
+        draft_json: draftJson,
+        version: created.version + 1,
+      });
+      expect(await store.getInstanceUpstreamGroup(created.group_id)).toEqual(updated);
+    });
+
     it("rejects stale update and toggle versions", async () => {
       const created = await createExtraction();
       const updated = await store.updateInstanceUpstreamGroup({

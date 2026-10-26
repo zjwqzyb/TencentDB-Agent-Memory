@@ -69,6 +69,16 @@ export {
   type AssetCapabilityConfig,
 } from './api/users';
 
+// ── Instance model configuration ──
+export {
+  instanceUpstreamApi,
+  type ExtractionConfig,
+  type ExtractionDraft,
+  type UpstreamProvider,
+  type CreateExtractionDraft,
+  type UpdateExtractionDraft,
+} from './api/instance-upstream';
+
 // ── Assets ──
 export { assetsApi } from './api/assets';
 

@@ -653,6 +653,11 @@ export interface InstanceUpstreamConfigEntity {
   api_key: string;
   model_id: string;
   description: string;
+  /**
+   * 设置页保存的未启用草稿（JSON）。为空表示没有草稿。
+   * active 字段始终保留在 base_url/api_key/model_id/provider 中，草稿写入不得覆盖它们。
+   */
+  draft_json: string;
   created_at: string;
   updated_at: string;
   /** 乐观锁版本号。SQLite 与 MongoDB 每次写入均递增，并在显式 expected_version 下做 CAS。 */
@@ -690,6 +695,8 @@ export interface CreateInstanceUpstreamGroupInput {
   api_key?: string;
   model_id?: string;
   description?: string;
+  /** 设置页草稿 JSON；保存草稿时 base 字段保持不变。 */
+  draft_json?: string;
 }
 
 /**
@@ -711,6 +718,8 @@ export interface UpdateInstanceUpstreamGroupInput {
   api_key?: string;
   model_id?: string;
   description?: string;
+  /** 设置页草稿 JSON；仅更新草稿，不改变运行时 active 字段。 */
+  draft_json?: string;
 }
 
 /** toggle 单字段快捷接口输入(是 update 的语法糖)。 */

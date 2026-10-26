@@ -1,21 +1,21 @@
 /**
  * SettingsDialog — 全局设置弹窗（从顶栏⚙图标触发）。
  *
- * 当前只有一个 Tab：「权限管理」— 控制资源管理模块的开关
- * （Wiki / Code / Skill / Chat_Memory），防止未稳定使用的模块
- * 被注入内核运行。
- *
- * 后续可在 TABS 数组里追加其他 Tab（如通知、偏好设置等）。
+ * system_admin 可在「权限管理」和「模型配置」之间切换；普通成员只看到
+ * 自己的资源开关，模型配置的权限仍以 Core 管理接口为准。
  *
  */
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
+  Button,
+  Modal,
   Switch,
+  TabPanel,
+  Tabs,
   Text,
   Tag,
-  Modal,
 } from 'tea-component';
 import {
   BooksIcon,
@@ -25,6 +25,8 @@ import {
 } from 'tea-icons-react';
 import { userConfigApi, type AssetCapabilityKey } from '@/lib/teamApi';
 import { tea } from '@/lib/tea-bridge';
+import { useAuthStore } from '@/stores/auth';
+import { ModelConfigPanel } from './model-config/ModelConfigPanel';
 
 // ===== 资源模块 =====
 
@@ -67,11 +69,23 @@ const RESOURCE_MODULES: ResourceModule[] = [
   },
 ];
 
-type SettingsTab = 'permissions';
+type SettingsTab = 'permissions' | 'model';
 
-export function SettingsDialog({ onClose }: { onClose: () => void }) {
+export function SettingsDialog({
+  onClose,
+  instanceName,
+}: {
+  onClose: () => void;
+  instanceName?: string;
+}) {
   const { t } = useTranslation();
-  const activeTab: SettingsTab = 'permissions';
+  const { auth } = useAuthStore();
+  const isSystemAdmin = auth?.isAdmin === true;
+  const [activeTab, setActiveTab] = useState<SettingsTab>('permissions');
+  const [modelDirty, setModelDirty] = useState(false);
+  const [modelBusy, setModelBusy] = useState(false);
+  const [resetToken, setResetToken] = useState(0);
+  const [pendingNavigation, setPendingNavigation] = useState<'close' | 'permissions' | null>(null);
 
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() => ({
     wiki: true,
@@ -124,10 +138,58 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     }
   }
 
+  function requestClose() {
+    if (modelBusy) return;
+    if (activeTab === 'model' && modelDirty) {
+      setPendingNavigation('close');
+      return;
+    }
+    onClose();
+  }
+
+  function handleTabChange(tab: { id: string }) {
+    const next = tab.id as SettingsTab;
+    if (next === activeTab) return;
+    if (activeTab === 'model' && modelDirty) {
+      setPendingNavigation('permissions');
+      return;
+    }
+    setActiveTab(next);
+  }
+
+  function confirmDiscard() {
+    if (pendingNavigation === 'close') {
+      setPendingNavigation(null);
+      onClose();
+      return;
+    }
+    if (pendingNavigation === 'permissions') {
+      setActiveTab('permissions');
+      setModelDirty(false);
+      setResetToken((value) => value + 1);
+    }
+    setPendingNavigation(null);
+  }
+
+  const tabs = isSystemAdmin
+    ? [
+        { id: 'permissions', label: t('settings.tab.permissions') },
+        { id: 'model', label: t('settings.tab.model') },
+      ]
+    : [{ id: 'permissions', label: t('settings.tab.permissions') }];
+
   return (
-    <Modal visible caption={t('settings.caption')} size="m" onClose={onClose}>
+    <Modal
+      visible
+      caption={t('settings.caption')}
+      size="l"
+      className="settings-dialog"
+      onClose={requestClose}
+      disableEscape={modelBusy}
+    >
       <Modal.Body>
-      {activeTab === 'permissions' && (
+      <Tabs tabs={tabs} activeId={activeTab} onActive={handleTabChange}>
+      <TabPanel id="permissions">
         <div>
           <div style={{ paddingTop: 4 }}>
             <Text theme="label" style={{ display: 'block', marginBottom: 8 }}>
@@ -188,8 +250,29 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         </div>
+      </TabPanel>
+      {isSystemAdmin && (
+        <TabPanel id="model">
+          <ModelConfigPanel
+            instanceName={instanceName}
+            resetToken={resetToken}
+            onDirtyChange={setModelDirty}
+            onBusyChange={setModelBusy}
+            notifySaved={() => tea.notify.success(t('modelConfig.notify.saved'))}
+          />
+        </TabPanel>
       )}
+      </Tabs>
       </Modal.Body>
+      {pendingNavigation && (
+        <Modal visible caption={t('settings.discard.title')} size="s" onClose={() => setPendingNavigation(null)}>
+          <Modal.Body>{t('settings.discard.body')}</Modal.Body>
+          <Modal.Footer>
+            <Button type="primary" onClick={confirmDiscard}>{t('settings.discard.confirm')}</Button>
+            <Button onClick={() => setPendingNavigation(null)}>{t('common.cancel')}</Button>
+          </Modal.Footer>
+        </Modal>
+      )}
     </Modal>
   );
 }

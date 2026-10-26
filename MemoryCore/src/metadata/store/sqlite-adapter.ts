@@ -362,6 +362,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         api_key TEXT NOT NULL DEFAULT '',
         model_id TEXT NOT NULL DEFAULT '',
         description TEXT NOT NULL DEFAULT '',
+        draft_json TEXT NOT NULL DEFAULT '',
         version INTEGER NOT NULL DEFAULT 1,
         supported_agents_snapshot TEXT NOT NULL DEFAULT '[]',
         created_at TEXT NOT NULL,
@@ -376,6 +377,7 @@ export class SqliteMetadataStore implements IMetadataStore {
     this.migrateUserTypeColumn();
     this.migrateLegacyUserKeys();
     this.migrateInstanceUpstreamProviderColumn();
+    this.migrateInstanceUpstreamDraftColumn();
   }
 
   private migrateUserTypeColumn(): void {
@@ -401,6 +403,18 @@ export class SqliteMetadataStore implements IMetadataStore {
     this.db.exec(
       "ALTER TABLE meta_instance_upstream_config " +
         "ADD COLUMN provider TEXT NOT NULL DEFAULT 'openai-compatible'",
+    );
+  }
+
+  /** 设置页草稿仅扩展存储，不触碰 active 字段；旧库按空草稿迁移。 */
+  private migrateInstanceUpstreamDraftColumn(): void {
+    const columns = this.all<{ name: string }>(
+      "SELECT name FROM pragma_table_info('meta_instance_upstream_config')",
+    );
+    if (columns.some((column) => column.name === "draft_json")) return;
+    this.db.exec(
+      "ALTER TABLE meta_instance_upstream_config " +
+        "ADD COLUMN draft_json TEXT NOT NULL DEFAULT ''",
     );
   }
 
@@ -2224,8 +2238,8 @@ export class SqliteMetadataStore implements IMetadataStore {
       // 3. INSERT(custom/extraction 的 snapshot 恒 [];default 由 seed 路径独立处理,不走此 create 分支)
       this.run(
         `INSERT INTO meta_instance_upstream_config
-          (group_id, group_type, name, agents, enabled, mode, provider, base_url, api_key, model_id, description, version, supported_agents_snapshot, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, '[]', ?, ?)`,
+          (group_id, group_type, name, agents, enabled, mode, provider, base_url, api_key, model_id, description, draft_json, version, supported_agents_snapshot, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, '[]', ?, ?)`,
         groupId,
         input.group_type,
         input.name ?? "",
@@ -2237,6 +2251,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         input.api_key ?? "",
         input.model_id ?? "",
         input.description ?? "",
+        input.draft_json ?? "",
         now,
         now,
       );
@@ -2306,11 +2321,12 @@ export class SqliteMetadataStore implements IMetadataStore {
         api_key: input.api_key ?? current.api_key,
         model_id: input.model_id ?? current.model_id,
         description: input.description ?? current.description,
+        draft_json: input.draft_json ?? current.draft_json,
       };
       const now = nowIso();
       this.run(
         `UPDATE meta_instance_upstream_config
-         SET name = ?, agents = ?, enabled = ?, mode = ?, provider = ?, base_url = ?, api_key = ?, model_id = ?, description = ?, version = version + 1, updated_at = ?
+         SET name = ?, agents = ?, enabled = ?, mode = ?, provider = ?, base_url = ?, api_key = ?, model_id = ?, description = ?, draft_json = ?, version = version + 1, updated_at = ?
          WHERE group_id = ?`,
         merged.name,
         JSON.stringify(merged.agents),
@@ -2321,6 +2337,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         merged.api_key,
         merged.model_id,
         merged.description,
+        merged.draft_json,
         now,
         input.group_id,
       );
@@ -2485,6 +2502,7 @@ export class SqliteMetadataStore implements IMetadataStore {
       api_key: String(r.api_key ?? ""),
       model_id: String(r.model_id ?? ""),
       description: String(r.description ?? ""),
+      draft_json: String(r.draft_json ?? ""),
       version: Number(r.version ?? 1),
       supported_agents_snapshot: snapshot,
       created_at: String(r.created_at),

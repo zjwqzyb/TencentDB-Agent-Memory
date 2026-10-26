@@ -308,6 +308,33 @@ function normalizeStoredBaseUrl(raw: string): string {
   }
 }
 
+interface ExtractionDraftConfig {
+  provider: UpstreamProvider;
+  base_url: string;
+  api_key: string;
+  model_id: string;
+  description: string;
+}
+
+function parseExtractionDraft(row: InstanceUpstreamConfigEntity): ExtractionDraftConfig | null {
+  if (!row.draft_json?.trim()) return null;
+  try {
+    const value = JSON.parse(row.draft_json) as Partial<ExtractionDraftConfig>;
+    const provider = typeof value.provider === "string" && UPSTREAM_PROVIDER_SET.has(value.provider as UpstreamProvider)
+      ? value.provider as UpstreamProvider
+      : DEFAULT_UPSTREAM_PROVIDER;
+    return {
+      provider,
+      base_url: typeof value.base_url === "string" ? value.base_url : "",
+      api_key: typeof value.api_key === "string" ? value.api_key : "",
+      model_id: typeof value.model_id === "string" ? value.model_id : "",
+      description: typeof value.description === "string" ? value.description : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export class MetadataService {
   private readonly quota: MetadataQuotaLimits;
   private readonly memorySystemUser?: MemorySystemUserConfig;
@@ -2492,6 +2519,7 @@ export class MetadataService {
         enabled: null,
         version: 0,
         updated_at: null,
+        draft: null,
       };
     }
     return this.toPublicExtraction(ext);
@@ -2503,8 +2531,8 @@ export class MetadataService {
       api_key: string;
       model_id?: string;
       provider?: UpstreamProvider;
-      enabled?: boolean;
       description?: string;
+      draft?: boolean;
     },
     supportedAgents: SupportedAgent[],
   ): Promise<Record<string, unknown>> {
@@ -2517,25 +2545,54 @@ export class MetadataService {
     if (input.provider !== undefined) assertUpstreamProvider(input.provider);
     const baseUrl = normalizeUpstreamBaseUrl(input.base_url);
     const apiKey = normalizeSubmittedApiKey(input.api_key);
+    const modelId = input.model_id?.trim() ?? "";
+    if (input.draft && !modelId) {
+      throw new MetadataError("MISSING_MODEL_ID", "model_id is required for an extraction draft");
+    }
+
     // 存量兜底 seed:Panel 首个请求可能直接 extraction/create,不走 list/groups
     await this.store.ensureDefaultSeeded(supportedAgents);
     try {
+      if (input.draft) {
+        const draft: ExtractionDraftConfig = {
+          provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
+          base_url: baseUrl,
+          api_key: apiKey,
+          model_id: modelId,
+          description: input.description ?? "",
+        };
+        const row = await this.store.createInstanceUpstreamGroup({
+          group_type: "extraction",
+          name: EXTRACTION_GROUP_NAME,
+          agents: [],
+          enabled: false,
+          mode: "custom_unified",
+          provider: draft.provider,
+          base_url: "",
+          api_key: "",
+          model_id: "",
+          description: "",
+          draft_json: JSON.stringify(draft),
+        });
+        return this.toPublicExtraction(row);
+      }
+
       const row = await this.store.createInstanceUpstreamGroup({
         group_type: "extraction",
         name: EXTRACTION_GROUP_NAME,
         agents: [],
-        enabled: input.enabled !== false,
+        enabled: false,
         mode: "custom_unified",
         provider: input.provider ?? DEFAULT_UPSTREAM_PROVIDER,
         base_url: baseUrl,
         api_key: apiKey,
-        model_id: input.model_id ?? "",
+        model_id: modelId,
         description: input.description ?? "",
       });
       return this.toPublicExtraction(row);
     } catch (e) {
       const err = this.translateUpstreamConflict(e);
-      if (err.code === "extraction_already_exists") {
+      if (err.code === "EXTRACTION_ALREADY_CONFIGURED") {
         throw new MetadataError(
           "EXTRACTION_ALREADY_CONFIGURED",
           "extraction row already exists; use /extraction/update to modify",
@@ -2551,19 +2608,17 @@ export class MetadataService {
       api_key?: string;
       model_id?: string;
       provider?: UpstreamProvider;
-      enabled?: boolean;
+      confirm_reuse_api_key?: boolean;
       description?: string;
       expected_version: number;
+      draft?: boolean;
     },
     supportedAgents: SupportedAgent[],
   ): Promise<Record<string, unknown>> {
-    const apiKey = input.api_key !== undefined
+    const submittedApiKey = input.api_key !== undefined
       ? normalizeSubmittedApiKey(input.api_key)
       : undefined;
     if (input.provider !== undefined) assertUpstreamProvider(input.provider);
-    const baseUrl = input.base_url !== undefined
-      ? normalizeUpstreamBaseUrl(input.base_url)
-      : undefined;
 
     // 存量兜底 seed
     await this.store.ensureDefaultSeeded(supportedAgents);
@@ -2575,6 +2630,81 @@ export class MetadataService {
         "extraction row does not exist; use /extraction/create first",
       );
     }
+
+    if (input.draft) {
+      const existingDraft = parseExtractionDraft(ext);
+      const source: ExtractionDraftConfig = existingDraft ?? {
+        provider: ext.provider,
+        base_url: normalizeStoredBaseUrl(ext.base_url),
+        api_key: ext.api_key,
+        model_id: ext.model_id,
+        description: ext.description,
+      };
+      const provider = input.provider ?? source.provider;
+      const baseUrl = input.base_url !== undefined
+        ? normalizeUpstreamBaseUrl(input.base_url)
+        : normalizeStoredBaseUrl(source.base_url);
+      if (!baseUrl) {
+        throw new MetadataError("MISSING_BASE_URL", "base_url is required for an extraction draft");
+      }
+      const apiKey = submittedApiKey ?? source.api_key;
+      if (!apiKey) {
+        throw new MetadataError("MISSING_API_KEY", "api_key is required for an extraction draft");
+      }
+      const modelId = (input.model_id ?? source.model_id).trim();
+      if (!modelId) {
+        throw new MetadataError("MISSING_MODEL_ID", "model_id is required for an extraction draft");
+      }
+      const providerChanged = provider !== source.provider;
+      const baseUrlChanged = baseUrl !== normalizeStoredBaseUrl(source.base_url);
+      if (
+        source.api_key &&
+        submittedApiKey === undefined &&
+        (providerChanged || baseUrlChanged) &&
+        input.confirm_reuse_api_key !== true
+      ) {
+        throw new MetadataError(
+          "API_KEY_CONFIRMATION_REQUIRED",
+          "confirm_reuse_api_key=true is required when changing provider or base_url without a replacement key",
+        );
+      }
+      const draft: ExtractionDraftConfig = {
+        provider,
+        base_url: baseUrl,
+        api_key: apiKey,
+        model_id: modelId,
+        description: input.description ?? source.description,
+      };
+      try {
+        const row = await this.store.updateInstanceUpstreamGroup({
+          group_id: ext.group_id,
+          expected_group_type: "extraction",
+          expected_version: input.expected_version,
+          draft_json: JSON.stringify(draft),
+        });
+        return this.toPublicExtraction(row);
+      } catch (e) {
+        throw this.translateUpstreamConflict(e);
+      }
+    }
+
+    const baseUrl = input.base_url !== undefined
+      ? normalizeUpstreamBaseUrl(input.base_url)
+      : undefined;
+    const providerChanged = input.provider !== undefined && input.provider !== ext.provider;
+    const baseUrlChanged = baseUrl !== undefined
+      && baseUrl !== normalizeStoredBaseUrl(ext.base_url);
+    if (
+      ext.api_key &&
+      submittedApiKey === undefined &&
+      (providerChanged || baseUrlChanged) &&
+      input.confirm_reuse_api_key !== true
+    ) {
+      throw new MetadataError(
+        "API_KEY_CONFIRMATION_REQUIRED",
+        "confirm_reuse_api_key=true is required when changing provider or base_url without a replacement key",
+      );
+    }
     try {
       const row = await this.store.updateInstanceUpstreamGroup({
         group_id: ext.group_id,
@@ -2582,9 +2712,8 @@ export class MetadataService {
         expected_version: input.expected_version,
         provider: input.provider,
         base_url: baseUrl,
-        api_key: apiKey,
+        api_key: submittedApiKey,
         model_id: input.model_id,
-        enabled: input.enabled,
         description: input.description,
       });
       return this.toPublicExtraction(row);
@@ -2711,10 +2840,13 @@ export class MetadataService {
   }
 
   private toPublicExtraction(row: InstanceUpstreamConfigEntity): Record<string, unknown> {
+    const draft = parseExtractionDraft(row);
+    const configured = Boolean(row.base_url && row.api_key);
+    const managed = configured || draft !== null;
     return {
-      configured: true,
-      managed: true,
-      source: "panel",
+      configured,
+      managed,
+      source: configured ? "panel" : "deployment",
       config_id: row.group_id,
       provider: row.provider,
       protocol: "openai-chat",
@@ -2726,6 +2858,16 @@ export class MetadataService {
       description: row.description,
       version: row.version,
       updated_at: row.updated_at,
+      draft: draft ? {
+        configured: true,
+        provider: draft.provider,
+        protocol: "openai-chat",
+        base_url: normalizeStoredBaseUrl(draft.base_url),
+        api_key_configured: Boolean(draft.api_key),
+        model_id: draft.model_id,
+        description: draft.description,
+        updated_at: row.updated_at,
+      } : null,
     };
   }
 

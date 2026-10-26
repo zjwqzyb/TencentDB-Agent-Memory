@@ -221,3 +221,50 @@
   width: 100%;
   min-width: 0;
 }
+
+/* ===== Narrow screens: keep every header action reachable ===== */
+@media (max-width: 720px) {
+  ._memory-global-header {
+    gap: 6px;
+    padding: 0 8px;
+  }
+
+  ._memory-global-header-left {
+    flex: 1;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  ._memory-global-header-brand-text,
+  ._memory-global-header-guide-btn,
+  ._memory-global-header-username {
+    display: none;
+  }
+
+  ._memory-global-header-right {
+    gap: 4px;
+  }
+
+  ._memory-team-switcher-trigger {
+    max-width: 136px;
+  }
+
+  ._memory-global-header-user-btn {
+    padding-right: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  ._memory-global-header-brand {
+    gap: 0;
+  }
+
+  ._memory-team-switcher-trigger {
+    max-width: 104px;
+    padding-right: 4px;
+  }
+
+  ._memory-team-switcher-id {
+    display: none;
+  }
+}

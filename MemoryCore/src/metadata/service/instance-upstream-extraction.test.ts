@@ -183,11 +183,50 @@ describe("instance extraction admin API", () => {
           api_key_configured: true,
           api_key_masked: "••••••••",
           model_id: "deepseek-chat",
+          enabled: false,
           version: 1,
         },
       },
     });
     expect(JSON.stringify(created.json)).not.toContain("short");
+
+    const unconfirmedReuse = await post(
+      harness.baseUrl,
+      "instance-upstream/extraction/update",
+      {
+        expected_version: created.json.data.version,
+        provider: "glm",
+      },
+      headers,
+    );
+    expect(unconfirmedReuse).toMatchObject({
+      status: 400,
+      json: { code: 400 },
+    });
+    expect(unconfirmedReuse.json.message).toContain("confirm_reuse_api_key");
+
+    const confirmedReuse = await post(
+      harness.baseUrl,
+      "instance-upstream/extraction/update",
+      {
+        expected_version: created.json.data.version,
+        provider: "glm",
+        confirm_reuse_api_key: true,
+      },
+      headers,
+    );
+    expect(confirmedReuse).toMatchObject({
+      status: 200,
+      json: {
+        code: 0,
+        data: {
+          provider: "glm",
+          enabled: false,
+          api_key_configured: true,
+          version: created.json.data.version + 1,
+        },
+      },
+    });
 
     const missingVersion = await post(harness.baseUrl, "instance-upstream/extraction/update", {
       description: "changed",
@@ -211,7 +250,7 @@ describe("instance extraction admin API", () => {
 
     const toggled = await post(harness.baseUrl, "instance-upstream/extraction/toggle", {
       enabled: false,
-      expected_version: created.json.data.version,
+      expected_version: confirmedReuse.json.data.version,
     }, headers);
     expect(toggled).toMatchObject({
       status: 200,
@@ -219,8 +258,8 @@ describe("instance extraction admin API", () => {
         code: 0,
         data: {
           enabled: false,
-          provider: "deepseek",
-          version: created.json.data.version + 1,
+          provider: "glm",
+          version: confirmedReuse.json.data.version + 1,
         },
       },
     });
@@ -306,5 +345,211 @@ describe("instance extraction admin API", () => {
         json: { code: 403 },
       });
     }
+  });
+
+
+  it("saves draft-only configuration without claiming an active managed model", async () => {
+    const service = makeService("draft-create-admin", "system_admin");
+    harness = await startHarness({ instance_draft: service });
+
+    const created = await post(
+      harness.baseUrl,
+      "instance-upstream/extraction/create",
+      {
+        draft: true,
+        provider: "deepseek",
+        base_url: "https://api.deepseek.com/v1/",
+        api_key: "draft-only-secret",
+        model_id: "deepseek-chat",
+        description: "draft only",
+      },
+      { instance: "instance_draft", key: "draft-create-admin" },
+    );
+
+    expect(created).toMatchObject({
+      status: 200,
+      json: {
+        code: 0,
+        data: {
+          configured: false,
+          source: "deployment",
+          enabled: false,
+          draft: {
+            configured: true,
+            provider: "deepseek",
+            base_url: "https://api.deepseek.com/v1",
+            api_key_configured: true,
+            model_id: "deepseek-chat",
+            description: "draft only",
+          },
+        },
+      },
+    });
+    expect(JSON.stringify(created.json)).not.toContain("draft-only-secret");
+
+    const rows = service.rawStore.listInstanceUpstreamGroups({ group_type: "extraction" });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      enabled: false,
+      base_url: "",
+      api_key: "",
+      model_id: "",
+      description: "",
+    });
+    expect(JSON.parse(rows[0].draft_json ?? "{}")).toMatchObject({
+      provider: "deepseek",
+      api_key: "draft-only-secret",
+      model_id: "deepseek-chat",
+    });
+  });
+
+  it("updates only draft fields and preserves active values and server-side keys", async () => {
+    const service = makeService("draft-update-admin", "system_admin");
+    const active = service.rawStore.createInstanceUpstreamGroup({
+      group_type: "extraction",
+      name: "抽取模型",
+      mode: "custom_unified",
+      provider: "openai-compatible",
+      base_url: "https://active.example/v1",
+      api_key: "active-secret",
+      model_id: "active-model",
+      description: "active config",
+      enabled: true,
+    });
+    harness = await startHarness({ instance_draft_update: service });
+    const headers = { instance: "instance_draft_update", key: "draft-update-admin" };
+
+    const first = await post(harness.baseUrl, "instance-upstream/extraction/update", {
+      draft: true,
+      expected_version: active.version,
+      provider: "deepseek",
+      base_url: "https://api.deepseek.com/v1",
+      api_key: "draft-secret",
+      model_id: "deepseek-chat",
+      description: "first draft",
+    }, headers);
+    expect(first).toMatchObject({
+      status: 200,
+      json: {
+        code: 0,
+        data: {
+          configured: true,
+          source: "panel",
+          provider: "openai-compatible",
+          base_url: "https://active.example/v1",
+          model_id: "active-model",
+          description: "active config",
+          draft: {
+            provider: "deepseek",
+            base_url: "https://api.deepseek.com/v1",
+            model_id: "deepseek-chat",
+            description: "first draft",
+            api_key_configured: true,
+          },
+        },
+      },
+    });
+
+    const afterFirst = service.rawStore.getInstanceUpstreamGroup(active.group_id)!;
+    expect(afterFirst).toMatchObject({
+      enabled: true,
+      provider: "openai-compatible",
+      base_url: "https://active.example/v1",
+      api_key: "active-secret",
+      model_id: "active-model",
+      description: "active config",
+    });
+
+    const second = await post(harness.baseUrl, "instance-upstream/extraction/update", {
+      draft: true,
+      expected_version: afterFirst.version,
+      provider: "deepseek",
+      base_url: "https://api.deepseek.com/v1",
+      model_id: "deepseek-reasoner",
+      description: "second draft",
+    }, headers);
+    expect(second).toMatchObject({
+      status: 200,
+      json: {
+        code: 0,
+        data: {
+          draft: {
+            model_id: "deepseek-reasoner",
+            description: "second draft",
+            api_key_configured: true,
+          },
+        },
+      },
+    });
+
+    const afterSecond = service.rawStore.getInstanceUpstreamGroup(active.group_id)!;
+    expect(afterSecond.api_key).toBe("active-secret");
+    expect(JSON.parse(afterSecond.draft_json ?? "{}")).toMatchObject({
+      api_key: "draft-secret",
+      model_id: "deepseek-reasoner",
+    });
+
+    const stale = await post(harness.baseUrl, "instance-upstream/extraction/update", {
+      draft: true,
+      expected_version: active.version,
+      provider: "deepseek",
+      base_url: "https://api.deepseek.com/v1",
+      model_id: "stale-model",
+    }, headers);
+    expect(stale).toMatchObject({ status: 409, json: { code: 409 } });
+  });
+
+  it("requires explicit confirmation before reusing a key for another endpoint", async () => {
+    const service = makeService("key-reuse-admin", "system_admin");
+    const active = service.rawStore.createInstanceUpstreamGroup({
+      group_type: "extraction",
+      name: "抽取模型",
+      mode: "custom_unified",
+      provider: "openai-compatible",
+      base_url: "https://active.example/v1",
+      api_key: "active-secret",
+      model_id: "active-model",
+      enabled: true,
+    });
+    harness = await startHarness({ instance_key_reuse: service });
+    const headers = { instance: "instance_key_reuse", key: "key-reuse-admin" };
+    const body = {
+      draft: true,
+      expected_version: active.version,
+      provider: "deepseek",
+      base_url: "https://api.deepseek.com/v1",
+      model_id: "deepseek-chat",
+    };
+
+    const rejected = await post(
+      harness.baseUrl,
+      "instance-upstream/extraction/update",
+      body,
+      headers,
+    );
+    expect(rejected).toMatchObject({ status: 400, json: { code: 400 } });
+    expect(rejected.json.message).toContain("API_KEY_CONFIRMATION_REQUIRED");
+    expect(rejected.json.message).toContain("confirm_reuse_api_key");
+    expect(service.rawStore.getInstanceUpstreamGroup(active.group_id)?.draft_json).toBe("");
+
+    const confirmed = await post(
+      harness.baseUrl,
+      "instance-upstream/extraction/update",
+      { ...body, confirm_reuse_api_key: true },
+      headers,
+    );
+    expect(confirmed).toMatchObject({
+      status: 200,
+      json: {
+        code: 0,
+        data: {
+          draft: {
+            provider: "deepseek",
+            model_id: "deepseek-chat",
+            api_key_configured: true,
+          },
+        },
+      },
+    });
   });
 });

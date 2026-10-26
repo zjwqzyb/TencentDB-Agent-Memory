@@ -1,0 +1,133 @@
+.model-config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.model-config-context {
+  padding: 14px;
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 8px;
+  background: var(--tea-color-bg-secondary-default);
+}
+
+.model-config-context-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+  min-width: 0;
+}
+
+.model-config-context-title strong {
+  color: var(--tea-color-text-primary-default);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.model-config-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 0;
+}
+
+.model-config-summary div {
+  min-width: 0;
+}
+
+.model-config-summary dt {
+  color: var(--tea-color-text-secondary-default);
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.model-config-summary dd {
+  color: var(--tea-color-text-primary-default);
+  font-size: 13px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.model-config-form {
+  min-width: 0;
+}
+
+.model-config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+
+.model-config-key-row,
+.model-config-alert-row,
+.model-config-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.model-config-key-row > :first-child {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.model-config-alert-row {
+  justify-content: space-between;
+}
+
+.model-config-error-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.model-config-actions {
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.model-config-dirty-state {
+  margin-right: auto;
+}
+
+@media (max-width: 720px) {
+  .settings-dialog {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px);
+  }
+
+  .settings-dialog .tea-dialog__inner {
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  .settings-dialog .tea-dialog__body {
+    min-width: 0;
+  }
+
+  .model-config-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .model-config-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .model-config-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .model-config-actions > button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .model-config-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

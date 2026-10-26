@@ -129,7 +129,12 @@ export function GlobalHeader({
         />
       )}
 
-      {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsDialog
+          instanceName={instanceName}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
     </header>
   );
 }

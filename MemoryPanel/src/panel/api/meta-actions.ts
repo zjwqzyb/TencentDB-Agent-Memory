@@ -76,6 +76,10 @@ export const META_ACTIONS = [
   'acl/revoke',
   'acl/list',
   'acl/check',
+  // Instance extraction model draft management (system_admin enforced by Core).
+  'instance-upstream/extraction/get',
+  'instance-upstream/extraction/create',
+  'instance-upstream/extraction/update',
   'auth/verify',
   'instance-quota/get',
   'config/user/get',

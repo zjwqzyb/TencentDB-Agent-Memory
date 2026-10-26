@@ -88,14 +88,19 @@ function parseMetaErrorEnvelope(text: string): {
   return {};
 }
 
+export interface RequestOptions {
+  signal?: AbortSignal;
+}
+
 export async function request<T>(
   method: string,
   path: string,
   body?: unknown,
-  extraHeaders?: Record<string, string>
+  extraHeaders?: Record<string, string>,
+  options?: RequestOptions,
 ): Promise<T> {
   const headers: Record<string, string> = { ...extraHeaders };
-  const init: RequestInit = { method, headers, credentials: 'include' };
+  const init: RequestInit = { method, headers, credentials: 'include', signal: options?.signal };
   if (body !== undefined) {
     headers['content-type'] = 'application/json';
     init.body = JSON.stringify(body);
@@ -170,13 +175,24 @@ export function unwrapEnvelope<T>(envelope: MetaEnvelope<T>, emptyMessage: strin
  */export async function metaCall<T>(
   action: string,
   body: Record<string, unknown>,
-  headers: Record<string, string>
+  headers: Record<string, string>,
+  options?: RequestOptions,
 ): Promise<T> {
-  const envelope = await request<MetaEnvelope<T>>('POST', `${META_PREFIX}/${action}`, body, headers);
+  const envelope = await request<MetaEnvelope<T>>(
+    'POST',
+    `${META_PREFIX}/${action}`,
+    body,
+    headers,
+    options,
+  );
   return unwrapEnvelope(envelope, 'empty meta response');
 }
 
-export async function metaPost<T>(action: string, body: Record<string, unknown> = {}): Promise<T> {
+export async function metaPost<T>(
+  action: string,
+  body: Record<string, unknown> = {},
+  options?: RequestOptions,
+): Promise<T> {
   const session = getPanelSession();
   if (!session) {
     throw new ApiError(401, 'Unauthorized', 'no active panel session');
@@ -184,7 +200,7 @@ export async function metaPost<T>(action: string, body: Record<string, unknown> 
   const headers: Record<string, string> = { 'X-Tdai-Service-Id': session.instanceId };
   // IdP Session 用 HttpOnly Cookie 认证，user_key 不下发到浏览器。
   if (session.userKey) headers['X-Tdai-User-Key'] = session.userKey;
-  return metaCall<T>(action, body, headers);
+  return metaCall<T>(action, body, headers, options);
 }
 
 /**

@@ -1724,6 +1724,7 @@ export class MongoMetadataStore implements IMetadataStore {
         api_key: input.api_key ?? "",
         model_id: input.model_id ?? "",
         description: input.description ?? "",
+        draft_json: input.draft_json ?? "",
         version: 1,
         supported_agents_snapshot: [],   // custom/extraction 恒 [];default 由 seed 路径写入
         created_at: now,
@@ -1799,6 +1800,7 @@ export class MongoMetadataStore implements IMetadataStore {
       if (input.api_key !== undefined) setDoc.api_key = input.api_key;
       if (input.model_id !== undefined) setDoc.model_id = input.model_id;
       if (input.description !== undefined) setDoc.description = input.description;
+      if (input.draft_json !== undefined) setDoc.draft_json = input.draft_json;
 
       const result = await this.col("meta_instance_upstream_config").updateOne(
         { group_id: input.group_id, version: effectiveExpectedVersion } as Document,
@@ -2078,6 +2080,7 @@ export class MongoMetadataStore implements IMetadataStore {
       api_key: String(doc.api_key ?? ""),
       model_id: String(doc.model_id ?? ""),
       description: String(doc.description ?? ""),
+      draft_json: String(doc.draft_json ?? ""),
       version: Number(doc.version ?? 1),
       supported_agents_snapshot: Array.isArray(doc.supported_agents_snapshot)
         ? (doc.supported_agents_snapshot as string[]) : [],
