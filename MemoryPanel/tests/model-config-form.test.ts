@@ -54,6 +54,22 @@ describe('model configuration form model', () => {
       .toBe('');
   });
 
+  it('follows the new preset when the shown address was loaded instead of typed', () => {
+    // 生产复现：已保存第三方地址，切换供应商后 Base URL 应跟随新预设
+    const savedCustom = {
+      ...formFromConfig(undefined),
+      provider: 'openai-compatible' as const,
+      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    };
+    expect(selectProvider(savedCustom, 'glm', savedCustom.baseUrl).baseUrl)
+      .toBe('https://open.bigmodel.cn/api/paas/v4');
+
+    // 本次会话手工改写过的地址仍然保留
+    const edited = { ...savedCustom, baseUrl: 'https://my-proxy.example/v1' };
+    expect(selectProvider(edited, 'glm', savedCustom.baseUrl).baseUrl)
+      .toBe('https://my-proxy.example/v1');
+  });
+
   it('requires explicit confirmation before reusing a key across provider or endpoint changes', () => {
     expect(requiresKeyReuseConfirmation(form({ provider: 'glm' }), configured)).toBe(true);
     expect(requiresKeyReuseConfirmation(form({ baseUrl: 'https://proxy.example/v1' }), configured)).toBe(true);

@@ -88,15 +88,32 @@ export function formFromConfig(config: ExtractionConfig | undefined): ModelConfi
   };
 }
 
-export function selectProvider(form: ModelConfigForm, provider: UpstreamProvider): ModelConfigForm {
-  const previousPreset = presetBaseUrl(form.provider);
+/**
+ * 切换供应商时的 Base URL 策略。
+ *
+ * `savedBaseUrl` 是加载表单时服务端回显的地址。只有「用户本次手动改写过的地址」
+ * 才需要保留；地址为空、仍等于上一家预设、或仍等于加载时的地址，都视为未改写，
+ * 跟随新供应商的预设。否则会出现「切换供应商后 Base URL 不动」的困惑。
+ */
+export function selectProvider(
+  form: ModelConfigForm,
+  provider: UpstreamProvider,
+  savedBaseUrl?: string,
+): ModelConfigForm {
+  const previousPreset = normalizeBaseUrlInput(presetBaseUrl(form.provider));
   const nextPreset = presetBaseUrl(provider);
   const currentUrl = normalizeBaseUrlInput(form.baseUrl);
-  const shouldApplyPreset = currentUrl === '' || currentUrl === normalizeBaseUrlInput(previousPreset);
+  const initialUrl = normalizeBaseUrlInput(savedBaseUrl ?? '');
+  const untouched =
+    currentUrl === ''
+    || (previousPreset !== '' && currentUrl === previousPreset)
+    || (initialUrl !== '' && currentUrl === initialUrl);
   return {
     ...form,
     provider,
-    baseUrl: shouldApplyPreset ? nextPreset : form.baseUrl,
+    // 未改写 → 跟随新预设（第三方兼容预设为空，等价于要求重新填写）；
+    // 已改写 → 保留用户输入。
+    baseUrl: untouched ? nextPreset : form.baseUrl,
     confirmReuseKey: false,
   };
 }

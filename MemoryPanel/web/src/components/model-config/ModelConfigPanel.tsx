@@ -204,7 +204,7 @@ export function ModelConfigPanel({
 
   function handleProviderChange(provider: UpstreamProvider) {
     resetTestResults();
-    setForm((prev) => selectProvider(prev, provider));
+    setForm((prev) => selectProvider(prev, provider, savedModelConfig(config)?.base_url));
     setFieldErrors([]);
     setError('');
     setConflict(false);
