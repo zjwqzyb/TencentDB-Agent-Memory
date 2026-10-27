@@ -69,5 +69,9 @@
       "better-sqlite3",
       "esbuild"
     ]
+  },
+  "overrides": {
+    "@opentelemetry/exporter-trace-otlp-http": "0.219.0",
+    "@opentelemetry/otlp-transformer": "0.219.0"
   }
 }
