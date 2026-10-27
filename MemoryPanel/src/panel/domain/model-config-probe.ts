@@ -532,6 +532,118 @@ async function runCapability(
   return runToolsProbe(opts, modelId);
 }
 
+/** 由同一个 Base URL 推导出 `/models` 端点（与 chat 端点共享同一套安全校验）。 */
+export function resolveModelsUrl(rawBaseUrl: string, opts: { allowLoopback: boolean }): URL {
+  const chat = resolveChatCompletionsUrl(rawBaseUrl, opts);
+  const url = new URL(chat.toString());
+  url.pathname = url.pathname.replace(/\/chat\/completions$/i, '/models');
+  return url;
+}
+
+export interface ModelListOptions {
+  baseUrl: string;
+  apiKey: string;
+  timeoutMs: number;
+  allowLoopback: boolean;
+  signal?: AbortSignal | undefined;
+  fetchImpl?: typeof fetch;
+}
+
+/** 单次模型列表最多返回多少条（防止上游返回超大列表）。 */
+export const MAX_LISTED_MODELS = 500;
+
+function extractModelIds(payload: unknown): string[] {
+  let raw: unknown[] | null = null;
+  if (Array.isArray(payload)) {
+    raw = payload;
+  } else if (payload && typeof payload === 'object') {
+    const rec = payload as Record<string, unknown>;
+    if (Array.isArray(rec.data)) raw = rec.data;
+    else if (Array.isArray(rec.models)) raw = rec.models;
+  }
+  if (!raw) {
+    throw new ModelProbeFailure({
+      code: 'INVALID_RESPONSE',
+      message: 'Upstream did not return a model list (expected {data:[{id}]}).',
+    });
+  }
+  const ids: string[] = [];
+  for (const item of raw) {
+    let id: unknown;
+    if (typeof item === 'string') id = item;
+    else if (item && typeof item === 'object') id = (item as Record<string, unknown>).id;
+    if (typeof id === 'string' && id.trim()) ids.push(id.trim());
+    if (ids.length >= MAX_LISTED_MODELS) break;
+  }
+  return Array.from(new Set(ids)).sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * 拉取 OpenAI 兼容服务的模型列表（`GET {base}/models`）。
+ * 与连接测试共用：仅 https（或显式 loopback）、不跟随重定向、响应体上限、错误脱敏。
+ */
+export async function listChatModels(opts: ModelListOptions): Promise<string[]> {
+  const url = resolveModelsUrl(opts.baseUrl, { allowLoopback: opts.allowLoopback });
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const timeoutController = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    timeoutController.abort();
+  }, opts.timeoutMs);
+  const signal = opts.signal
+    ? AbortSignal.any([timeoutController.signal, opts.signal])
+    : timeoutController.signal;
+
+  let res: Response;
+  try {
+    res = await fetchImpl(url, {
+      method: 'GET',
+      headers: { authorization: `Bearer ${opts.apiKey}` },
+      redirect: 'manual',
+      signal,
+    });
+  } catch (err) {
+    if (timedOut) {
+      throw new ModelProbeFailure({
+        code: 'TIMEOUT',
+        message: `Upstream did not respond within ${opts.timeoutMs} ms.`,
+      });
+    }
+    if (opts.signal?.aborted) {
+      throw new ModelProbeFailure({ code: 'CANCELLED', message: 'Request cancelled.' });
+    }
+    const raw = err instanceof Error ? err.message : String(err);
+    throw new ModelProbeFailure({
+      code: 'NETWORK_ERROR',
+      message: `Network request failed. ${sanitizeUpstreamMessage(raw, [opts.apiKey])}`.trim(),
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (res.status >= 300 && res.status < 400) {
+    await res.body?.cancel().catch(() => undefined);
+    throw new ModelProbeFailure({
+      code: 'REDIRECT_NOT_ALLOWED',
+      message: `Upstream tried to redirect (HTTP ${res.status}); redirects are not followed.`,
+      http_status: res.status,
+    });
+  }
+
+  const text = await readBoundedText(res);
+  let payload: unknown = null;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+  }
+  if (!res.ok) throw classifyHttpError(res.status, payload, opts.apiKey);
+  return extractModelIds(payload);
+}
+
 export interface ModelProbeRunOptions {
   baseUrl: string;
   apiKey: string;

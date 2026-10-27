@@ -94,6 +94,8 @@ export const META_ACTIONS = [
   'instance-upstream/extraction/disable',
   // 启用后 KS 同步失败的手动恢复入口（Panel 本地处理，不转发内核）。
   'instance-upstream/extraction/resync-knowledge',
+  // 模型 ID 下拉框：按当前表单（或已存 Key）拉取供应商可用模型（Panel 本地处理）。
+  'instance-upstream/extraction/models',
   'auth/verify',
   'instance-quota/get',
   'config/user/get',

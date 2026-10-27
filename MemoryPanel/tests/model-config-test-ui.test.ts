@@ -18,8 +18,10 @@ import {
   type TestConfigBody,
 } from '../web/src/lib/api/instance-upstream';
 import {
+  buildModelsBody,
   buildTestBody,
   canEnableConfig,
+  canFetchModels,
   canRunTest,
   enableBlockedReason,
   formFromConfig,
@@ -301,5 +303,24 @@ describe('enable gating', () => {
   it('reports no-draft when there is nothing to enable', () => {
     expect(enableBlockedReason(withDraft({ draft: null }))).toBe('no-draft');
     expect(canEnableConfig(undefined)).toBe(false);
+  });
+});
+
+
+describe('model list fetching guards', () => {
+  const base = form();
+
+  it('needs a usable base url and an available key', () => {
+    expect(canFetchModels({ ...base, baseUrl: 'https://api.deepseek.com', apiKey: 'sk-typed' }, undefined)).toBe(true);
+    expect(canFetchModels({ ...base, baseUrl: 'https://api.deepseek.com', apiKey: '' }, configured)).toBe(true);
+    expect(canFetchModels({ ...base, baseUrl: 'https://api.deepseek.com', apiKey: '' }, undefined)).toBe(false);
+    expect(canFetchModels({ ...base, baseUrl: 'not-a-url', apiKey: 'sk-typed' }, undefined)).toBe(false);
+  });
+
+  it('omits a blank key so the server reuses the stored one', () => {
+    expect(buildModelsBody({ ...base, baseUrl: 'https://api.deepseek.com/', apiKey: '' }))
+      .toEqual({ provider: 'deepseek', base_url: 'https://api.deepseek.com' });
+    expect(buildModelsBody({ ...base, apiKey: 'sk-typed' }))
+      .toEqual({ provider: 'deepseek', base_url: 'https://api.deepseek.com', api_key: 'sk-typed' });
   });
 });

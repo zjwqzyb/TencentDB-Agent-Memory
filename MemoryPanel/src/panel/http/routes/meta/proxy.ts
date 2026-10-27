@@ -13,6 +13,7 @@ import { DEFAULT_SKILLS } from './default-skills.js';
 import { extractListItems, isCallerSystemAdmin, resolveCallerUserId } from '../knowledge/common.js';
 import { handleModelConfigTest } from './model-config-test.js';
 import { handleModelConfigResync } from './model-config-resync.js';
+import { handleModelConfigModels } from './model-config-models.js';
 import {
   syncKnowledgeBindingAfterDisable,
   syncKnowledgeBindingAfterEnable,
@@ -187,6 +188,11 @@ export function registerMetaProxyRoutes(api: Hono, deps: PanelDeps): void {
     const duplicateMsg = await checkDuplicate(action, body, ctx, deps);
     if (duplicateMsg) {
       return respondControlError(c, 409, duplicateMsg);
+    }
+
+    // ── 供应商模型列表：Panel 本地执行（不转发内核）──
+    if (action === 'instance-upstream/extraction/models') {
+      return handleModelConfigModels(c, deps);
     }
 
     // ── 模型绑定手动再同步：Panel 本地执行（不转发内核）──

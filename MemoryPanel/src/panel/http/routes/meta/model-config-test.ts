@@ -84,7 +84,7 @@ export async function verifyAdminCaller(
   return { userId: userId || ctx.userKey.slice(0, 12) };
 }
 
-async function resolveStoredExtraction(
+export async function resolveStoredExtraction(
   deps: PanelDeps,
   ctx: MetaCallContext,
 ): Promise<ResolvedExtractionConfig | null> {

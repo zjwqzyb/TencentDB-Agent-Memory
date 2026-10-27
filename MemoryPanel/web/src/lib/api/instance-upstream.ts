@@ -176,6 +176,11 @@ export const instanceUpstreamApi = {
   /** 停用但保留草稿与 active snapshot，进入 paused。 */
   disable: (body: DisableExtractionConfig, signal?: AbortSignal) =>
     metaPost<ExtractionConfig>(`${ACTION}/disable`, { ...body }, { signal }),
+  /** 按当前表单（或服务端已存 Key）拉取供应商可用模型列表。 */
+  models: (
+    body: { provider: UpstreamProvider; base_url: string; api_key?: string },
+    signal?: AbortSignal,
+  ) => metaPost<{ models: string[]; count: number }>(`${ACTION}/models`, { ...body }, { signal }),
   /** 手动把 Core 当前快照（ready/paused/invalid）重新同步到知识服务。 */
   resyncKnowledge: (signal?: AbortSignal) =>
     metaPost<{

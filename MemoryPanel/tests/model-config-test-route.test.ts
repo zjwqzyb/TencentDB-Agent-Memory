@@ -94,13 +94,22 @@ interface ChatFixture {
   baseUrl: string;
   requests: Array<{ url?: string; headers: Record<string, string | string[] | undefined>; body: Record<string, unknown> }>;
   slow: { value: boolean };
+  modelsStatus: { value: number };
   close: () => Promise<void>;
 }
 
 async function startChatFixture(): Promise<ChatFixture> {
   const requests: ChatFixture['requests'] = [];
   const slow = { value: false };
+  const modelsStatus = { value: 200 };
   const server = createServer(async (req, res) => {
+    if (req.method === 'GET' && (req.url ?? '').endsWith('/models')) {
+      requests.push({ url: req.url, headers: req.headers, body: {} });
+      if (modelsStatus.value !== 200) {
+        return json(res, modelsStatus.value, { error: { message: 'invalid api key' } });
+      }
+      return json(res, 200, { object: 'list', data: [{ id: 'probe-model-2' }, { id: 'probe-model' }] });
+    }
     const raw = await readBody(req);
     const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
     requests.push({ url: req.url, headers: req.headers, body });
@@ -138,6 +147,7 @@ async function startChatFixture(): Promise<ChatFixture> {
     baseUrl: `http://127.0.0.1:${address.port}/v1`,
     requests,
     slow,
+    modelsStatus,
     close: () =>
       new Promise<void>((resolve) => {
         server.closeAllConnections();
@@ -385,5 +395,71 @@ describe('model config test endpoint', () => {
     expect(results).toHaveLength(3);
     expect(results.every((e) => (e.error as { code?: string } | undefined)?.code === 'ENDPOINT_NOT_ALLOWED')).toBe(true);
     expect(chat.requests).toHaveLength(0);
+  });
+});
+
+
+describe('model list endpoint', () => {
+  const modelsRequest = (payload: Record<string, unknown>) =>
+    app.request('/meta/instance-upstream/extraction/models', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Tdai-Service-Id': 'instance-a',
+        'X-Tdai-User-Key': 'admin-key',
+      },
+      body: JSON.stringify(payload),
+    });
+
+  it('returns the provider model list with the submitted key', async () => {
+    const res = await modelsRequest({ provider: 'deepseek', base_url: chat.baseUrl, api_key: 'sk-form-key' });
+    const body = (await res.json()) as { code: number; data?: { models?: string[]; count?: number } };
+    expect(res.status).toBe(200);
+    expect(body.code).toBe(0);
+    expect(body.data?.models).toEqual(['probe-model', 'probe-model-2']);
+    expect(body.data?.count).toBe(2);
+    expect(chat.requests.at(-1)?.headers.authorization).toBe('Bearer sk-form-key');
+  });
+
+  it('reuses the stored draft key when the form leaves it blank', async () => {
+    core.resolved = unresolved({
+      version: 2,
+      source: 'panel',
+      config_id: 'ext-1',
+      draft_present: true,
+      draft: { provider: 'deepseek', base_url: chat.baseUrl, api_key: 'sk-stored-draft', model_id: 'probe-model', description: '' },
+    });
+    const res = await modelsRequest({ provider: 'deepseek', base_url: chat.baseUrl });
+    expect(res.status).toBe(200);
+    expect(chat.requests.at(-1)?.headers.authorization).toBe('Bearer sk-stored-draft');
+  });
+
+  it('requires a key from the form or the stored config', async () => {
+    const res = await modelsRequest({ provider: 'deepseek', base_url: chat.baseUrl });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ message: 'MISSING_API_KEY' });
+  });
+
+  it('maps upstream auth failures to a distinguishable message', async () => {
+    chat.modelsStatus.value = 401;
+    const res = await modelsRequest({ provider: 'deepseek', base_url: chat.baseUrl, api_key: 'sk-bad' });
+    const body = (await res.json()) as { message: string };
+    expect(res.status).toBe(502);
+    expect(body.message).toContain('AUTH_FAILED');
+  });
+
+  it('refuses a malicious endpoint without any upstream request', async () => {
+    const before = chat.requests.length;
+    const res = await modelsRequest({ provider: 'deepseek', base_url: 'http://169.254.169.254/latest', api_key: 'sk-x' });
+    const body = (await res.json()) as { message: string };
+    expect(res.status).toBe(502);
+    expect(body.message).toContain('ENDPOINT_NOT_ALLOWED');
+    expect(chat.requests.length).toBe(before);
+  });
+
+  it('rejects non-admins', async () => {
+    adminUserType = 'member';
+    const res = await modelsRequest({ provider: 'deepseek', base_url: chat.baseUrl, api_key: 'sk-x' });
+    expect(res.status).toBe(403);
   });
 });

@@ -14,9 +14,11 @@ import { ApiError, instanceUpstreamApi, type ExtractionConfig } from '@/lib/team
 import {
   MODEL_PROVIDER_PRESETS,
   buildCreateDraftBody,
+  buildModelsBody,
   buildTestBody,
   buildUpdateDraftBody,
   canEnableConfig,
+  canFetchModels,
   canRunTest,
   enableBlockedReason,
   formFromConfig,
@@ -120,6 +122,11 @@ export function ModelConfigPanel({
   const [activating, setActivating] = useState(false);
   const [resyncing, setResyncing] = useState(false);
   const [resyncNotice, setResyncNotice] = useState('');
+  const [models, setModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelsError, setModelsError] = useState('');
+  const [manualModel, setManualModel] = useState(false);
+  const modelsSeq = useRef(0);
   const testAbort = useRef<AbortController | null>(null);
   // 同步闸门：同一 tick 内的两次点击都看到尚未刷新的 `testing`，必须靠 ref 拦住。
   const testInFlight = useRef(false);
@@ -134,6 +141,57 @@ export function ModelConfigPanel({
   const disabledManaged = config?.configured === true && config.enabled !== true && !managedDraft;
   const activeManaged = config?.configured === true && config.enabled === true;
   const saved = savedModelConfig(config);
+  const modelsFetchable = canFetchModels(form, config);
+  const modelsFetchKey = [
+    form.provider,
+    form.baseUrl.trim(),
+    form.apiKey.trim() ? 'typed-key' : 'no-typed-key',
+    saved?.api_key_configured ? 'stored-key' : 'no-stored-key',
+  ].join('|');
+  const modelOptions = useMemo(() => {
+    const values = new Set(models);
+    if (form.modelId.trim()) values.add(form.modelId.trim());
+    return Array.from(values).map((value) => ({ value, text: value }));
+  }, [models, form.modelId]);
+
+  const loadModels = useCallback(async (signal?: AbortSignal) => {
+    if (!canFetchModels(form, config)) {
+      setModels([]);
+      setModelsError('');
+      return;
+    }
+    const seq = ++modelsSeq.current;
+    setModelsLoading(true);
+    setModelsError('');
+    try {
+      const result = await instanceUpstreamApi.models(buildModelsBody(form), signal);
+      if (modelsSeq.current !== seq || signal?.aborted) return;
+      setModels(result.models);
+      if (result.models.length === 0) setModelsError(t('modelConfig.models.empty'));
+    } catch (err) {
+      if (modelsSeq.current !== seq || signal?.aborted) return;
+      setModels([]);
+      setModelsError(errorMessage(err));
+    } finally {
+      if (modelsSeq.current === seq && !signal?.aborted) setModelsLoading(false);
+    }
+  }, [config, form, t]);
+
+  // 地址/Key 变化后自动拉取（防抖），避免每敲一个字符就打一次供应商。
+  useEffect(() => {
+    if (!modelsFetchable) {
+      setModels([]);
+      setModelsError('');
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => { void loadModels(controller.signal); }, 700);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelsFetchKey, modelsFetchable]);
 
   const resetTestResults = useCallback(() => {
     setTestResults(initialTestResults());
@@ -538,14 +596,49 @@ export function ModelConfigPanel({
                 boxSizeSync
               />
             </Form.Item>
-            <Form.Item label={t('modelConfig.field.modelId')} required>
-              <Input
-                size="full"
-                value={form.modelId}
-                placeholder={t('modelConfig.placeholder.modelId')}
-                onChange={(value) => updateForm({ modelId: value })}
-                disabled={busy}
-              />
+            <Form.Item
+              label={t('modelConfig.field.modelId')}
+              required
+              extra={modelsError
+                ? `${t('modelConfig.models.error')}${modelsError}`
+                : t('modelConfig.models.hint')}
+            >
+              <div className="model-config-model-row">
+                {manualModel || models.length === 0 ? (
+                  <Input
+                    size="full"
+                    value={form.modelId}
+                    placeholder={t('modelConfig.placeholder.modelId')}
+                    onChange={(value) => updateForm({ modelId: value })}
+                    disabled={busy}
+                  />
+                ) : (
+                  <Select
+                    appearance="button"
+                    size="full"
+                    searchable
+                    value={form.modelId}
+                    options={modelOptions}
+                    placeholder={modelsLoading ? t('modelConfig.models.loading') : t('modelConfig.models.placeholder')}
+                    onChange={(value) => updateForm({ modelId: value as string })}
+                    disabled={busy}
+                    boxSizeSync
+                  />
+                )}
+                <Button
+                  type="link"
+                  loading={modelsLoading}
+                  disabled={busy || !modelsFetchable}
+                  onClick={() => void loadModels()}
+                >
+                  {t('modelConfig.models.refresh')}
+                </Button>
+                {models.length > 0 && (
+                  <Button type="link" onClick={() => setManualModel((v) => !v)}>
+                    {manualModel ? t('modelConfig.models.fromList') : t('modelConfig.models.manual')}
+                  </Button>
+                )}
+              </div>
             </Form.Item>
           </div>
 

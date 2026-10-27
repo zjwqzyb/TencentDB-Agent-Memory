@@ -209,6 +209,32 @@ export function canEnableConfig(
   return Boolean(config?.draft) && enableBlockedReason(config, options) === null;
 }
 
+/**
+ * 是否可以拉取模型列表：地址合法 + 有可用 Key（表单里填了，或服务端已存）。
+ * 服务端会在 Key 留空时复用已存 Key，因此这里不把「表单没填 Key」当阻断。
+ */
+export function canFetchModels(
+  form: ModelConfigForm,
+  config: ExtractionConfig | undefined,
+): boolean {
+  if (baseUrlErrorKey(form.baseUrl)) return false;
+  const saved = savedModelConfig(config);
+  return Boolean(form.apiKey.trim()) || Boolean(saved?.api_key_configured);
+}
+
+export function buildModelsBody(form: ModelConfigForm): {
+  provider: UpstreamProvider;
+  base_url: string;
+  api_key?: string;
+} {
+  const body: { provider: UpstreamProvider; base_url: string; api_key?: string } = {
+    provider: form.provider,
+    base_url: normalizeBaseUrlInput(form.baseUrl),
+  };
+  if (form.apiKey.trim()) body.api_key = form.apiKey.trim();
+  return body;
+}
+
 export function buildCreateDraftBody(form: ModelConfigForm): CreateDraftBody {
   return {
     provider: form.provider,

@@ -226,3 +226,17 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 模型 ID：下拉框 + 刷新/手动输入操作 */
+.model-config-model-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.model-config-model-row > .tea-input,
+.model-config-model-row > .tea-select {
+  flex: 1 1 220px;
+  min-width: 0;
+}
