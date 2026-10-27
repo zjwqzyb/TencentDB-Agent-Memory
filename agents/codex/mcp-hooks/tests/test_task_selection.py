@@ -48,6 +48,8 @@ class TaskSelectionTests(unittest.TestCase):
                 "owner_user_id": "user" if body["agent_id"] == "agent" else "other",
                 "status": "active",
             }
+        if path == "meta/agent/list":
+            return {"items": [{"agent_id": "agent"}], "total": 1}
         if path == "task/list-with-agents":
             start = body.get("offset", 0)
             return {
@@ -92,6 +94,19 @@ class TaskSelectionTests(unittest.TestCase):
     def test_defaults_without_tasks(self):
         self.assertIsNone(self.initialize()["task"])
 
+    def test_binding_choices_always_include_explicit_no_task_option(self):
+        for has_tasks in (False, True):
+            if has_tasks:
+                self.add_task()
+            with self.subTest(has_tasks=has_tasks):
+                result = self.call("choices")
+                self.assertEqual(result["task_selection_options"], [
+                    {"label": "暂不绑定任务", "defer_task": True},
+                ])
+                self.assertEqual(result["tasks"]["items"], self.tasks)
+                self.assertEqual(result["tasks"]["total"], len(self.tasks))
+                self.assertEqual(result["session"]["state"], "asset_confirm")
+
     def test_defaults_with_tasks_stays_uninitialized(self):
         self.add_task()
         with self.assertRaisesRegex(ValueError, "Task selection required"):
@@ -107,6 +122,107 @@ class TaskSelectionTests(unittest.TestCase):
         result = self.call("select_agent_task", agent_id="agent", task_id="task")
         self.assertEqual(result["session"]["generation"], 1)
         self.assertEqual(result["task"]["task_id"], "task")
+
+    def test_explicit_planning_initializes_with_existing_tasks_and_persists(self):
+        self.add_task()
+        self.select_stage()
+        result = self.call("select_agent_task", agent_id="agent", defer_task=True)
+        self.assertEqual(result["session"]["state"], "initialized")
+        self.assertTrue(result["session"]["task_selection_deferred"])
+        self.assertIsNone(result["task"])
+        self.assertTrue(self.call("status")["session"]["task_selection_deferred"])
+        self.assertTrue(rt.binding("isolated-test")["task_selection_deferred"])
+        repeated = self.call("select_agent_task", agent_id="agent", defer_task=True)
+        self.assertEqual(repeated["session"]["generation"], 1)
+        self.assertEqual(self.initialize()["session"]["generation"], 1)
+
+    def test_defaults_planning_still_requires_confirmation(self):
+        self.add_task()
+        with self.assertRaisesRegex(ValueError, "Explicit confirmation"):
+            self.call("initialize_defaults", defer_task=True)
+        result = self.call("initialize_defaults", confirmed=True, defer_task=True)
+        self.assertTrue(result["session"]["task_selection_deferred"])
+        self.assertIsNone(result["task"])
+
+    def test_deferral_requires_boolean_and_cannot_include_a_task(self):
+        for kwargs in ({"defer_task": "true"}, {"defer_task": 1},
+                       {"defer_task": True, "task_id": "task"}):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                self.call("initialize_defaults", confirmed=True, **kwargs)
+        self.assertEqual(rt.state("isolated-test")["state"], "asset_confirm")
+
+    def test_deferral_does_not_bypass_agent_or_team_validation(self):
+        self.select_stage()
+        with self.assertRaisesRegex(ValueError, "Agent must be active"):
+            self.call("select_agent_task", agent_id="other", defer_task=True)
+        self.assertEqual(rt.state("isolated-test")["state"], "agent_task_select")
+        with patch.object(rt, "member", side_effect=ValueError("Membership revoked")):
+            with self.assertRaisesRegex(ValueError, "Membership revoked"):
+                self.call("select_agent_task", agent_id="agent", defer_task=True)
+
+    def test_planning_binding_later_task_keeps_old_generation_and_child(self):
+        self.add_task()
+        self.call("initialize_defaults", confirmed=True, defer_task=True)
+        rt.register_child({"session_id": "isolated-test", "agent_id": "planning-child"})
+        result = self.call("select_agent_task", agent_id="agent", task_id="task")
+        self.assertEqual(result["session"]["generation"], 2)
+        self.assertEqual(result["task"]["task_id"], "task")
+        self.assertNotIn("task_selection_deferred", result["session"])
+        self.assertNotIn("task_selection_deferred", rt.binding("isolated-test"))
+        for old in (rt.binding("isolated-test", 1), rt.binding("planning-child")):
+            self.assertIsNone(old["task_id"])
+            self.assertTrue(old["task_selection_deferred"])
+
+    def test_legacy_empty_binding_can_explicitly_defer_without_rewriting_history(self):
+        self.initialize()
+        self.add_task()
+        result = self.call("select_agent_task", agent_id="agent", defer_task=True)
+        self.assertEqual(result["session"]["generation"], 2)
+        self.assertTrue(result["session"]["task_selection_deferred"])
+        self.assertNotIn("task_selection_deferred", rt.binding("isolated-test", 1))
+
+    def test_deferral_cannot_remove_existing_task(self):
+        self.select_stage()
+        self.call("select_agent_task", agent_id="agent", task_id="task")
+        for operation, kwargs in (("select_agent_task", {"agent_id": "agent"}),
+                                  ("initialize_defaults", {"confirmed": True})):
+            with self.subTest(operation=operation), self.assertRaises(ValueError):
+                self.call(operation, defer_task=True, **kwargs)
+        self.assertEqual(rt.binding("isolated-test")["task_id"], "task")
+
+    def test_reset_does_not_inherit_deferral(self):
+        self.add_task()
+        self.call("initialize_defaults", confirmed=True, defer_task=True)
+        result = self.call("reset")
+        self.assertEqual(result["session"]["generation"], 2)
+        self.assertNotIn("task_selection_deferred", result["session"])
+        with self.assertRaisesRegex(ValueError, "Task selection required"):
+            self.call("initialize_defaults", confirmed=True, expected_generation=2)
+        self.assertTrue(rt.binding("isolated-test", 1)["task_selection_deferred"])
+
+    def test_planning_capture_and_queued_generation_omit_task(self):
+        self.add_task()
+        self.call("initialize_defaults", confirmed=True, defer_task=True)
+        self.call("select_agent_task", agent_id="agent", task_id="task")
+        calls = []
+
+        def capture(path, body):
+            if path in ("chat-memory/import", "skill/conversation/add"):
+                calls.append((path, body))
+                return {"accepted_count": len(body["messages"])}
+            return self.api(path, body)
+
+        with patch.object(rt, "api", capture):
+            rt.save({"session_id": "isolated-test", "generation": 1,
+                     "request_id": "planning-capture",
+                     "messages": [{"role": "user", "content": "Planning"}]})
+        self.assertEqual(len(calls), 2)
+        for _, body in calls:
+            self.assertEqual(body["team_id"], "team")
+            self.assertEqual(body["agent_id"], "agent")
+            self.assertNotIn("task_id", body)
+            self.assertNotIn("task_selection_deferred", body)
+            self.assertEqual(body["session_id"], "codex-isolated-test-g1")
 
     def test_complete_task_preserves_old_generation(self):
         self.initialize()

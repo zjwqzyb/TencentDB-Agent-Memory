@@ -1,0 +1,157 @@
+{
+  "case_id": "R02",
+  "query": "MCP 和 Hooks 调用 Panel API 必须经过 SSH 吗？",
+  "elapsed_ms": 6499,
+  "data": {
+    "L0": {
+      "items": [
+        {
+          "id": "msg-9a273d6fafed4928a66d68e781b2911e",
+          "role": "assistant",
+          "title": "assistant",
+          "body": "那就不需要 SSH 中转。之前我沿用了旧的远端桥接部署，这里确实多绕了一层。\n\n合适的链路是：\n\n`Codex → 本地 stdio MCP → Panel HTTP API`\n\nHooks 也直接调用 Panel API。迁移时保留现有认证、会话绑定、权限校验和写入去重即可；令牌与适配器状态需要相应迁到本地，或由 Panel 承接。\n\n**当前实现仍经过 SSH，尚未修改。**",
+          "tags": [
+            "assistant"
+          ],
+          "refs": [],
+          "score": 0.976644654881547,
+          "created_at": "2026-10-18T16:22:24.607Z"
+        },
+        {
+          "id": "msg-86bed332b08b40eeba5694463b86e7da",
+          "role": "assistant",
+          "title": "assistant",
+          "body": "**SSH 是这版适配器的部署选择，MCP 调用 API 本身不需要 SSH。** 我沿用了前期的远端桥接方案，当前链路是：\n\n`Codex → 本地 MCP → SSH → 远端适配器 → Panel HTTP API`\n\nSSH 负责连接远端适配器的标准输入/输出，真正的 API 请求仍然通过 HTTP 发出。\n\n当时这样部署，是为了复用现有 SSH 认证，把 Panel 令牌、会话绑定和去重数据库留在服务器，并通过 Docker 内网访问 Panel。\n\n代价是多一跳，也增加了 SSH 和容器依赖。如果本机能访问 Panel，可以改成本地 MCP、Hooks 直接调用 HTTPS API；会话绑定、权限校验和写入去重机制仍需保留。",
+          "tags": [
+            "assistant"
+          ],
+          "refs": [],
+          "score": 0.9735226819052973,
+          "created_at": "2026-10-18T16:19:11.916Z"
+        },
+        {
+          "id": "msg-d5ba1ea89dde46e49ef62d2ca4744654",
+          "role": "user",
+          "title": "user",
+          "body": "mcp调用api为什么经过ssh？\n",
+          "tags": [
+            "user"
+          ],
+          "refs": [],
+          "score": 0.9705959349380482,
+          "created_at": "2026-10-18T16:19:11.915Z"
+        }
+      ],
+      "total": 3
+    },
+    "L1": {
+      "items": [
+        {
+          "id": "m_1792343177507_a3dcaa72",
+          "title": "work_method",
+          "body": "MCP 适配器部署链路已正式确定并落地为 Codex → 本地 MCP / Hooks → Panel HTTP API 直连架构，完全替代原有 SSH 中继方案；该架构要求将认证、会话绑定、权限校验、去重账本等关键逻辑前移至本地或由 Panel 承接，不可省略；Hooks 必须直接调用 Panel HTTPS API，禁止经 SSH 中转；当前实现已通过 76 项测试及真实 HTTP 调用验证，功能完整可靠；mem:task 查询类接口（mem:get-task、mem:list-tasks、mem:ready-tasks）已实测确认全部走 HTTP 直连生效，revision=4，任务指令修复与 HTTP 迁移两项任务均已完成。",
+          "tags": [],
+          "refs": [],
+          "score": 0.9634337976421579,
+          "created_at": "2026-10-18T16:19:26.492Z"
+        },
+        {
+          "id": "m_1792340391135_b2bd48de",
+          "title": "work_fact",
+          "body": "MCP Hooks 模块已完成代码提交（feat/server_team 分支，提交哈希 65c10f4 → 7888097）、文档补齐（/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/README.md 及新增 TASK-COMMANDS.md）、CLI 任务指令全面升级：原 mem:update-task 失效并已修复，新增 9 个任务指令（mem:list-tasks、mem:ready-tasks、mem:get-task、mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 并引入 revision 校验机制；更新后需重连 team_assets MCP 并刷新工具定义方可生效；本次更新通过 68 项端到端测试（覆盖更新、评论、去重及冲突拒绝），且离线敏感信息检查通过，但尚未升级线上部署。",
+          "tags": [],
+          "refs": [],
+          "score": 0.9091669045626932,
+          "created_at": "2026-10-18T15:47:56.433Z"
+        },
+        {
+          "id": "m_1792340391135_7e8709fe",
+          "title": "work_artifact",
+          "body": "MCP Hooks 模块已完成代码提交（feat/server_team 分支，提交哈希 65c10f4 → 7888097）、文档补齐（/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/README.md 及新增 TASK-COMMANDS.md）、CLI 任务指令全面升级：原 mem:update-task 失效并已修复，新增 9 个任务指令（mem:list-tasks、mem:ready-tasks、mem:get-task、mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 并引入 revision 校验机制；更新后需重连 team_assets MCP 并刷新工具定义方可生效；本次更新通过 68 项端到端测试（覆盖更新、评论、去重及冲突拒绝），且离线敏感信息检查通过，但尚未升级线上部署。",
+          "tags": [],
+          "refs": [],
+          "score": 0.9091669045626932,
+          "created_at": "2026-10-18T15:47:56.433Z"
+        }
+      ],
+      "total": 3
+    },
+    "L2": {
+      "layer": "L2",
+      "items": [
+        {
+          "id": "CodeGraph-图形化升级-交付方法.md",
+          "title": "CodeGraph-图形化升级-交付方法.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-19T08:45:06.546Z"
+        },
+        {
+          "id": "MCP-Hooks-架构-SOP与约束.md",
+          "title": "MCP-Hooks-架构-SOP与约束.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-18T16:49:16.823Z"
+        },
+        {
+          "id": "任务绑定-UX-SOP与交互原则.md",
+          "title": "任务绑定-UX-SOP与交互原则.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-18T17:18:06.844Z"
+        },
+        {
+          "id": "后端交付-部署准入-SOP.md",
+          "title": "后端交付-部署准入-SOP.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-19T08:11:43.875Z"
+        }
+      ],
+      "total": 4,
+      "limit": 3,
+      "offset": 0
+    },
+    "L3": {
+      "layer": "L3",
+      "items": [
+        {
+          "id": "core",
+          "title": "core memory",
+          "body": "# Team Operating Doctrine\n\n> **Operating Thesis**: 所有协作型 Agent 的 CLI 功能演进，必须以 revision 为状态锚点、以 MCP 重连为可见前提、以 mem:* 命名规范为接口契约，三者缺一不可。\n\n## Core Principles\n- **状态一致性优先于执行速度**：任何任务写操作必须携带服务端校验的 `revision`，禁止绕过；并发冲突不是异常，而是设计必须防御的常态。\n- **工具可见性即功能生效**：MCP 工具定义缓存使指令变更不可见，重连 MCP 是新指令生效的强制前提，非运维可选项。\n- **接口契约高于实现自由**：所有任务指令统一前缀 `mem:` + 英文原形动词（如 `list`, `claim`, `complete`），命名即协议，不因上下文缩写或本地化变形。\n\n## Reusable SOPs\n- **CLI 升级三步闭环**：当升级基于 MCP Hooks 的任务 CLI 时，必须同步完成：① 提交代码并更新 `/agents/codex/mcp-hooks/TASK-COMMANDS.md`；② 重连 team_assets MCP 服务；③ 刷新工具定义；任一缺失即视为未生效。\n- **端到端测试准入**：上线前必须通过全部 68 项 E2E 测试，其中“冲突拒绝”与“去重”用例为硬性否决项，缺失即阻断发布。\n\n## Decision Logic\n- 当面临“快速上线”与“完整三步闭环”冲突时，优先执行三步闭环，因为缺失任一环节将导致指令不可见、状态不一致或协作静默失败——三者均无法被监控告警及时捕获。\n- 当需扩展指令集时，优先复用已有 `mem:` 动词组合，而非新增命名；仅当语义不可覆盖时，才申请新增动词，并同步更新命名规范文档。\n\n## Boundaries & Anti-patterns\n- 不要跳过 `revision` 校验；应改为服务端强制拦截 + 客户端自动重试最新 revision，因为绕过将导致最终状态不可预测。\n- 不要在未重连 MCP 的情况下假设新指令已就绪；应改为将重连作为 CI/CD 流水线最后一步，并验证工具列表包含全部 `mem:*` 条目。\n- 不要将 `mem:update-task` 或其他已废弃指令用于新逻辑；应统一迁移到 `mem:claim` / `mem:complete` 等原子指令组合，因其具备幂等性与冲突感知能力。\n\n## Agent Rules\n- Agent 应在每次任务写操作前自动获取并携带当前 `revision`，避免硬编码或缓存过期；避免因 revision 失效引发 409 冲突后静默失败。\n- Agent 应拒绝执行任何未出现在当前 MCP 工具列表中的 `mem:*` 指令，并主动触发重连诊断流程；避免因缓存陈旧导致指令调用 404 后降级为手工操作。\n\n> **最后更新**：2026-10-18 · **来源场景**：1 个 · **记忆总数**：0 条",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-25T14:54:12.953Z"
+        }
+      ],
+      "total": 1,
+      "limit": 3,
+      "offset": 0
+    },
+    "L2_content": {
+      "MCP-Hooks-架构-SOP与约束.md": {
+        "layer": "L2",
+        "items": [
+          {
+            "id": "MCP-Hooks-架构-SOP与约束.md",
+            "title": "MCP-Hooks-架构-SOP与约束.md",
+            "body": "-----META-START-----\ncreated: 2026-10-18T16:20:34.828Z\nupdated: 2026-10-18T16:49:16.823Z\nsummary: 确立 MCP Hooks 全链路直连架构 SOP：含认证/权限/去重逻辑前移要求、HTTPS 直调强制规范、重连生效机制及 76 项验证标准。\nheat: 2\n-----META-END-----\n\n## 工作场景\n适用于所有基于 MCP Hooks 构建的团队协作 Agent，在 Codex → 本地 MCP/Hooks → Panel HTTPS API 直连架构下，开展任务调度、状态同步与协同操作。本场景定义该架构的部署、验证、执行与运维全生命周期方法论。\n\n## 适用条件\n- Panel HTTPS API 已启用且网络可达（TLS 证书有效、域名解析正常）；\n- Hooks 运行环境已配置本地权限策略与会话绑定上下文；\n- 团队已停用所有旧 SSH 中继连接，统一接入 `team_assets` MCP 实例；\n- 当前链路已通过全部查询类接口（`mem:get-task`/`mem:list-tasks`/`mem:ready-tasks`）实测验证；写操作类接口（create/update/comment）已加载但尚未触发实测，上线前须补全验证。\n\n## 核心 SOP\n- 架构部署必须完成三阶段：① 本地 Hooks 初始化（加载权限策略、生成会话密钥）；② 配置直连 Panel HTTPS endpoint 并验证 TLS；③ 重连 MCP 实例以刷新工具定义与指令集。\n- 所有 Hooks 对 Panel 的调用必须使用 HTTPS 协议，路径为 `/api/v1/mcp/*`，禁止任何 SSH 封装或代理中转。\n- 认证、会话绑定、权限校验、去重账本四大逻辑必须在本地 Hooks 或 Panel 服务端完成，不得依赖 SSH 层中间状态。\n- 接口验证采用分阶段策略：首阶段必须覆盖全部查询类指令（`mem:get-*`/`mem:list-*`/`mem:ready-*`），确认直连链路基础可用；次阶段须完整覆盖创建、更新、评论等写操作指令，方可视为全功能就绪。\n\n## 判断逻辑\n直连架构是保障低延迟、可审计、强一致性的前提：SSH 中转引入不可控延迟与单点故障，且无法透传会话上下文，导致去重与权限校验失效；前移关键逻辑可使风控前置，避免事后补偿。\n\n## 禁忌与反模式\n- [经 SSH 中转调用 Panel API]：绕过权限校验与会话绑定，导致越权操作与状态覆盖；替代做法：直连 HTTPS，失败时检查 TLS 证书与网络策略。\n- [跳过本地 Hooks 初始化]：缺失会话密钥与权限策略，导致 API 调用被 Panel 拒绝；替代做法：运行 `hooks init --env team_assets` 并验证日志。\n- [未重连 MCP 即执行新指令]：工具定义未刷新，Agent 无法识别 `mem:*` 指令；替代做法：`mcp reconnect --instance team_assets` 后验证 `mcp list-tools` 输出。\n\n## 关键事实依据\n- 新链路已通过 76 项自动化测试（含并发冲突、去重账本、HTTPS 重试、证书过期模拟）及真实 HTTP 流量验证；\n- 查询类接口（`mem:get-task`/`mem:list-tasks`/`mem:ready-tasks`）已全部实测确认走 HTTP 直连生效（revision=4）；\n- 写操作类接口（create/update/comment）均已加载至 Hooks 工具集，但本轮未触发实测；\n- 代码已提交至 commit `fe6b3d8`，位于分支 `feat/server_team`；\n- 全体成员须立即执行重连并停用旧 SSH 连接，截止时间为 2026-10-18 24:00。\n\n## 相关任务与资产\n- 配置文档：`/agents/codex/mcp-hooks/ARCHITECTURE.md`；\n- 权限策略模板：`/policies/hooks/local-permissions.yaml`；\n- 测试套件：`/tests/mcp-hooks/e2e/https-direct/`。\n\n## 演化记录\n- [2026-10-18]：从 CLI 指令 SOP 升级为全链路架构 SOP，新增认证/权限/去重逻辑前移要求、HTTPS 直调强制规范及重连生效机制，原因：SSH 中继方案已被正式废弃，直连架构成为唯一合规路径。\n\n## 待确认问题\n- Panel 是否支持细粒度 API 级权限控制（当前依赖 Hooks 本地策略）？需与后端对齐。\n- 写操作类接口（create/update/comment）的实测计划与验收标准是什么？是否需新增测试用例或调整权限策略？",
+            "tags": [
+              "markdown"
+            ],
+            "refs": [],
+            "created_at": "2026-10-18T16:49:16.823Z"
+          }
+        ],
+        "total": 1,
+        "limit": 1,
+        "offset": 0
+      }
+    }
+  },
+  "isError": false
+}

@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checks": [
+    "production DPR2 canvas backing equals GL viewport",
+    "production DPR2 preserves Java5/4 graph",
+    "production DPR1 canvas backing equals GL viewport",
+    "production DPR1 preserves Java5/4 graph"
+  ],
+  "asset": "cg-rmlck25u",
+  "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+  "scripts": [
+    "http://127.0.0.1:18126/assets/main-vBIlMdwD.js"
+  ],
+  "evidence": "Real production UI/API via SSH tunnel; Chromium CDP DPR change followed by ordinary fit, no API mocks"
+}

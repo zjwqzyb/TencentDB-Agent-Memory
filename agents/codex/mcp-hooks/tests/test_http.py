@@ -61,6 +61,9 @@ class Panel(BaseHTTPRequestHandler):
             data = copy.deepcopy(s.task)
         elif route == "meta/task-agent/list":
             data = {"items": [{"agent_id": "agent"}]}
+        elif route == "task/list-with-agents":
+            tasks = getattr(s, "linked_tasks", [])
+            data = {"items": tasks, "total": len(tasks)}
         elif route in ("meta/issue/update", "meta/issue/comment"):
             if body["expected_revision"] != s.task["issue"]["revision"]:
                 self.send_error(409)
@@ -126,7 +129,7 @@ class DirectHTTPTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(self.dest / "mcp-launcher.py")], cwd=self.root, env=self.env,
                                 input="".join(json.dumps(r) + "\n" for r in requests), text=True, capture_output=True, timeout=10, check=True)
         replies = [json.loads(line)["result"] for line in result.stdout.splitlines()]
-        self.assertEqual(replies[0]["serverInfo"]["version"], "3.2.0")
+        self.assertEqual(replies[0]["serverInfo"]["version"], "3.3.0")
         self.assertEqual(len(replies[1]["tools"]), 14)
         self.assertFalse(replies[2]["isError"])
         context = json.loads(replies[2]["content"][0]["text"])
@@ -157,6 +160,55 @@ class DirectHTTPTests(unittest.TestCase):
         with sqlite3.connect(self.state / "runtime.sqlite3") as db:
             self.assertEqual(db.execute("SELECT status FROM writes WHERE id='intent-one'").fetchone()[0], "done")
             self.assertEqual(db.execute("SELECT status FROM writes WHERE id='intent-two'").fetchone()[0], "rejected")
+
+    def test_planning_initialization_survives_restart_and_later_binds(self):
+        sid = "planning-session"
+        self.server.linked_tasks = [{"task_id": "task-one", "status": "completed",
+                                     "agents": [{"agent_id": "agent"}]}]
+        rejected = self.bridge(action="session", session_id=sid,
+                               operation="initialize_defaults", confirmed=True,
+                               expected_generation=1)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("Task selection required", rejected.stderr)
+        requests = [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {
+                "name": "project_session", "arguments": {
+                    "session_id": sid, "operation": "initialize_defaults",
+                    "confirmed": True, "defer_task": True, "expected_generation": 1,
+                }}},
+        ]
+        result = subprocess.run(
+            [sys.executable, str(self.dest / "mcp-launcher.py")], cwd=self.root,
+            env=self.env, input="".join(json.dumps(r) + "\n" for r in requests),
+            text=True, capture_output=True, timeout=10, check=True,
+        )
+        reply = json.loads(result.stdout.splitlines()[-1])["result"]
+        self.assertFalse(reply["isError"], reply)
+        data = json.loads(reply["content"][0]["text"])
+        self.assertEqual(data["session"]["state"], "initialized")
+        self.assertTrue(data["session"]["task_selection_deferred"])
+        self.assertIsNone(data["task"])
+        # A new bridge and Hook process must both observe the persisted choice.
+        status = self.bridge(action="session", operation="status", session_id=sid)
+        self.assertEqual(status.returncode, 0, status.stderr)
+        self.assertTrue(json.loads(status.stdout)["session"]["task_selection_deferred"])
+        event = {"hook_event_name": "UserPromptSubmit", "session_id": sid,
+                 "turn_id": "planning-turn", "cwd": str(self.root), "prompt": "Plan"}
+        hook = subprocess.run(
+            [sys.executable, str(self.dest / "hook.py")], cwd=self.root, env=self.env,
+            input=json.dumps(event), text=True, capture_output=True, timeout=10, check=True,
+        )
+        context = json.loads(hook.stdout)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("不要再次要求选择任务", context)
+        self.assertNotIn("当前会话尚未绑定任务", context)
+        bound = self.bridge(action="session", operation="select_agent_task", session_id=sid,
+                            agent_id="agent", task_id="task-one", expected_generation=1)
+        self.assertEqual(bound.returncode, 0, bound.stderr)
+        data = json.loads(bound.stdout)
+        self.assertEqual(data["session"]["generation"], 2)
+        self.assertEqual(data["task"]["task_id"], "task-one")
+        self.assertNotIn("task_selection_deferred", data["session"])
 
     def test_lost_http_response_after_commit_is_uncertain_and_never_replayed(self):
         self.server.fail = "disconnect"

@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-19",
+  "purpose": "Non-sensitive local evidence for preserving the deployed task UI and audited production patches while preparing the CodeGraph release.",
+  "source": {
+    "branch": "feat/server_team",
+    "codegraphCommit": "c8ccf254746374c69b0e8af43ff82d63596a0a8c",
+    "taskUiOverlay": [
+      {
+        "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskWorkbench.tsx",
+        "sha256": "dc23c3e15b0116046dd43f29c9e9c3d6cb32f9a38f1d6fbb6c3bda543e32629e"
+      },
+      {
+        "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/IssueWorkbench.tsx",
+        "sha256": "9f9f311d972dff67b5ec94719a70e13c6c83d2030714a86c6434e0e5d6e1221e"
+      },
+      {
+        "path": "MemoryPanel/web/src/pages/WorkbenchPage/styles/issue-workbench.css",
+        "sha256": "647146b5cc71d7483284b7d830c775972b097d3ab4eaf09050c92a0e8f6bf5ec"
+      },
+      {
+        "path": "MemoryPanel/web/src/lib/api/issues.ts",
+        "sha256": "53094dad30119743c5aae9bd6687c9645bab75b1ba86bf987f99840be76a0d44"
+      }
+    ],
+    "panelBehaviorOverlays": [
+      {
+        "path": "MemoryPanel/src/panel/api/meta-actions.ts",
+        "sha256": "0ed7e484c79ef0a556c004e8dd5f2e373a10cc2ad8af599f6abbe30f916df52d",
+        "behavior": "Issue actions exposed through Panel meta API"
+      },
+      {
+        "path": "MemoryPanel/src/panel/http/routes/knowledge/wiki-routes.ts",
+        "sha256": "abf4a24ad547796c2020a1561e12cfdc412dad364dd9321c74973d03d1c5b86b",
+        "behavior": "Authenticated and size-limited Wiki page/write route"
+      }
+    ],
+    "auditedKnowledgePatches": [
+      {
+        "path": "MemoryCore/src/metadata/service/metadata-service.ts",
+        "sha256": "cfed8eeb65f8fc3171aa2782659302870378a2dd19f16b9a2a945bc804acca9c",
+        "behavior": "Restricted asset ACL explicit grant handling"
+      },
+      {
+        "path": "MemoryKnowledge/src/code-source/providers/bjjh-git.ts",
+        "sha256": "73a03b832556d093181dd6024e465f58bd0e362e371d6210fee1011057706863",
+        "behavior": "Company Git provider, credentials scoped to git.bjjhltd.com"
+      },
+      {
+        "path": "MemoryKnowledge/src/module.ts",
+        "sha256": "29542d6f2f4e166891ffc3fe0f154b51e4e5c265ca87b2c33d3c172077bb4147",
+        "behavior": "Registers bjjh_git provider"
+      },
+      {
+        "path": "MemoryKnowledge/src/engines/wiki/manager.ts",
+        "sha256": "e61d9e22b439cae2a93a7e89e3cca21c7528cfecbc6247d680c8a6b8c28cb899",
+        "behavior": "Normalized exact-title priority and source-page tie break"
+      },
+      {
+        "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/llm.ts",
+        "sha256": "c8a8a20ea73d6ef7a5c1087ad45b276639c5434751062553fa9cdec7db3b0f81",
+        "behavior": "Source fidelity safeguards and optional Qwen thinking budget"
+      },
+      {
+        "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/overview.ts",
+        "sha256": "6a9b86472e5d11ef7f7c5040a630371c4eacb64c075c046f7e11148c20944dd8",
+        "behavior": "Deterministic Wiki navigation overview"
+      },
+      {
+        "path": "MemoryKnowledge/docker-compose.yml",
+        "sha256": "e85cf44fa871f37fbd79e119df3be99beb9bfad2dfb9e08f878e5afb16168f7a"
+      },
+      {
+        "path": "MemoryKnowledge/docker/env.example",
+        "sha256": "e0be5b08b708c2020803f8e777c43759920b0e6e584a66a2c7724f57022a3577"
+      },
+      {
+        "path": "MemoryKnowledge/README.md",
+        "sha256": "7cb90f5d7f7b68a529640f543a30d09355c946fe4b4266c60e2d465582814692"
+      }
+    ],
+    "codegraphSdk": "@colbymchenry/codegraph 1.6.2 (exact manifest pin; MemoryKnowledge has no tracked lockfile)"
+  },
+  "build": {
+    "runtime": "Node 22.23.0",
+    "bundler": "Vite 6.4.4",
+    "baseline": {
+      "baseCommit": "fe6b3d876b811c96a7cf727dfc0c5e161860b34e",
+      "overlay": "The four taskUiOverlay files above",
+      "assets": {
+        "main-CLxr8z3o.js": "879d8dcf93f645efdf6f89f5ac9fba9484d9d40670326bfa0cb39e79725548e9",
+        "main-ClqFRUXj.css": "d22512e1757ccf720594777f2a7950dd32d2edf21d8a8458f6ad64c701e146e8",
+        "KnowledgeGraph-SutH8Tum.js": "9a3bebe3681f6017bda48ef0b187e6eafa564abbbd0445ee4770bbfae5838862",
+        "KnowledgeGraph-DEqMBSbC.css": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3"
+      },
+      "verification": "Exact asset hashes match output/deployment/production-local-audit-20261019.json and output/deployment/tasks-ui-20261018-01.json"
+    },
+    "codegraphRelease": {
+      "baseCommit": "c8ccf254746374c69b0e8af43ff82d63596a0a8c",
+      "overlay": "The same four taskUiOverlay files above",
+      "stagingDirectory": "/private/tmp/task-ui-baseline.uk3wto/build-c8",
+      "assets": {
+        "index.html": "60d861cc733016f82cf9f22ab431c1c25981d0905b0881709462a0cfc6bc27f3",
+        "main-C37_cp_s.js": "c8193113cd695dffcd0029439fd305d5585a5eacadde040a58b21c602605599f",
+        "main-BrQtKVsl.css": "bb09685e4bb015d1a0cec224ee206899381c66d1e17101c0b4521b339b328687",
+        "KnowledgeGraph-jCtOX3Uf.js": "0602c86ee597b6ca6a8cbde9e98787090ae1570d083032fa55428706e40deb72",
+        "KnowledgeGraph-DEqMBSbC.css": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3"
+      },
+      "verification": "Built from clean c8 commit plus only the four task UI overlays; no worktree changes"
+    },
+    "reproduction": [
+      "git archive fe6b3d876b811c96a7cf727dfc0c5e161860b34e | tar -x -C <baseline-root>",
+      "git archive c8ccf254746374c69b0e8af43ff82d63596a0a8c | tar -x -C <codegraph-root>",
+      "Copy TaskWorkbench.tsx, IssueWorkbench.tsx, issue-workbench.css, and issues.ts into each matching source path",
+      "ln -s <MemoryPanel/web/node_modules> <snapshot>/MemoryPanel/web/node_modules",
+      "cd <snapshot>/MemoryPanel/web && node node_modules/vite/bin/vite.js build --outDir <snapshot-build-dir>"
+    ]
+  },
+  "releaseBoundaries": {
+    "core": "Do not rebuild Core from clean c8 for this release; it can drop deployed issue and ACL behavior. Verify live image/source first.",
+    "worktree": "Dirty production patches were not committed with CodeGraph.",
+    "production": "This file records local build and audit evidence only; no host credentials or live changes are included."
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-19",
+  "browser": "Chrome 155",
+  "session": "codegraph-search-review",
+  "scope": "independent UI spot checks against the frozen candidate; fixture-backed, not production API evidence",
+  "observations": [
+    {
+      "scenario": "initial request exceeds the 12-second deadline",
+      "setup": "graph-search action delayed 15000ms; exactly one initial request and no continuation cursor",
+      "observedAtMs": 13000,
+      "visibleMessage": "搜索耗时较长，已暂停且尚未完成；可以重新搜索或缩小范围。",
+      "searchActionRestored": true,
+      "requestCount": 1,
+      "requestHasCursor": false,
+      "result": "passed"
+    },
+    {
+      "scenario": "continuation cursor exceeds the 12-second deadline",
+      "setup": "first page returns an empty scan_budget page; delayByAction cleared; second cursor delayed 15000ms",
+      "observedAtMs": 13000,
+      "visibleMessage": "扫描已暂停，尚未完成；可继续查找。",
+      "continueActionVisible": true,
+      "searchActionRestored": true,
+      "requests": ["initial request without cursor", "continuation request with slow-next cursor"],
+      "result": "passed"
+    },
+    {
+      "scenario": "English localization of the incomplete scan state",
+      "observed": "English status and Continue searching action were visible after switching locale",
+      "result": "passed"
+    }
+  ],
+  "scriptRun": {
+    "file": "MemoryPanel/tests/knowledge/browser/code-graph-search.js",
+    "frozenSha256": "247d2691f161c249c32c02beac675180b12c48efbb7ab27581adbb548c07b99d",
+    "passedChecks": 26,
+    "failedChecks": 0,
+    "evidence": "output/playwright/codegraph-search-final-result.json",
+    "priorAttemptNote": "An earlier pre-freeze run was invalidated by a fixture delayByAction value left over from a previous scenario; the fixture/script was corrected before the final independent run.",
+    "overallSuite": "passed"
+  },
+  "pending": [
+    "independent English localization check for the load-more action",
+    "independent common desktop and narrow viewport geometry spot check"
+  ]
+}

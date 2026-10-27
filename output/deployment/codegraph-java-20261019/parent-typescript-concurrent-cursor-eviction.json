@@ -1,0 +1,345 @@
+{
+  "checkedAt": "2026-10-19T04:47:45.555905+00:00",
+  "checks": [
+    {
+      "check": "existing indexed asset",
+      "passed": true,
+      "assetId": "cg-4oc687yt",
+      "indexCommit": "e9a82935b527",
+      "assetVersion": "4",
+      "stats": {
+        "files": 1025,
+        "nodes": 28394,
+        "edges": 70367
+      }
+    },
+    {
+      "check": "calls mode",
+      "passed": true,
+      "state": "ready",
+      "nodes": 23,
+      "edges": 31,
+      "truncated": false,
+      "rowsRead": 56,
+      "sdkVersion": "1.6.2"
+    },
+    {
+      "check": "calls budgets",
+      "passed": true
+    },
+    {
+      "check": "real call relations",
+      "passed": true
+    },
+    {
+      "check": "impact mode",
+      "passed": true,
+      "state": "ready",
+      "nodes": 4,
+      "edges": 3,
+      "truncated": false,
+      "rowsRead": 95,
+      "sdkVersion": "1.6.2"
+    },
+    {
+      "check": "impact budgets",
+      "passed": true
+    },
+    {
+      "check": "hierarchy mode",
+      "passed": true,
+      "state": "ready",
+      "nodes": 2,
+      "edges": 1,
+      "truncated": false,
+      "rowsRead": 9,
+      "sdkVersion": "1.6.2"
+    },
+    {
+      "check": "hierarchy budgets",
+      "passed": true
+    },
+    {
+      "check": "dependencies mode",
+      "passed": true,
+      "state": "ready",
+      "nodes": 1,
+      "edges": 0,
+      "truncated": true,
+      "rowsRead": 1997,
+      "sdkVersion": "1.6.2"
+    },
+    {
+      "check": "dependencies budgets",
+      "passed": true
+    },
+    {
+      "check": "clusters mode",
+      "passed": true,
+      "state": "ready",
+      "nodes": 1,
+      "edges": 0,
+      "truncated": true,
+      "rowsRead": 1997,
+      "sdkVersion": "1.6.2"
+    },
+    {
+      "check": "clusters budgets",
+      "passed": true
+    },
+    {
+      "check": "real inheritance relation",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 1",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 2",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 3",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 4",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 5",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 6",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 7",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 8",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 9",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 10",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 11",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 12",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 13",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 14",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 15",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 16",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 17",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 18",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 19",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 20",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 21",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 22",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 23",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 24",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 25",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 26",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 27",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 28",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 29",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 30",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 31",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 32",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 33",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 34",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 35",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 36",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 37",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 38",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 39",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 40",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 41",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 42",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 43",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 44",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 45",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 46",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 47",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 48",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 49",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 50",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 51",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 52",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 53",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 54",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 55",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 56",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 57",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 58",
+      "passed": true
+    },
+    {
+      "check": "dependencies continuation 59",
+      "passed": true
+    },
+    {
+      "check": "dependencies real aggregate edges",
+      "passed": true,
+      "pages": 60,
+      "nodes": 11,
+      "edges": 4,
+      "truncated": true
+    },
+    {
+      "check": "clusters continuation 1",
+      "passed": false
+    }
+  ],
+  "passed": false,
+  "error": "Verification failed: clusters continuation 1"
+}

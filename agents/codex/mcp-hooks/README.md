@@ -115,9 +115,13 @@ agent_task_select → select_agent_task(agent_id, task_id)
 initialized → 正常读取资产、召回和归档
 ```
 
-有与所选 Agent 关联的任务时必须选择真实任务。用户已明确指定且唯一匹配时可以直接使用，不能自动挑第一项。只有成功查询并确认没有关联任务时，才允许空任务；用户只同意默认 Team/Agent 不代表跳过任务选择。
+绑定时，任务列表末尾固定追加一个可直接点选的 **“暂不绑定任务”** 选项，与真实任务一起展示，不要求用户额外输入文字。`choices.task_selection_options` 返回该选项及 `defer_task=true`；它不属于真实任务，不混入 `tasks.items` 或任务总数。用户可以选择真实任务或此选项。后者使用 `select_agent_task(agent_id=..., defer_task=true, expected_generation=...)`，省略 `task_id`；即使已有未完成或已完成任务，也能初始化团队和 Agent。用户已明确指定且唯一匹配时可以直接绑定，不能自动挑第一项。用户只同意默认 Team/Agent 不代表同意暂不绑定；未明确选择时仍需核对关联任务，成功确认没有任务才允许自动空绑定。
 
-用户明确确认默认绑定且没有可选任务时，可用 `initialize_defaults(confirmed=true, expected_generation=...)` 合并初始化。查询失败不能当成空列表。会话已初始化但后来出现任务，可用 `select_agent_task` 补绑，服务端新建 generation；更换已绑定任务或 Agent 需要 `reset` 后重新初始化。`reset` 不删除历史记忆。
+用户明确确认默认绑定且没有可选任务时，可用 `initialize_defaults(confirmed=true, expected_generation=...)` 合并初始化；同时明确暂不绑定时，增加 `defer_task=true` 即可，不受任务列表是否为空限制。查询失败不能当成空列表或暂不绑定授权。`defer_task` 与 `task_id` 互斥，不能用来清除已有任务。
+
+明确暂不绑定的选择持久保存在当前代际的 binding 中，并通过 `session.task_selection_deferred=true` 返回；Hooks 后续不反复追问任务，即使出现新任务也不自动绑定。规划会话正常读取团队/Agent资产并按配置采集对话，无任务不触发会话改名。无任务的历史 binding 仍兼容；用户明确选择暂不绑定时可以通过 `select_agent_task` 记录该选择。
+
+用户后续选择任务时，用 `select_agent_task` 补绑，服务端新建 generation 并清除当前代际的暂不绑定标记；旧代际、待发送记录及已有子 Agent 仍保留原目标。更换已绑定任务或 Agent 需要 `reset` 后重新初始化。`reset` 不删除历史记忆，新代际重新选择是否关联任务。
 
 示例 MCP 参数（替换真实 ID，不要复制示例 ID 作为当前会话）：
 
@@ -207,7 +211,7 @@ sqlite3 /absolute/path/to/state/example-project/events.sqlite3 \
 | MCP 工具数量或名称仍旧 | 重启 MCP；确认运行的是此目录版本和正确包装器，不是旧的五工具 Wiki 服务 |
 | Hook 无召回/无保存 | 客户端是否触发四类事件；输入 JSON 是否包含真实 ID；配置是否加载；采集开关是否开启 |
 | 每轮要求初始化或看到其他团队 | 检查 Hook 的工作目录与 MCP 的固定 `cwd` 是否指向相同项目，勿猜测旧绑定有效 |
-| 有任务却不能空绑定 | 调 `choices`，按所选 Agent 过滤并让用户选任务；服务端会检查超过第一页的关联任务 |
+| 规划时不想关联现有任务 | 明确选择暂不绑定，调用 `select_agent_task` 或已确认默认绑定的 `initialize_defaults` 时传 `defer_task=true`，省略 `task_id`；若客户端尚无此参数，重连 MCP 加载新契约 |
 | HTTP 连接失败或重定向 | 本机可达性、Panel 最终地址与端口；不要继续使用 Docker 内部服务名；不会回退 SSH |
 | `Panel configuration missing` | 检查 `config_file`、私有凭据文件和迁移状态 |
 | `Panel HTTP 401/403` | 服务凭据、用户身份、有效团队成员资格、Agent 所有者和资产 ACL |
@@ -240,7 +244,7 @@ python3 agents/codex/mcp-hooks/migrate.py \
 
 导入会校验数据库完整性、v3 表结构和绑定团队，保留全部 generation、固定子 Agent 绑定、已采集片段及写入账本。原有 Hook 的 `events.sqlite3` 不变。先写凭据和状态，最后替换当前项目映射，清除旧 SSH 字段；其他项目记录不变。迁移会备份原配置并生成 `manifest.json`，凭据与数据库文件权限为 0600，目录为 0700。已有目标运行时数据库时拒绝覆盖。
 
-4. 多项目安装对每个要启用的项目重复导入，或先禁用尚未迁移的条目。重新连接 MCP 并重新加载 Hook，检查 14 个工具、版本 3.2.0、正确团队/Agent 和原 generation。普通已初始化会话无需 reset、重新绑定或改名。
+4. 多项目安装对每个要启用的项目重复导入，或先禁用尚未迁移的条目。重新连接 MCP 并重新加载 Hook，检查 14 个工具、版本 3.3.0、正确团队/Agent 和原 generation。普通已初始化会话无需 reset、重新绑定或改名。
 5. 核对 Hook 待发送队列和首轮 Stop 保存。历史 `review`、`pending/uncertain` 不会自动清空或重放。确认正常后停用旧适配器入口，保留受保护的旧快照以便对账。
 
 回滚时先停用新写入端，按备份清单恢复配置。切换后产生过写入时必须先对账并迁回最新绑定/账本，不能直接用旧数据库覆盖；不得同时恢复两个可写副本。

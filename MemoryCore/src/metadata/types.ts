@@ -390,6 +390,8 @@ export interface CreateAgentInput {
 }
 
 export interface CreateTaskInput {
+  /** Internal issue graph snapshot; never accepted by the public task schema. */
+  issue_graph_snapshot?: import('./store/issue-write-guard.js').IssueGraphSnapshot;
   task_id?: string;
   team_id: string;
   creator_user_id: string;
@@ -644,7 +646,8 @@ export interface InstanceUpstreamConfigEntity {
    * 三种 group_type 的 enabled 语义不同:
    *   - default:  false = 命中该组的 agent 请求报 UPSTREAM_DISABLED
    *   - custom:   false = 命中该组的 agent 请求报 UPSTREAM_DISABLED
-   *   - extraction: false = 优雅回退到全局 upstream(不报错)
+   *   - extraction: false = 受管生成暂停(paused)；从未启用(active snapshot=null)
+   *     的草稿/legacy 行仍保持既有兼容行为
    */
   enabled: boolean;
   mode: UpstreamMode;
@@ -658,6 +661,12 @@ export interface InstanceUpstreamConfigEntity {
    * active 字段始终保留在 base_url/api_key/model_id/provider 中，草稿写入不得覆盖它们。
    */
   draft_json: string;
+  /**
+   * extraction 行的不可变生效快照与最近一次连接测试证据。
+   * 其他 group_type 保持空串。该列含明文 api_key，只能由内部 snapshot
+   * resolver 暴露，公开接口必须脱敏。
+   */
+  snapshot_json: string;
   created_at: string;
   updated_at: string;
   /** 乐观锁版本号。SQLite 与 MongoDB 每次写入均递增，并在显式 expected_version 下做 CAS。 */
@@ -697,6 +706,8 @@ export interface CreateInstanceUpstreamGroupInput {
   description?: string;
   /** 设置页草稿 JSON；保存草稿时 base 字段保持不变。 */
   draft_json?: string;
+  /** extraction 行的快照 JSON；通常只在测试证据/启用写入时设置。 */
+  snapshot_json?: string;
 }
 
 /**
@@ -720,6 +731,48 @@ export interface UpdateInstanceUpstreamGroupInput {
   description?: string;
   /** 设置页草稿 JSON；仅更新草稿，不改变运行时 active 字段。 */
   draft_json?: string;
+  /** extraction 行的快照 JSON；省略表示保留原值。 */
+  snapshot_json?: string;
+}
+
+/** immutable active snapshot written atomically by extraction/enable. */
+export interface InstanceUpstreamActiveSnapshot {
+  snapshot_id: string;
+  version: number;
+  provider: UpstreamProvider;
+  base_url: string;
+  api_key: string;
+  model_id: string;
+  description: string;
+  activated_at: string;
+}
+
+/** Most recent connection-test evidence; fingerprint excludes remarks/version. */
+export interface InstanceUpstreamTestEvidence {
+  test_id: string;
+  fingerprint: string;
+  passed: boolean;
+  tested_at: string;
+  expires_at: string;
+  capabilities: Record<string, string>;
+}
+
+export interface InstanceUpstreamExtractionSnapshot {
+  active: InstanceUpstreamActiveSnapshot | null;
+  test: InstanceUpstreamTestEvidence | null;
+}
+
+/**
+ * CAS write of snapshot_json that MUST NOT increment the configuration version.
+ * expected_snapshot_json closes the read-modify-write race between concurrent
+ * test-evidence writers that leave version unchanged.
+ */
+export interface UpdateInstanceUpstreamSnapshotInput {
+  group_id: string;
+  expected_group_type: GroupType;
+  expected_version: number;
+  expected_snapshot_json: string;
+  snapshot_json: string;
 }
 
 /** toggle 单字段快捷接口输入(是 update 的语法糖)。 */

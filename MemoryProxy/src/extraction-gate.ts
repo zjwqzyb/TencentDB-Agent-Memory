@@ -31,6 +31,7 @@
 
 import { log } from "./report/log.js";
 import type { ProxyConfig } from "./types.js";
+import type { InstanceUpstreamRow, InstanceUpstreamState } from "./instance-upstream-cache.js";
 
 export function isExtractionAllowed(config: ProxyConfig, asset: string): boolean {
   const ext = config.extraction;
@@ -70,4 +71,119 @@ export function logExtractionSkipped(
     : "not-in-extractors";                      // asset missing from whitelist
   const session = sessionKey && sessionKey.length > 0 ? sessionKey : "-";
   log.debug("extraction.skipped", { asset, session, reason });
+}
+
+// ============================================================
+// Managed extraction model (Panel-configured snapshot)
+// ============================================================
+//
+// The Panel manages ONE extraction model per Memory Instance. Proxy is the
+// write-side boundary: every system-user (memory/skill extraction) request must
+// either use that managed model or fail closed.
+//
+// Semantic contract:
+//   - unconfigured : no extraction row ever existed → deployment default
+//                    (global upstream) applies. This is the unchanged
+//                    open-source behaviour.
+//   - managed      : enabled + endpoint + key + model all present → forward.
+//   - paused       : a previously active configuration was disabled → refuse.
+//   - incomplete   : enabled but one of endpoint/key/model is missing → refuse.
+//   - unavailable  : the config could not be read (or only a stale copy
+//                    exists) → refuse; NEVER treat as "unconfigured".
+//
+// `enabled===true` is required in addition to the connection fields, and the
+// model id is mandatory: forwarding without it would let the upstream pick an
+// arbitrary default model, which is exactly the silent fallback this ticket
+// forbids.
+
+export type ExtractionUpstreamDecision =
+  | { kind: "managed"; row: InstanceUpstreamRow }
+  | { kind: "unconfigured"; reason: string }
+  | { kind: "paused"; row: InstanceUpstreamRow }
+  | { kind: "incomplete"; row: InstanceUpstreamRow; missing: string[] }
+  | { kind: "unavailable"; reason: string };
+
+function nonEmpty(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+/** Origin + path only (no userinfo/query/hash) — safe for logs. */
+export function sanitizeUpstreamEndpoint(raw: string | undefined | null): string {
+  if (!raw) return "(none)";
+  try {
+    const url = new URL(raw.trim());
+    const path = url.pathname.replace(/\/+$/, "");
+    const out = `${url.protocol}//${url.host}${path}`;
+    return out.length > 120 ? `${out.slice(0, 117)}...` : out;
+  } catch {
+    const fallback = raw.trim().split(/[?#]/)[0] ?? "";
+    return fallback.slice(0, 80) || "(invalid)";
+  }
+}
+
+/**
+ * Decide what the write side should do with the instance's extraction row.
+ * Pure: all I/O (including freshness) is supplied by the caller.
+ */
+export function evaluateExtractionUpstream(
+  state: Pick<InstanceUpstreamState, "items" | "freshness">,
+): ExtractionUpstreamDecision {
+  if (state.freshness !== "fresh") {
+    // Read failure must never degrade into "not configured": a stale copy may
+    // predate a pause, so it is not trustworthy for the write side either.
+    return { kind: "unavailable", reason: `config_${state.freshness}` };
+  }
+
+  const row = state.items.find((r) => r.group_type === "extraction");
+  if (!row) return { kind: "unconfigured", reason: "no_extraction_row" };
+
+  const baseUrl = nonEmpty(row.base_url);
+  const apiKey = nonEmpty(row.api_key);
+  const modelId = nonEmpty(row.model_id);
+  const hasActive = baseUrl !== "" || apiKey !== "" || modelId !== "";
+
+  if (row.enabled !== true) {
+    // A draft-only row (never activated) has no active fields → still the
+    // deployment default. A previously active row keeps its fields while
+    // disabled (draft + snapshot retained) → paused, fail closed.
+    return hasActive
+      ? { kind: "paused", row }
+      : { kind: "unconfigured", reason: "never_activated" };
+  }
+
+  const missing: string[] = [];
+  if (!baseUrl) missing.push("base_url");
+  if (!apiKey) missing.push("api_key");
+  if (!modelId) missing.push("model_id");
+  if (missing.length > 0) return { kind: "incomplete", row, missing };
+
+  return { kind: "managed", row };
+}
+
+/** Stable machine-readable error code + HTTP status for a blocked decision. */
+export function extractionDecisionError(
+  decision: Exclude<ExtractionUpstreamDecision, { kind: "managed" } | { kind: "unconfigured" }>,
+): { status: number; code: string; message: string; detail: Record<string, unknown> } {
+  if (decision.kind === "paused") {
+    return {
+      status: 409,
+      code: "EXTRACTION_MODEL_PAUSED",
+      message: "The instance extraction model is paused. Enable a tested model configuration in Panel to resume background generation.",
+      detail: { config_id: decision.row.group_id },
+    };
+  }
+  if (decision.kind === "incomplete") {
+    return {
+      status: 409,
+      code: "EXTRACTION_MODEL_INCOMPLETE",
+      message: `The instance extraction model is incomplete (missing: ${decision.missing.join(", ")}).`,
+      detail: { config_id: decision.row.group_id, missing: decision.missing },
+    };
+  }
+  return {
+    status: 503,
+    code: "EXTRACTION_MODEL_UNAVAILABLE",
+    message: "The instance extraction model configuration could not be read; refusing to fall back to the global upstream.",
+    detail: { reason: decision.reason },
+  };
 }

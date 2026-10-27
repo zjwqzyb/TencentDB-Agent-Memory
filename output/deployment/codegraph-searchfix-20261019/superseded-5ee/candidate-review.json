@@ -1,0 +1,32 @@
+{
+  "status": "superseded; never deployed",
+  "image": "sha256:5ee5a490e828d8d51887bb1137200e53579f49b40d36c808a11555ab49f06cb5",
+  "functionalArtifactHashesPassed": 21,
+  "inheritedHashesPassed": 435,
+  "unexpectedDistFiles": [
+    "/app/knowledge/dist/._callback-BCkkJJAa.mjs",
+    "/app/knowledge/dist/._callback-DjcxSG96.mjs",
+    "/app/knowledge/dist/._cascade-DDYvCNzz.mjs",
+    "/app/knowledge/dist/._frontmatter-Ce2kZn6q.mjs",
+    "/app/knowledge/dist/._ingest-v2-DO9DJ5Z1.mjs",
+    "/app/knowledge/dist/._llm-B7HSkSdx.mjs",
+    "/app/knowledge/dist/._llm-CGiD6drV.mjs",
+    "/app/knowledge/dist/._logger-CcNfQhS0.mjs",
+    "/app/knowledge/dist/._mcp",
+    "/app/knowledge/dist/._overview-BCBicShu.mjs",
+    "/app/knowledge/dist/._server.mjs",
+    "/app/knowledge/dist/._slug-D2KxInte.mjs",
+    "/app/knowledge/dist/._template-BGLLCFYb.mjs",
+    "/app/knowledge/dist/mcp/._server.mjs",
+    "/app/panel/web/dist/._assets",
+    "/app/panel/web/dist/._downloads",
+    "/app/panel/web/dist/._index.html",
+    "/app/panel/web/dist/._logo.png",
+    "/app/panel/web/dist/assets/._KnowledgeGraph-DEqMBSbC.css",
+    "/app/panel/web/dist/assets/._KnowledgeGraph-DPs5J6V2.js",
+    "/app/panel/web/dist/assets/._main-BgPCB3yz.css",
+    "/app/panel/web/dist/assets/._main-WHD-_3ny.js",
+    "/app/panel/web/dist/downloads/._tdai-memory-agents.zip"
+  ],
+  "reason": "Mac tar generated AppleDouble metadata; package rebuilt without altering any compiled artifact bytes"
+}

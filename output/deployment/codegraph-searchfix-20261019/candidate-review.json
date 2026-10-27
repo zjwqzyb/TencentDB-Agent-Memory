@@ -1,0 +1,101 @@
+{
+  "status": "candidate-ready-for-parent-review",
+  "productionSwitch": "not-run; new actual image requires final parent approval",
+  "commit": "20b2d585132367a0ddb217c979b78c065a31af88",
+  "remoteCommit": "20b2d585132367a0ddb217c979b78c065a31af88",
+  "committedPaths": [
+    "MemoryKnowledge/src/engines/code/structured-search.test.ts",
+    "MemoryKnowledge/src/engines/code/structured-search.ts",
+    "MemoryKnowledge/src/engines/code/structured-snapshot.test.ts",
+    "MemoryKnowledge/src/engines/code/structured.ts",
+    "MemoryPanel/tests/knowledge/browser/code-graph-fixture.js",
+    "MemoryPanel/tests/knowledge/browser/code-graph-search.js",
+    "MemoryPanel/web/src/i18n/code-graph.ts",
+    "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphWorkspace.tsx",
+    "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+    "MemoryPanel/web/src/pages/CodePage/graph/useCodeGraphWorkspace.ts"
+  ],
+  "scopeFile": "scope-approved.json",
+  "baseImage": "sha256:4e14be68361b7aa9b3b7fb47decfcf84ab96c2603cfecaf98fa876d0838ada4f",
+  "candidateImage": "sha256:48a42344a8a26e8868e2509629ac2e28defe5f54c9d77dfe07bbcb3372029762",
+  "candidateTag": "local/tdai-memory-hub:codegraph-searchfix-20b2d585-candidate",
+  "sourceManifestSha256": "1e95292d0baf29e8e1ea3a9c0995e549e24a779f11918e832899a72b36505e4c",
+  "cleanSourceArchive": true,
+  "preservedOverlays": 14,
+  "knowledge": {
+    "inputFilesCompared": 119,
+    "reproducedByteForByte": true,
+    "outputs": 13,
+    "sameAsProduction": 12,
+    "changed": [
+      "/app/knowledge/dist/server.mjs"
+    ]
+  },
+  "web": {
+    "typecheck": "passed",
+    "build": "passed",
+    "inputFiles": 200,
+    "mainAsset": "main-WHD-_3ny.js"
+  },
+  "inheritedHashesPassed": 435,
+  "artifactHashesPassed": 21,
+  "expectedDistFileCount": 20,
+  "actualDistFileCount": 20,
+  "unexpectedDistFiles": 0,
+  "isolatedHealth": {
+    "container": "/tdai-codegraph-searchfix-health",
+    "image": "sha256:48a42344a8a26e8868e2509629ac2e28defe5f54c9d77dfe07bbcb3372029762",
+    "network": "none",
+    "readonlyRoot": true,
+    "health": "healthy",
+    "mounts": []
+  },
+  "candidateRuntime": {
+    "node": "v22.23.3",
+    "sdk": "1.6.2"
+  },
+  "healthEndpoints": {
+    "panel": {
+      "status": "ok"
+    },
+    "knowledge": {
+      "status": "ok",
+      "timestamp": "2026-10-19T10:00:00.139Z"
+    }
+  },
+  "realSnapshot": {
+    "checks": 10,
+    "status": "passed; unchanged functional artifacts",
+    "executedAgainstImage": "sha256:5ee5a490e828d8d51887bb1137200e53579f49b40d36c808a11555ab49f06cb5",
+    "replacementFunctionalArtifactsMatch": true,
+    "evidence": "real-search-final-candidate.json",
+    "fullPagination": {
+      "action": "pagination",
+      "pages": 274,
+      "totalMilliseconds": 8292.448929999991,
+      "uniqueNodes": 11109,
+      "expectedNodes": 11109,
+      "duplicates": 0,
+      "exhausted": true,
+      "claim": "exhaustive comparison against original JavaScript substring predicate over all snapshot nodes"
+    },
+    "sourceCoverage": "Only exact SvcClaim class files copied; other source files deliberately absent. Full database copied."
+  },
+  "productionUnchanged": {
+    "expectedImage": true,
+    "hubHealthy": true,
+    "coreUnchanged": true,
+    "environmentUnchanged": true,
+    "mountsCanonicalUnchanged": true,
+    "runtimeOptionsUnchanged": true,
+    "networkAliasPreserved": true,
+    "originalHubIdentity": true
+  },
+  "candidateHealthContainerCleaned": true,
+  "supersededCandidate": "superseded-5ee/candidate-review.json",
+  "packagingCorrection": "packaging-correction.json",
+  "deployScript": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/deploy-codegraph-searchfix.sh",
+  "rollbackScript": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/rollback-codegraph-searchfix.sh",
+  "release": "/opt/tencent-agent-memory/releases/codegraph-searchfix-20261019",
+  "qaDocsCommitted": false
+}

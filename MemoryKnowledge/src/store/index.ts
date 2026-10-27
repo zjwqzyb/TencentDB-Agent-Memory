@@ -37,14 +37,25 @@ export {
 export { BuildQueue } from "./build-queue.js";
 export { SerialQueue } from "./serial-queue.js";
 
-export { createLlmBindingStore, resolveLlmConfig } from "./llm-binding-store.js";
+export {
+  createLlmBindingStore,
+  resolveLlmConfig,
+  resolveLlmBinding,
+  sanitizeEndpointForLog,
+  StaleLlmBindingError,
+} from "./llm-binding-store.js";
 export type {
   ILlmBindingStore,
   LlmBindingRow,
   LlmBindingInput,
   LlmBindingStatus,
   LlmBindingMode,
+  LlmBindingConfigSource,
+  LlmBindingProtocol,
+  LlmBindingResolution,
+  ModelSnapshotMeta,
 } from "./llm-binding-store.js";
+export { modelConfigFingerprint, isModelConfigFingerprint } from "./model-config-fingerprint.js";
 
 export { CodeGraphService } from "./code-graph-service.js";
 export type {

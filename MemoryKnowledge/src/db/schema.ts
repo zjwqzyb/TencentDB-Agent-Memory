@@ -164,6 +164,19 @@ export const llmBinding = sqliteTable("llm_binding", {
   proxyBaseUrl: text("proxy_base_url"),
   apiKey: text("api_key"),
   baseUrl: text("base_url"),
+  /** Active model id (managed) or null for legacy fallback-to-global-model. */
+  model: text("model"),
+  /** Managed snapshot provenance (see store/llm-binding-store.ts). */
+  provider: text("provider"),
+  protocol: text("protocol"),
+  /** 'deployment' = legacy env-driven binding; 'managed' = Core active snapshot. */
+  configSource: text("config_source").notNull().default("deployment"),
+  configId: text("config_id"),
+  configVersion: integer("config_version"),
+  fingerprint: text("fingerprint"),
+  snapshotId: text("snapshot_id"),
+  /** Fail-closed reason recorded by Panel reconcile (paused/invalid/...). */
+  unavailableReason: text("unavailable_reason"),
   enabled: integer("enabled").notNull().default(1),
   updatedAt: text("updated_at").notNull(),
 });

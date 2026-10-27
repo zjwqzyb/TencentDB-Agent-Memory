@@ -1,0 +1,31 @@
+{
+  "status": "Backend approved/prebuilt/real-snapshot10 passed; UI browser acceptance pending; no commit/image build/deploy",
+  "release": "/opt/tencent-agent-memory/releases/codegraph-searchfix-20261019",
+  "baseImage": "sha256:4e14be68361b7aa9b3b7fb47decfcf84ab96c2603cfecaf98fa876d0838ada4f",
+  "sourceInputs": "Await exact approved paths and frozen hashes; clean git archive plus 14 audited overlays; Node22 absolute local path",
+  "overlayManifest": "/Users/zj/daydayup/TencentDB-Agent-Memory/output/deployment/codegraph-java-20261019/overlays.json",
+  "validation": {
+    "realIndex": "SQLite backup of cg-gvcy949i with RO original bind; only exact SvcClaim source files copied and SHA checked; no .git/config/credentials",
+    "adapter": "Import standalone candidate structured bundle only; queryStructured against readonly snapshot; do not import server/module or run startup/background work",
+    "cases": [
+      "SvcClaim first-page includes both app/svc exact classes",
+      "ASCII case variants SvcClaim/svcclaim/SVCCLAIM",
+      "prefix/exact ranking, all cursor pages deduplicated, same indexVersion",
+      "scoped search only inside safe file/directory bounds",
+      "infix fallback and budget completeness notice remain honest",
+      "no-result query/unsupported index fallback",
+      "prior Java and TS representative structured checks"
+    ],
+    "api": "After candidate audit, use transient isolated candidate with empty isolated data for health; real-production API only read actions and no sync/rebuild. Do not attach real data RW to candidate."
+  },
+  "candidate": {
+    "derive": "FROM current 4e14 image",
+    "replace": "Only approved Knowledge compiled outputs and Web dist as required by final scope; retain Panel backend/runtime/Node/SDK; compare inherited hash manifest excluding exact reviewed changed outputs",
+    "health": "network none when direct adapter; isolated health with no production data; all curl --max-time5",
+    "inheritance": "435 unchanged runtime hashes; Knowledge13 outputs:12 unchanged, only server.mjs updated; verify all new artifacts separately"
+  },
+  "deploy": "Adapt previously reviewed guarded Hub-only scripts into new release; guard current4e14, env/mount/Core identity; unique rollback; no overwrite historical backup; parent audit before switch",
+  "reusableScripts": "/tmp/tencentdb-codegraph-layout-listfix-20261019/ops/{deploy-codegraph-layout-listfix.sh,rollback-codegraph-layout-listfix.sh,audit-production.sh,verify-candidate-health.sh}",
+  "scriptManifest": "output/deployment/codegraph-searchfix-20261019/prepared-script-manifest.json",
+  "scope": "/tmp/tencentdb-codegraph-searchfix-20261019/scope-proposed.json"
+}

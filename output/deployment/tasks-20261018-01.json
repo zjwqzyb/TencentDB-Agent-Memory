@@ -1,0 +1,50 @@
+{
+  "url": "http://192.168.200.137:8125/",
+  "verified_at": "2026-10-18T15:48:20.668047+00:00",
+  "release": "tasks-20261018-01",
+  "images": {
+    "core": "local/tdai-memory-core:tasks-20261018-01",
+    "hub": "local/tdai-memory-hub:tasks-20261018-01"
+  },
+  "backup_directory": "/opt/tencent-agent-memory/backups/before-tasks-20261018-01/",
+  "rollback_command": "bash /opt/tencent-agent-memory/releases/tasks-20261018-01/task-rollback.sh",
+  "history": {
+    "protectedTables": {
+      "meta_tasks": 4,
+      "meta_task_agents": 4,
+      "meta_participation_logs": 0,
+      "meta_users": 3,
+      "meta_teams": 4,
+      "meta_team_members": 5,
+      "meta_agents": 4,
+      "meta_assets": 13,
+      "meta_agent_fixed_assets": 13
+    },
+    "protectedDataUnchanged": true,
+    "otherChangedTables": []
+  },
+  "api": {
+    "panelIssueAPI": "passed",
+    "legacyTaskReadAPI": "passed",
+    "teams": [
+      {
+        "team_id": "team-d6wsrcwehz",
+        "historical_tasks": 0,
+        "read_only_check": "passed"
+      },
+      {
+        "team_id": "team-39a2ok52l4",
+        "historical_tasks": 4,
+        "read_only_check": "passed"
+      }
+    ],
+    "productionTaskWrites": 0
+  },
+  "asset_verification": "Live JavaScript and CSS match local build byte for byte",
+  "notes": [
+    "Existing ACL and knowledge patches preserved",
+    "Original containers retained stopped",
+    "Application recreation scripts updated",
+    "No historical tasks migrated or edited in production"
+  ]
+}

@@ -76,6 +76,31 @@ class TaskTitleTests(unittest.TestCase):
         self.assertIn("当前会话尚未绑定任务", context)
         self.assertIn("未选任务或标题为空时不改名", context)
 
+    def test_planning_session_does_not_prompt_for_tasks(self):
+        data = self.data()
+        data["session"]["task_selection_deferred"] = True
+        context = self.context(data)
+        self.assertIn("当前会话已初始化", context)
+        self.assertIn("不要再次要求选择任务", context)
+        self.assertIn("无任务时不触发会话改名", context)
+        self.assertNotIn("当前会话尚未绑定任务", context)
+        self.assertNotIn("先用 project_session choices", context)
+        self.assertIn("用户后续明确要求关联任务时", context)
+
+    def test_initialization_offers_explicit_deferral(self):
+        context = self.context(self.data("agent_task_select"))
+        self.assertIn("defer_task=true", context)
+        self.assertIn("即使已有任务也允许", context)
+        self.assertIn("仅确认默认团队/Agent不等于同意暂不绑定", context)
+
+    def test_binding_list_contains_clickable_no_task_option(self):
+        for state in ("asset_confirm", "team_select", "agent_task_select", "initialized"):
+            with self.subTest(state=state):
+                context = self.context(self.data(state))
+                self.assertIn("同一组选项末尾追加可直接点选的“暂不绑定任务”", context)
+                self.assertIn("choices.task_selection_options", context)
+                self.assertIn("不能只在说明文字中提及", context)
+
     def test_bound_session_does_not_enforce_title_each_turn(self):
         context = self.context(self.data(task={"task_id": "t", "title": "任务标题"}))
         self.assertIn(

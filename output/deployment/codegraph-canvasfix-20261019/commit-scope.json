@@ -1,0 +1,13 @@
+{
+  "baseCommit": "39a53d24aac32fda77fa2f67fd9d024e25a299ec",
+  "paths": [
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphCanvas.tsx",
+      "sha256": "80168c9d06fcd35864fc970ef2e88c8bf80078cb56c3a35740125fbb6e14c12e"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-dpr.js",
+      "sha256": "5815b1288d38fa7c702a6644e6dcaa6c9d8a0dbf66cb8581047ce9d43e959d46"
+    }
+  ]
+}

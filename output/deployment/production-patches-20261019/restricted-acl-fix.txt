@@ -1,0 +1,5 @@
+    // Restricted assets require loading explicit grants even when the role normally permits read.
+    const restrictedAclCheck = asset.visibility === "restricted"
+      && fast.reason === "visibility_restricted" && membership?.status === "active";
+    if (fast.reason !== "no_permission" && !restrictedAclCheck) return fast;
+    if (!restrictedAclCheck && membership && roleDefaultCovers(membership.role, action)) return fast;

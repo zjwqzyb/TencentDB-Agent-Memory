@@ -1,0 +1,2901 @@
+{
+  "status": "passed",
+  "indexVersion": "46a6e50a5b48483ef0fd87bcef314e10",
+  "sourceCoverage": "Only exact SvcClaim class files copied; other source files deliberately absent. Full database copied.",
+  "checks": [
+    "SvcClaim-exact-first-two",
+    "svcclaim-exact-first-two",
+    "SVCCLAIM-exact-first-two",
+    "scope-class:74ca913b7495344bb43b78060b897df0",
+    "scope-class:e8450bb1ce1346ab922aed48d135a25e",
+    "source-class:74ca913b7495344bb43b78060b897df0",
+    "hierarchy-access-class:74ca913b7495344bb43b78060b897df0",
+    "source-class:e8450bb1ce1346ab922aed48d135a25e",
+    "hierarchy-access-class:e8450bb1ce1346ab922aed48d135a25e",
+    "full-pagination-no-missing-no-duplicates"
+  ],
+  "observations": [
+    {
+      "query": "SvcClaim",
+      "page": 1,
+      "milliseconds": 37.18754,
+      "nodes": 100,
+      "rowsRead": 103,
+      "truncated": true,
+      "nextCursorPresent": true,
+      "reasons": [
+        "node_budget"
+      ],
+      "firstTwo": [
+        {
+          "id": "class:74ca913b7495344bb43b78060b897df0",
+          "name": "SvcClaim",
+          "filePath": "biz-serve/app/app-service/src/main/java/com/jinhui/app/orm/claim/model/SvcClaim.java",
+          "startLine": 26
+        },
+        {
+          "id": "class:e8450bb1ce1346ab922aed48d135a25e",
+          "name": "SvcClaim",
+          "filePath": "biz-serve/svc/svc-service/src/main/java/com/jinhui/svc/orm/claim/model/SvcClaim.java",
+          "startLine": 27
+        }
+      ]
+    },
+    {
+      "query": "svcclaim",
+      "page": 1,
+      "milliseconds": 6.971831000000009,
+      "nodes": 100,
+      "rowsRead": 103,
+      "truncated": true,
+      "nextCursorPresent": true,
+      "reasons": [
+        "node_budget"
+      ],
+      "firstTwo": [
+        {
+          "id": "class:74ca913b7495344bb43b78060b897df0",
+          "name": "SvcClaim",
+          "filePath": "biz-serve/app/app-service/src/main/java/com/jinhui/app/orm/claim/model/SvcClaim.java",
+          "startLine": 26
+        },
+        {
+          "id": "class:e8450bb1ce1346ab922aed48d135a25e",
+          "name": "SvcClaim",
+          "filePath": "biz-serve/svc/svc-service/src/main/java/com/jinhui/svc/orm/claim/model/SvcClaim.java",
+          "startLine": 27
+        }
+      ]
+    },
+    {
+      "query": "SVCCLAIM",
+      "page": 1,
+      "milliseconds": 5.900525999999985,
+      "nodes": 100,
+      "rowsRead": 103,
+      "truncated": true,
+      "nextCursorPresent": true,
+      "reasons": [
+        "node_budget"
+      ],
+      "firstTwo": [
+        {
+          "id": "class:74ca913b7495344bb43b78060b897df0",
+          "name": "SvcClaim",
+          "filePath": "biz-serve/app/app-service/src/main/java/com/jinhui/app/orm/claim/model/SvcClaim.java",
+          "startLine": 26
+        },
+        {
+          "id": "class:e8450bb1ce1346ab922aed48d135a25e",
+          "name": "SvcClaim",
+          "filePath": "biz-serve/svc/svc-service/src/main/java/com/jinhui/svc/orm/claim/model/SvcClaim.java",
+          "startLine": 27
+        }
+      ]
+    },
+    {
+      "scopePath": "biz-serve/app/app-service/src/main/java/com/jinhui/app/orm/claim/model/",
+      "milliseconds": 18.180140999999992,
+      "nodes": 100,
+      "rowsRead": 728,
+      "truncated": true,
+      "nextCursorPresent": true
+    },
+    {
+      "scopePath": "biz-serve/svc/svc-service/src/main/java/com/jinhui/svc/orm/claim/model/SvcClaim.java",
+      "milliseconds": 16.49401499999999,
+      "nodes": 100,
+      "rowsRead": 727,
+      "truncated": true,
+      "nextCursorPresent": true
+    },
+    {
+      "action": "graph-source",
+      "node": "class:74ca913b7495344bb43b78060b897df0",
+      "milliseconds": 2.5565779999999734,
+      "state": "ready",
+      "warnings": [],
+      "contentReturned": true
+    },
+    {
+      "action": "hierarchy",
+      "node": "class:74ca913b7495344bb43b78060b897df0",
+      "milliseconds": 4.240798999999981,
+      "state": "empty",
+      "nodes": 1,
+      "edges": 0,
+      "warnings": [],
+      "truncationReasons": [],
+      "claim": "accessible; partial source snapshot cannot assert complete relationship validation"
+    },
+    {
+      "action": "graph-source",
+      "node": "class:e8450bb1ce1346ab922aed48d135a25e",
+      "milliseconds": 2.3598230000000058,
+      "state": "ready",
+      "warnings": [],
+      "contentReturned": true
+    },
+    {
+      "action": "hierarchy",
+      "node": "class:e8450bb1ce1346ab922aed48d135a25e",
+      "milliseconds": 3.414209999999997,
+      "state": "empty",
+      "nodes": 1,
+      "edges": 0,
+      "warnings": [],
+      "truncationReasons": [],
+      "claim": "accessible; partial source snapshot cannot assert complete relationship validation"
+    },
+    {
+      "action": "pagination",
+      "pages": 274,
+      "totalMilliseconds": 7517.418645999982,
+      "uniqueNodes": 11109,
+      "expectedNodes": 11109,
+      "duplicates": 0,
+      "exhausted": true,
+      "claim": "exhaustive comparison against original JavaScript substring predicate over all snapshot nodes",
+      "pageDetails": [
+        {
+          "page": 1,
+          "nodes": 100,
+          "rowsRead": 103,
+          "milliseconds": 5.146189000000049,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 2,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 4.227537000000211,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 3,
+          "nodes": 100,
+          "rowsRead": 110,
+          "milliseconds": 4.303007999999863,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 4,
+          "nodes": 100,
+          "rowsRead": 104,
+          "milliseconds": 4.582773999999972,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 5,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.913959999999861,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 6,
+          "nodes": 100,
+          "rowsRead": 118,
+          "milliseconds": 4.730834999999843,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 7,
+          "nodes": 25,
+          "rowsRead": 2000,
+          "milliseconds": 40.56826000000001,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 8,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.061729000000014,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 9,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.315192000000025,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 10,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.16916399999991,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 11,
+          "nodes": 100,
+          "rowsRead": 801,
+          "milliseconds": 16.661576999999852,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 12,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.6182260000000497,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 13,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.40175999999974,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 14,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.328954000000067,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 15,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 6.267432000000099,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 16,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 9.830208000000312,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 17,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.5638920000001235,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 18,
+          "nodes": 43,
+          "rowsRead": 2000,
+          "milliseconds": 37.47743900000023,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 19,
+          "nodes": 26,
+          "rowsRead": 2000,
+          "milliseconds": 38.88915799999995,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 20,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.59751099999994,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 21,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.39092899999969,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 22,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.91443100000015,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 23,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.30170300000009,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 24,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.515977999999905,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 25,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.54215699999986,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 26,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.84427800000003,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 27,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.58552899999995,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 28,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.9101840000003,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 29,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.54431400000021,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 30,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 63.20791599999984,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 31,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.49314000000004,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 32,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.08606499999996,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 33,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.44728099999975,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 34,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.7870469999998,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 35,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.25778100000025,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 36,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.891895000000204,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 37,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.058604999999716,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 38,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.70956899999965,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 39,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.7438360000001,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 40,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.98001999999997,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 41,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.608680999999706,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 42,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.966301000000385,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 43,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.47427000000016,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 44,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.66942999999992,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 45,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 44.27454799999987,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 46,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.55753999999979,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 47,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 43.61368700000003,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 48,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.955233999999564,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 49,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.330887000000075,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 50,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.77647999999999,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 51,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.16477699999996,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 52,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.73869800000011,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 53,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.51642700000002,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 54,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.633662000000186,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 55,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.916295999999875,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 56,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.35332700000026,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 57,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.9232549999997,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 58,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.98261900000034,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 59,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.94192000000021,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 60,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.80041599999913,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 61,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.94847899999968,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 62,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.50694899999962,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 63,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.64813099999992,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 64,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.279327000000194,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 65,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.74970200000007,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 66,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.54892899999959,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 67,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.64116800000011,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 68,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.051158000000214,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 69,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.84196299999985,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 70,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.6652839999997,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 71,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.53959500000019,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 72,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.06709800000044,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 73,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.67906700000003,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 74,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.91052099999979,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 75,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.48497600000064,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 76,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.614582999999584,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 77,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.993390000000545,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 78,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.04695999999967,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 79,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.38479200000074,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 80,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.17675899999995,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 81,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.77303200000006,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 82,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 48.98183700000027,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 83,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 58.75644699999975,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 84,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 43.39550899999995,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 85,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 46.7657820000004,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 86,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 52.4687270000004,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 87,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.41958799999975,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 88,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 43.87035299999934,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 89,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.68469299999924,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 90,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.465580999999474,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 91,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.37201999999979,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 92,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.54971699999987,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 93,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.75161399999979,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 94,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 45.60112300000037,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 95,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.13158800000019,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 96,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.40408000000025,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 97,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.850735999999415,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 98,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.422833999999966,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 99,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.24964499999987,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 100,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.583197999999356,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 101,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.05675800000063,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 102,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.31032899999991,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 103,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.684454999999616,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 104,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.587830999999824,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 105,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.28567999999996,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 106,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.439471000000594,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 107,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.409286000000066,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 108,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.87251600000036,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 109,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.175295000000006,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 110,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 45.57788199999959,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 111,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.41654800000015,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 112,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.07711199999994,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 113,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 65.94785999999931,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 114,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 43.57350200000019,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 115,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.92439800000011,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 116,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.314674000000196,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 117,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.76590099999976,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 118,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.49744600000031,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 119,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 43.445607000000564,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 120,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.01745899999969,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 121,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.94230999999945,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 122,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.91659499999969,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 123,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.46479400000044,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 124,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.54269199999999,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 125,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.02479399999993,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 126,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.11559500000021,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 127,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.261969000000136,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 128,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.01131299999997,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 129,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.245434999999816,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 130,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.488304000000426,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 131,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.764726999999766,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 132,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.75018199999977,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 133,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.843526000000566,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 134,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.52108900000076,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 135,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.07723299999998,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 136,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.410037999999986,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 137,
+          "nodes": 61,
+          "rowsRead": 2000,
+          "milliseconds": 38.258700999999746,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 138,
+          "nodes": 51,
+          "rowsRead": 2000,
+          "milliseconds": 41.597428000000036,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 139,
+          "nodes": 2,
+          "rowsRead": 2000,
+          "milliseconds": 41.85698299999967,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 140,
+          "nodes": 8,
+          "rowsRead": 2000,
+          "milliseconds": 38.30793699999958,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 141,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.236901999999645,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 142,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.005699999999706,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 143,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.943409999999858,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 144,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.898361999999906,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 145,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.90495699999974,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 146,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.920607999999447,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 147,
+          "nodes": 46,
+          "rowsRead": 2000,
+          "milliseconds": 40.102304000000004,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 148,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.258710999999494,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 149,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.16821499999969,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 150,
+          "nodes": 2,
+          "rowsRead": 2000,
+          "milliseconds": 40.48176500000045,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 151,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 47.007400999999845,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 152,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.25536800000009,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 153,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.8764740000006,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 154,
+          "nodes": 100,
+          "rowsRead": 1201,
+          "milliseconds": 24.46824100000049,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 155,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.395298000000366,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 156,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.345003000000361,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 157,
+          "nodes": 100,
+          "rowsRead": 301,
+          "milliseconds": 7.307547000000341,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 158,
+          "nodes": 100,
+          "rowsRead": 501,
+          "milliseconds": 11.339528999999857,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 159,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 4.292167999999947,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 160,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.509838999999374,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 161,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.403951999999663,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 162,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.483204000000114,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 163,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.045649999999114,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 164,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.94811800000025,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 165,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.113766999999825,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 166,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.9819760000000315,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 167,
+          "nodes": 100,
+          "rowsRead": 301,
+          "milliseconds": 6.8432080000002316,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 168,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.688642999999502,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 169,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 7.1209310000003825,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 170,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.155448000000433,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 171,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.329576000000088,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 172,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.434210000000348,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 173,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.033218000000488,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 174,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.2890229999993608,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 175,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.237851999999293,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 176,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.0967680000003384,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 177,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.750662999999804,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 178,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 7.08728500000052,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 179,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.4656080000004295,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 180,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.060282999999799,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 181,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.819155000000137,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 182,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.880630999999994,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 183,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.846607999999833,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 184,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.018637999999555,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 185,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.1351709999999,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 186,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.153370999999424,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 187,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.151171000000431,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 188,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 4.98671800000011,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 189,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.1728099999991173,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 190,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.1278229999998075,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 191,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.847283000000061,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 192,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.9180459999997765,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 193,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.979454999999689,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 194,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.310136000000057,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 195,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.079063000000133,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 196,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.902570000000196,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 197,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.862055999999939,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 198,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.93964700000015,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 199,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.875033000000258,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 200,
+          "nodes": 100,
+          "rowsRead": 401,
+          "milliseconds": 8.731544000000213,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 201,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.056037999999717,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 202,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.288924999999836,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 203,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.2617819999995845,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 204,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.117099000000053,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 205,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.118620999999621,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 206,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 5.6872599999996964,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 207,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.527339000000211,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 208,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.7474419999998645,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 209,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.090615000000071,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 210,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.222383000000264,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 211,
+          "nodes": 100,
+          "rowsRead": 301,
+          "milliseconds": 7.012319999999818,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 212,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.143817000000126,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 213,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.155583000000661,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 214,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.769756000000598,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 215,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.990027999999256,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 216,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.857049999999617,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 217,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.2467870000000403,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 218,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.242964999999458,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 219,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.3656100000007427,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 220,
+          "nodes": 100,
+          "rowsRead": 101,
+          "milliseconds": 3.1745460000001913,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 221,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.208880999998655,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 222,
+          "nodes": 100,
+          "rowsRead": 501,
+          "milliseconds": 10.628522000000885,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 223,
+          "nodes": 100,
+          "rowsRead": 301,
+          "milliseconds": 7.307557000000088,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 224,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 7.923808999999892,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 225,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.611547000000428,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 226,
+          "nodes": 100,
+          "rowsRead": 401,
+          "milliseconds": 8.973061999999118,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 227,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.033080999999584,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 228,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.045313999999053,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 229,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.947653999999602,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 230,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.01990300000034,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 231,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 4.924622999998974,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 232,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.021679999999833,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 233,
+          "nodes": 83,
+          "rowsRead": 2000,
+          "milliseconds": 40.30873299999985,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 234,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.84387699999934,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 235,
+          "nodes": 8,
+          "rowsRead": 2000,
+          "milliseconds": 39.017132999999376,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 236,
+          "nodes": 14,
+          "rowsRead": 2000,
+          "milliseconds": 37.427999999999884,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 237,
+          "nodes": 6,
+          "rowsRead": 2000,
+          "milliseconds": 40.85803499999929,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 238,
+          "nodes": 14,
+          "rowsRead": 2000,
+          "milliseconds": 54.94960600000013,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 239,
+          "nodes": 4,
+          "rowsRead": 2000,
+          "milliseconds": 56.348313999998936,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 240,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 36.57610100000056,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 241,
+          "nodes": 49,
+          "rowsRead": 2000,
+          "milliseconds": 40.19837499999994,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 242,
+          "nodes": 36,
+          "rowsRead": 2000,
+          "milliseconds": 39.307683999999426,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 243,
+          "nodes": 100,
+          "rowsRead": 701,
+          "milliseconds": 14.576677999999447,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 244,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.317221999999674,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 245,
+          "nodes": 100,
+          "rowsRead": 401,
+          "milliseconds": 8.936877999998615,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 246,
+          "nodes": 87,
+          "rowsRead": 2000,
+          "milliseconds": 39.28909200000089,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 247,
+          "nodes": 19,
+          "rowsRead": 2000,
+          "milliseconds": 41.5979040000002,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 248,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.936689999998634,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 249,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.3208829999985,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 250,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.766983999999866,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 251,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.399553000001106,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 252,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 42.47029400000065,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 253,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.20630899999924,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 254,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 40.14052300000003,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 255,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.48157699999865,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 256,
+          "nodes": 100,
+          "rowsRead": 1301,
+          "milliseconds": 26.761900999999853,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 257,
+          "nodes": 100,
+          "rowsRead": 201,
+          "milliseconds": 5.300397999999404,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 258,
+          "nodes": 45,
+          "rowsRead": 2000,
+          "milliseconds": 38.307026000000405,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 259,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.541565000001356,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 260,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.210886999999275,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 261,
+          "nodes": 1,
+          "rowsRead": 2000,
+          "milliseconds": 40.83245299999908,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 262,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 39.85304899999937,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 263,
+          "nodes": 100,
+          "rowsRead": 701,
+          "milliseconds": 15.342183999999179,
+          "truncated": true,
+          "reasons": [
+            "node_budget"
+          ]
+        },
+        {
+          "page": 264,
+          "nodes": 77,
+          "rowsRead": 2000,
+          "milliseconds": 37.00065100000029,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 265,
+          "nodes": 2,
+          "rowsRead": 2000,
+          "milliseconds": 39.53308599999946,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 266,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 46.04458700000032,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 267,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 61.252230000000054,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 268,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 58.952440000000934,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 269,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 41.07953400000042,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 270,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 37.69124000000011,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 271,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.615954000000784,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 272,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.02021499999864,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 273,
+          "nodes": 0,
+          "rowsRead": 2000,
+          "milliseconds": 38.320912999999564,
+          "truncated": true,
+          "reasons": [
+            "scan_budget"
+          ]
+        },
+        {
+          "page": 274,
+          "nodes": 0,
+          "rowsRead": 1547,
+          "milliseconds": 27.611666999999215,
+          "truncated": false,
+          "reasons": []
+        }
+      ]
+    }
+  ]
+}

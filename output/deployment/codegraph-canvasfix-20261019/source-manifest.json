@@ -1,0 +1,88 @@
+{
+  "commit": "c9f6645f1e8231c2fe37609c3ff6577ffb397630",
+  "baseRuntimeImage": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+  "replaces": "Web dist only",
+  "committedPaths": [
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphCanvas.tsx",
+      "sha256": "80168c9d06fcd35864fc970ef2e88c8bf80078cb56c3a35740125fbb6e14c12e"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-dpr.js",
+      "sha256": "5815b1288d38fa7c702a6644e6dcaa6c9d8a0dbf66cb8581047ce9d43e959d46"
+    }
+  ],
+  "overlayCount": 14,
+  "overlays": [
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskWorkbench.tsx",
+      "sha256": "dc23c3e15b0116046dd43f29c9e9c3d6cb32f9a38f1d6fbb6c3bda543e32629e",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/IssueWorkbench.tsx",
+      "sha256": "9f9f311d972dff67b5ec94719a70e13c6c83d2030714a86c6434e0e5d6e1221e",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/styles/issue-workbench.css",
+      "sha256": "647146b5cc71d7483284b7d830c775972b097d3ab4eaf09050c92a0e8f6bf5ec",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/issues.ts",
+      "sha256": "53094dad30119743c5aae9bd6687c9645bab75b1ba86bf987f99840be76a0d44",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/src/panel/api/meta-actions.ts",
+      "sha256": "0ed7e484c79ef0a556c004e8dd5f2e373a10cc2ad8af599f6abbe30f916df52d",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/src/panel/http/routes/knowledge/wiki-routes.ts",
+      "sha256": "abf4a24ad547796c2020a1561e12cfdc412dad364dd9321c74973d03d1c5b86b",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/providers/bjjh-git.ts",
+      "sha256": "73a03b832556d093181dd6024e465f58bd0e362e371d6210fee1011057706863",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/module.ts",
+      "sha256": "29542d6f2f4e166891ffc3fe0f154b51e4e5c265ca87b2c33d3c172077bb4147",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/manager.ts",
+      "sha256": "e61d9e22b439cae2a93a7e89e3cca21c7528cfecbc6247d680c8a6b8c28cb899",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/llm.ts",
+      "sha256": "c8a8a20ea73d6ef7a5c1087ad45b276639c5434751062553fa9cdec7db3b0f81",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/overview.ts",
+      "sha256": "6a9b86472e5d11ef7f7c5040a630371c4eacb64c075c046f7e11148c20944dd8",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/docker-compose.yml",
+      "sha256": "e85cf44fa871f37fbd79e119df3be99beb9bfad2dfb9e08f878e5afb16168f7a",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/docker/env.example",
+      "sha256": "e0be5b08b708c2020803f8e777c43759920b0e6e584a66a2c7724f57022a3577",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/README.md",
+      "sha256": "7cb90f5d7f7b68a529640f543a30d09355c946fe4b4266c60e2d465582814692",
+      "source": "reviewed prior release snapshot"
+    }
+  ]
+}

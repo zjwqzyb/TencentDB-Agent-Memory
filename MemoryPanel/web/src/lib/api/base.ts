@@ -96,20 +96,11 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
-export async function request<T>(
-  method: string,
-  path: string,
-  body?: unknown,
-  extraHeaders?: Record<string, string>,
-  options?: RequestOptions,
-): Promise<T> {
-  const headers: Record<string, string> = { ...extraHeaders };
-  const init: RequestInit = { method, headers, credentials: 'include', signal: options?.signal };
-  if (body !== undefined) {
-    headers['content-type'] = 'application/json';
-    init.body = JSON.stringify(body);
-  }
-  const res = await fetch(path, init);
+/**
+ * 统一处理非成功响应：401 触发登录态失效事件，其余非 2xx 抛携带信封信息的 ApiError。
+ * `request` 与 `requestNdjson` 共用，避免两条路径的错误语义分叉。
+ */
+async function assertSuccessfulResponse(res: Response, path: string): Promise<void> {
   if (res.status === 401) {
     const text = await res.text().catch(() => '');
     const env = parseMetaErrorEnvelope(text);
@@ -122,8 +113,50 @@ export async function request<T>(
     const env = parseMetaErrorEnvelope(text);
     throw new ApiError(res.status, res.statusText, text, env);
   }
+}
+
+function buildRequestInit(
+  method: string,
+  body: unknown,
+  extraHeaders: Record<string, string> | undefined,
+  options: RequestOptions | undefined,
+): RequestInit {
+  const headers: Record<string, string> = { ...extraHeaders };
+  const init: RequestInit = { method, headers, credentials: 'include', signal: options?.signal };
+  if (body !== undefined) {
+    headers['content-type'] = 'application/json';
+    init.body = JSON.stringify(body);
+  }
+  return init;
+}
+
+export async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  extraHeaders?: Record<string, string>,
+  options?: RequestOptions,
+): Promise<T> {
+  const res = await fetch(path, buildRequestInit(method, body, extraHeaders, options));
+  await assertSuccessfulResponse(res, path);
   if (res.status === 204) return undefined as unknown as T;
   return res.json() as Promise<T>;
+}
+
+/**
+ * 流式请求（NDJSON 等）：header 注入、401 与非 2xx 处理与 `request` 完全一致，
+ * 但成功后返回原始 Response，由调用方自行读取 body 流。
+ */
+export async function requestNdjson(
+  method: string,
+  path: string,
+  body?: unknown,
+  extraHeaders?: Record<string, string>,
+  options?: RequestOptions,
+): Promise<Response> {
+  const res = await fetch(path, buildRequestInit(method, body, extraHeaders, options));
+  await assertSuccessfulResponse(res, path);
+  return res;
 }
 
 // ========================= Meta API 基础 =========================
@@ -192,11 +225,8 @@ export function unwrapEnvelope<T>(envelope: MetaEnvelope<T>, emptyMessage: strin
   return unwrapEnvelope(envelope, 'empty meta response');
 }
 
-export async function metaPost<T>(
-  action: string,
-  body: Record<string, unknown> = {},
-  options?: RequestOptions,
-): Promise<T> {
+/** 读取当前面板会话并构造 meta 请求头；未登录直接抛 401 ApiError。 */
+function metaRequestHeaders(): Record<string, string> {
   const session = getPanelSession();
   if (!session) {
     throw new ApiError(401, 'Unauthorized', 'no active panel session');
@@ -204,7 +234,27 @@ export async function metaPost<T>(
   const headers: Record<string, string> = { 'X-Tdai-Service-Id': session.instanceId };
   // IdP Session 用 HttpOnly Cookie 认证，user_key 不下发到浏览器。
   if (session.userKey) headers['X-Tdai-User-Key'] = session.userKey;
-  return metaCall<T>(action, body, headers, options);
+  return headers;
+}
+
+export async function metaPost<T>(
+  action: string,
+  body: Record<string, unknown> = {},
+  options?: RequestOptions,
+): Promise<T> {
+  return metaCall<T>(action, body, metaRequestHeaders(), options);
+}
+
+/**
+ * meta 流式 POST：与 `metaPost` 相同的 Header/错误语义，成功时返回未解析的 Response。
+ * 用于 NDJSON 流式接口（如模型能力测试）。
+ */
+export async function metaPostNdjson(
+  action: string,
+  body: Record<string, unknown> = {},
+  options?: RequestOptions,
+): Promise<Response> {
+  return requestNdjson('POST', `${META_PREFIX}/${action}`, body, metaRequestHeaders(), options);
 }
 
 /**

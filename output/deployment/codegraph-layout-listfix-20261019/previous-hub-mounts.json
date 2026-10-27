@@ -1,0 +1,1 @@
+[{"Type":"bind","Source":"/opt/tencent-agent-memory/data/knowledge","Destination":"/data/knowledge","Mode":"","RW":true,"Propagation":"rprivate"},{"Type":"bind","Source":"/opt/tencent-agent-memory/releases/tasks-20261018-01/runtime/metadata-instances.json","Destination":"/app/panel/config/metadata-instances.json","Mode":"ro","RW":false,"Propagation":"rprivate"}]

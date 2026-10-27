@@ -12,6 +12,8 @@
  * 不感知具体后端（SQLite / MongoDB），保证存储可切换。
  */
 
+import { IssueService } from "../issue/issue-service.js";
+import { taskMetadata, listTeamTasks } from "../issue/issue-model.js";
 import { DuplicateUserKeyError, type IMetadataStore } from "../store/interface.js";
 // UserSessionDefaultService (v3.3): 值 import, 用于 MetadataService.userSessionDefault
 // 懒初始化。循环 import 风险: 该 service 回头 import MetadataError (值) + MetadataService
@@ -94,6 +96,9 @@ import type {
   UserListFilter,
   InstanceUpstreamConfigEntity,
   InstanceUpstreamConfigFilter,
+  InstanceUpstreamActiveSnapshot,
+  InstanceUpstreamExtractionSnapshot,
+  InstanceUpstreamTestEvidence,
   CreateInstanceUpstreamGroupInput,
   UpdateInstanceUpstreamGroupInput,
   ToggleInstanceUpstreamGroupInput,
@@ -113,6 +118,10 @@ import {
 import { formatListResult, paginateArray, resolvePagination, wrapPaginated, DEFAULT_PAGINATION } from "../pagination.js";
 import { generateId, ID_PREFIX } from "../utils/id-generator.js";
 import { buildChatMemoryAssetId, resolveChatMemoryAgentId } from "../utils/chat-memory-asset.js";
+import {
+  modelConfigFingerprint,
+  newModelConfigSnapshotId,
+} from "./model-config-fingerprint.js";
 
 // ── 默认 Agent / Team 常量 ──
 
@@ -336,6 +345,143 @@ function parseExtractionDraft(row: InstanceUpstreamConfigEntity): ExtractionDraf
   }
 }
 
+const MODEL_CONFIG_TEST_TTL_SECONDS = 15 * 60;
+const MODEL_CONFIG_TEST_TTL_MAX_SECONDS = 60 * 60;
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function stringField(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function numberField(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+/** Tolerant parser: malformed JSON reads as no snapshot, never throws at API boundaries. */
+function parseExtractionSnapshot(row: InstanceUpstreamConfigEntity): InstanceUpstreamExtractionSnapshot {
+  if (!row.snapshot_json?.trim()) return { active: null, test: null };
+  try {
+    const parsed = asRecord(JSON.parse(row.snapshot_json));
+    if (!parsed) return { active: null, test: null };
+
+    const rawActive = asRecord(parsed.active);
+    const active: InstanceUpstreamActiveSnapshot | null = rawActive
+      ? {
+          snapshot_id: stringField(rawActive.snapshot_id),
+          version: numberField(rawActive.version),
+          provider: stringField(rawActive.provider) as UpstreamProvider,
+          base_url: stringField(rawActive.base_url),
+          api_key: stringField(rawActive.api_key),
+          model_id: stringField(rawActive.model_id),
+          description: stringField(rawActive.description),
+          activated_at: stringField(rawActive.activated_at),
+        }
+      : null;
+
+    const rawTest = asRecord(parsed.test);
+    let test: InstanceUpstreamTestEvidence | null = null;
+    if (rawTest) {
+      const capabilitiesRecord = asRecord(rawTest.capabilities) ?? {};
+      const capabilities: Record<string, string> = {};
+      for (const [key, value] of Object.entries(capabilitiesRecord)) {
+        if (typeof value === "string") capabilities[key] = value;
+      }
+      test = {
+        test_id: stringField(rawTest.test_id),
+        fingerprint: stringField(rawTest.fingerprint),
+        passed: rawTest.passed === true,
+        tested_at: stringField(rawTest.tested_at),
+        expires_at: stringField(rawTest.expires_at),
+        capabilities,
+      };
+    }
+    return { active, test };
+  } catch {
+    return { active: null, test: null };
+  }
+}
+
+function legacyActiveSnapshot(row: InstanceUpstreamConfigEntity): InstanceUpstreamActiveSnapshot | null {
+  if (!row.base_url || !row.api_key) return null;
+  return {
+    snapshot_id: `legacy:${row.group_id}`,
+    version: row.version,
+    provider: row.provider,
+    base_url: normalizeStoredBaseUrl(row.base_url),
+    api_key: row.api_key,
+    model_id: row.model_id,
+    description: row.description,
+    activated_at: row.updated_at,
+  };
+}
+
+/**
+ * Return the persisted immutable active snapshot, or synthesize a read-only
+ * compatibility snapshot for rows that predate snapshot_json. The synthesized
+ * value is never written back automatically.
+ */
+function effectiveActiveSnapshot(row: InstanceUpstreamConfigEntity): InstanceUpstreamActiveSnapshot | null {
+  const parsed = parseExtractionSnapshot(row).active;
+  if (parsed) return parsed;
+  return legacyActiveSnapshot(row);
+}
+
+function missingSnapshotFields(active: InstanceUpstreamActiveSnapshot): string[] {
+  const missing: string[] = [];
+  if (!active.provider) missing.push("provider");
+  if (!active.base_url) missing.push("base_url");
+  if (!active.api_key) missing.push("api_key");
+  if (!active.model_id) missing.push("model_id");
+  if (!active.snapshot_id) missing.push("snapshot_id");
+  if (!Number.isFinite(active.version) || active.version <= 0) missing.push("version");
+  return missing;
+}
+
+function currentConnectionConfig(row: InstanceUpstreamConfigEntity): {
+  provider: UpstreamProvider;
+  base_url: string;
+  api_key: string;
+  model_id: string;
+} | null {
+  const draft = parseExtractionDraft(row);
+  if (draft) {
+    return {
+      provider: draft.provider,
+      base_url: draft.base_url,
+      api_key: draft.api_key,
+      model_id: draft.model_id,
+    };
+  }
+  if (!row.base_url || !row.api_key) return null;
+  return {
+    provider: row.provider,
+    base_url: normalizeStoredBaseUrl(row.base_url),
+    api_key: row.api_key,
+    model_id: row.model_id,
+  };
+}
+
+function testMatchesCurrent(
+  test: InstanceUpstreamTestEvidence | null,
+  config: ReturnType<typeof currentConnectionConfig>,
+  nowMs: number = Date.now(),
+): boolean {
+  if (!test || !config) return false;
+  const expiresAt = Date.parse(test.expires_at);
+  if (!Number.isFinite(expiresAt) || nowMs > expiresAt) return false;
+  return modelConfigFingerprint({
+    provider: config.provider,
+    baseUrl: config.base_url,
+    modelId: config.model_id,
+    apiKey: config.api_key,
+  }) === test.fingerprint;
+}
+
 export class MetadataService {
   private readonly quota: MetadataQuotaLimits;
   private readonly memorySystemUser?: MemorySystemUserConfig;
@@ -377,6 +523,9 @@ export class MetadataService {
     this.quota = { ...DEFAULT_METADATA_QUOTA_LIMITS, ...quotaLimits };
     this.memorySystemUser = memorySystemUser;
   }
+
+  private _issues?: IssueService;
+  get issues(): IssueService { return this._issues ??= new IssueService(this.store, this); }
 
   get scopedInstanceId(): string {
     return this.instanceId;
@@ -1168,13 +1317,31 @@ export class MetadataService {
   }
 
   async updateTask(taskId: string, patch: Partial<TaskEntity>): Promise<TaskEntity> {
-    if (!(await this.getTaskById(taskId))) throw new MetadataError("task_not_found", `task not found: ${taskId}`);
-    const updated = await this.store.updateTask(taskId, patch);
-    if (!updated) throw new MetadataError("task_not_found", `task not found: ${taskId}`);
+    const current = await this.getTaskById(taskId);
+    if (!current) throw new MetadataError("task_not_found", `task not found: ${taskId}`);
+    if (taskMetadata(current).issue || (patch.metadata_json && taskMetadata({ metadata_json: patch.metadata_json }).issue)) {
+      throw new MetadataError('invalid_issue', 'Use issue/update to edit an issue; legacy task/update cannot preserve issue revisions');
+    }
+    const updated = await this.store.compareAndSwapTask(taskId, current.metadata_json, patch);
+    if (!updated) throw new MetadataError("issue_conflict", "Task changed; reload and retry");
     return updated;
   }
 
   async deleteTasks(taskIds: string[]): Promise<BatchDeleteResult> {
+    const deleting = new Set(taskIds);
+    for (const id of taskIds) {
+      const task = await this.store.getTaskById(id);
+      if (!task) continue;
+      if (taskMetadata(task).issue) {
+        throw new MetadataError('invalid_issue', 'Close or cancel issues to preserve their history');
+      }
+      const team = await listTeamTasks(this.store, task.team_id);
+      if (team.some(t => {
+        if (deleting.has(t.task_id)) return false;
+        const issue = taskMetadata(t).issue as { parent_id?: string; blocked_by?: string[] } | undefined;
+        return issue?.parent_id === id || issue?.blocked_by?.includes(id);
+      })) throw new MetadataError('invalid_issue', 'This task is referenced by an issue; unlink it before deletion');
+    }
     return this.store.deleteTasks(taskIds);
   }
 
@@ -1784,9 +1951,11 @@ export class MetadataService {
     });
     if (fast.allowed) return fast;
 
-    // 只有「通过了前置门但角色默认未覆盖」(no_permission) 才需懒加载 ACL 重判
-    if (fast.reason !== "no_permission") return fast;
-    if (membership && roleDefaultCovers(membership.role, action)) return fast;
+    // Restricted 资产的显式授权也要参与重判；成员身份等前置门仍由 fast 保证。
+    const restrictedAclCheck = asset.visibility === "restricted"
+      && fast.reason === "visibility_restricted" && membership?.status === "active";
+    if (fast.reason !== "no_permission" && !restrictedAclCheck) return fast;
+    if (!restrictedAclCheck && membership && roleDefaultCovers(membership.role, action)) return fast;
 
     const aclRecords = await this.allAclRecords(params.asset_id);
     return checkPermission({
@@ -2317,9 +2486,10 @@ export class MetadataService {
     supportedAgents: SupportedAgent[],
   ): Promise<{ items: InstanceUpstreamConfigEntity[] }> {
     const rows = await this.store.listInstanceUpstreamGroups(undefined, supportedAgents);
-    // 内部 Proxy 只需要 active 转发字段。draft_json 含待提交 Key，不能随内部
-    // 列表进入请求/响应日志或跨越到不需要草稿的消费者。
-    return { items: rows.map((row) => ({ ...row, draft_json: "" })) };
+    // 内部 Proxy 只需要 active 转发字段。draft_json / snapshot_json 都含
+    // 未启用或快照级明文 Key，不能随内部列表进入日志；需要快照的消费者走
+    // /v3/internal/meta/instance-upstream/extraction/snapshot。
+    return { items: rows.map((row) => ({ ...row, draft_json: "", snapshot_json: "" })) };
   }
 
   /** Panel B2: 新建 custom 组。 */
@@ -2520,12 +2690,333 @@ export class MetadataService {
         model_id: null,
         description: "",
         enabled: null,
+        paused: false,
         version: 0,
         updated_at: null,
+        active_snapshot: null,
+        test: null,
         draft: null,
       };
     }
     return this.toPublicExtraction(ext);
+  }
+
+  /**
+   * 内部路由专用：返回当前实例 extraction 行的明文生效字段（active + draft 两套）。
+   *
+   * 仅供 Panel 控制面在服务端探测“未保存表单”时解析明文 Key。调用方必须走
+   * /v3/internal/meta/instance-upstream/extraction/resolve（仅 Bearer 校验），
+   * 结果不通过 /v3/meta/* 公开面暴露；dispatch 层日志按 `api_key` 字段名脱敏。
+   *
+   * - active 只在该行同时具备 base_url 与 api_key 时存在，与公开面 `configured`
+   *   口径一致；draft 来自 draft_json 的解析结果，损坏/不完整的草稿视为不存在。
+   */
+  async resolveInstanceUpstreamExtraction(
+    supportedAgents: SupportedAgent[],
+  ): Promise<Record<string, unknown>> {
+    // 与 extraction/get 一致：只读也 seed，避免存量实例缺 default 行。
+    await this.store.ensureDefaultSeeded(supportedAgents);
+    const rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
+    const ext = rows[0];
+    if (!ext) {
+      return {
+        source: "deployment",
+        config_id: null,
+        version: 0,
+        enabled: null,
+        updated_at: null,
+        draft_present: false,
+        active: null,
+        draft: null,
+      };
+    }
+    const draft = parseExtractionDraft(ext);
+    const active = ext.base_url && ext.api_key
+      ? {
+          provider: ext.provider,
+          base_url: normalizeStoredBaseUrl(ext.base_url),
+          api_key: ext.api_key,
+          model_id: ext.model_id,
+          description: ext.description,
+        }
+      : null;
+    return {
+      source: active ? "panel" : "deployment",
+      config_id: ext.group_id,
+      version: ext.version,
+      enabled: ext.enabled,
+      updated_at: ext.updated_at,
+      draft_present: draft !== null,
+      active,
+      draft: draft
+        ? {
+            provider: draft.provider,
+            base_url: normalizeStoredBaseUrl(draft.base_url),
+            api_key: draft.api_key,
+            model_id: draft.model_id,
+            description: draft.description,
+          }
+        : null,
+    };
+  }
+
+  /**
+   * Internal-only: persist the evidence produced by an unsaved-form probe.
+   * This never increments the config version and only CAS-replaces snapshot_json.
+   */
+  async recordInstanceUpstreamExtractionTest(
+    input: {
+      test_id: string;
+      provider: UpstreamProvider;
+      base_url: string;
+      model_id: string;
+      api_key?: string;
+      capabilities: Record<string, string>;
+      passed: boolean;
+      ttl_seconds?: number;
+    },
+    supportedAgents: SupportedAgent[],
+  ): Promise<Record<string, unknown>> {
+    assertUpstreamProvider(input.provider);
+    const baseUrl = normalizeUpstreamBaseUrl(input.base_url);
+    const modelId = input.model_id.trim();
+    if (!modelId) {
+      throw new MetadataError("MISSING_MODEL_ID", "model_id is required for a connection test");
+    }
+
+    await this.store.ensureDefaultSeeded(supportedAgents);
+    let rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
+    let ext = rows[0];
+    if (!ext) {
+      throw new MetadataError(
+        "EXTRACTION_NOT_CONFIGURED",
+        "save an extraction draft before recording test evidence",
+      );
+    }
+
+    const draft = parseExtractionDraft(ext);
+    const apiKey = input.api_key !== undefined
+      ? normalizeSubmittedApiKey(input.api_key)
+      : draft?.api_key || ext.api_key;
+    if (!apiKey) {
+      throw new MetadataError("MISSING_API_KEY", "a service-side API key is required for the test");
+    }
+
+    const testedAtMs = Date.now();
+    const ttlSeconds = Math.min(
+      Math.max(Math.floor(input.ttl_seconds ?? MODEL_CONFIG_TEST_TTL_SECONDS), 0),
+      MODEL_CONFIG_TEST_TTL_MAX_SECONDS,
+    );
+    const test: InstanceUpstreamTestEvidence = {
+      test_id: input.test_id,
+      fingerprint: modelConfigFingerprint({
+        provider: input.provider,
+        baseUrl,
+        modelId,
+        apiKey,
+      }),
+      passed: input.passed === true,
+      tested_at: new Date(testedAtMs).toISOString(),
+      expires_at: new Date(testedAtMs + ttlSeconds * 1000).toISOString(),
+      capabilities: { ...input.capabilities },
+    };
+
+    // A test write does not bump version, so retry with a fresh version/snapshot
+    // CAS if a concurrent config save or another test won the race.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (attempt > 0) {
+        rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
+        ext = rows[0];
+        if (!ext) {
+          throw new MetadataError(
+            "EXTRACTION_NOT_CONFIGURED",
+            "extraction row disappeared while recording test evidence",
+          );
+        }
+      }
+      const snapshot = parseExtractionSnapshot(ext);
+      snapshot.test = test;
+      try {
+        const updated = await this.store.updateInstanceUpstreamSnapshotJson({
+          group_id: ext.group_id,
+          expected_group_type: "extraction",
+          expected_version: ext.version,
+          expected_snapshot_json: ext.snapshot_json,
+          snapshot_json: JSON.stringify(snapshot),
+        });
+        return {
+          test_id: test.test_id,
+          fingerprint: test.fingerprint,
+          passed: test.passed,
+          tested_at: test.tested_at,
+          expires_at: test.expires_at,
+          version: updated.version,
+        };
+      } catch (e) {
+        const mapped = this.translateUpstreamConflict(e);
+        if (mapped.code === "WRITE_CONFLICT" && attempt < 2) continue;
+        throw mapped;
+      }
+    }
+    throw new MetadataError("WRITE_CONFLICT", "test evidence could not be recorded after concurrent writes");
+  }
+
+  /**
+   * Gate activation on fresh evidence and atomically mirror the draft into the
+   * runtime columns + immutable active snapshot in one store update.
+   */
+  async enableInstanceUpstreamExtraction(
+    input: {
+      expected_version: number;
+      test_id: string;
+    },
+    supportedAgents: SupportedAgent[],
+  ): Promise<Record<string, unknown>> {
+    await this.store.ensureDefaultSeeded(supportedAgents);
+    const rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
+    const ext = rows[0];
+    if (!ext) {
+      throw new MetadataError("DRAFT_REQUIRED", "save an extraction draft before enabling it");
+    }
+    const draft = parseExtractionDraft(ext);
+    if (!draft) {
+      throw new MetadataError(
+        "DRAFT_REQUIRED",
+        "save a complete extraction draft (provider, base URL, API key and model id) before enabling it",
+      );
+    }
+
+    const snapshot = parseExtractionSnapshot(ext);
+    const test = snapshot.test;
+    if (!test) {
+      throw new MetadataError("TEST_REQUIRED", "record a successful connection test before enabling");
+    }
+    const fingerprint = modelConfigFingerprint({
+      provider: draft.provider,
+      baseUrl: draft.base_url,
+      modelId: draft.model_id,
+      apiKey: draft.api_key,
+    });
+    const expiresAt = Date.parse(test.expires_at);
+    if (
+      test.test_id !== input.test_id
+      || test.passed !== true
+      || test.fingerprint !== fingerprint
+      || !Number.isFinite(expiresAt)
+      || Date.now() > expiresAt
+    ) {
+      throw new MetadataError(
+        "TEST_STALE",
+        "the connection test is stale, failed, or does not match the current draft",
+      );
+    }
+
+    const activatedAt = new Date().toISOString();
+    const active: InstanceUpstreamActiveSnapshot = {
+      snapshot_id: newModelConfigSnapshotId(),
+      version: ext.version + 1,
+      provider: draft.provider,
+      base_url: draft.base_url,
+      api_key: draft.api_key,
+      model_id: draft.model_id,
+      description: draft.description,
+      activated_at: activatedAt,
+    };
+    const nextSnapshot: InstanceUpstreamExtractionSnapshot = {
+      active,
+      test,
+    };
+    try {
+      const row = await this.store.updateInstanceUpstreamGroup({
+        group_id: ext.group_id,
+        expected_group_type: "extraction",
+        expected_version: input.expected_version,
+        provider: draft.provider,
+        base_url: draft.base_url,
+        api_key: draft.api_key,
+        model_id: draft.model_id,
+        description: draft.description,
+        enabled: true,
+        snapshot_json: JSON.stringify(nextSnapshot),
+      });
+      return this.toPublicExtraction(row);
+    } catch (e) {
+      throw this.translateUpstreamConflict(e);
+    }
+  }
+
+  /** Pause a managed extraction model while retaining its draft and active snapshot. */
+  async disableInstanceUpstreamExtraction(
+    input: { expected_version: number },
+    supportedAgents: SupportedAgent[],
+  ): Promise<Record<string, unknown>> {
+    await this.store.ensureDefaultSeeded(supportedAgents);
+    const rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
+    const ext = rows[0];
+    if (!ext || !effectiveActiveSnapshot(ext)) {
+      throw new MetadataError(
+        "EXTRACTION_NOT_CONFIGURED",
+        "no active extraction snapshot exists to disable",
+      );
+    }
+    try {
+      const row = await this.store.updateInstanceUpstreamGroup({
+        group_id: ext.group_id,
+        expected_group_type: "extraction",
+        expected_version: input.expected_version,
+        enabled: false,
+      });
+      return this.toPublicExtraction(row);
+    } catch (e) {
+      throw this.translateUpstreamConflict(e);
+    }
+  }
+
+  /**
+   * Internal-only immutable snapshot resolver for downstream generators.
+   * `ready` is the only branch that returns the plaintext api_key.
+   */
+  async resolveInstanceUpstreamExtractionSnapshot(
+    supportedAgents: SupportedAgent[],
+  ): Promise<Record<string, unknown>> {
+    await this.store.ensureDefaultSeeded(supportedAgents);
+    const rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
+    const ext = rows[0];
+    if (!ext) return { status: "config_unavailable" };
+
+    const parsed = parseExtractionSnapshot(ext);
+    let active = parsed.active;
+    if (!active) {
+      active = legacyActiveSnapshot(ext);
+      if (!active) {
+        return ext.enabled
+          ? { status: "invalid", reason: "active_snapshot_missing" }
+          : { status: "config_unavailable" };
+      }
+    } else {
+      const missing = missingSnapshotFields(active);
+      if (missing.length > 0) {
+        return {
+          status: "invalid",
+          reason: `active_snapshot_missing_${missing.join("_")}`,
+        };
+      }
+    }
+
+    if (!ext.enabled) return { status: "paused" };
+    return {
+      status: "ready",
+      snapshot: {
+        snapshot_id: active.snapshot_id,
+        version: active.version,
+        provider: active.provider,
+        base_url: normalizeStoredBaseUrl(active.base_url),
+        api_key: active.api_key,
+        model_id: active.model_id,
+        description: active.description,
+        activated_at: active.activated_at,
+      },
+    };
   }
 
   async createInstanceUpstreamExtraction(
@@ -2635,6 +3126,12 @@ export class MetadataService {
         "extraction row does not exist; use /extraction/create first",
       );
     }
+    if (input.enabled !== undefined && input.enabled !== ext.enabled) {
+      throw new MetadataError(
+        "USE_ENABLE_DISABLE_ENDPOINT",
+        "use /extraction/enable with a fresh test_id or /extraction/disable to change activation state",
+      );
+    }
 
     if (input.draft) {
       const existingDraft = parseExtractionDraft(ext);
@@ -2728,6 +3225,11 @@ export class MetadataService {
     }
   }
 
+  /**
+   * Backward-compatible pause path. Enabling must use
+   * /extraction/enable with a fresh test_id, otherwise a stale active snapshot
+   * could be resumed without meeting the test gate.
+   */
   async toggleInstanceUpstreamExtraction(
     input: {
       enabled: boolean;
@@ -2735,26 +3237,16 @@ export class MetadataService {
     },
     supportedAgents: SupportedAgent[],
   ): Promise<Record<string, unknown>> {
-    // 存量兜底 seed
-    await this.store.ensureDefaultSeeded(supportedAgents);
-    const rows = await this.store.listInstanceUpstreamGroups({ group_type: "extraction" });
-    const ext = rows[0];
-    if (!ext) {
+    if (input.enabled) {
       throw new MetadataError(
-        "EXTRACTION_NOT_CONFIGURED",
-        "extraction row does not exist",
+        "TEST_REQUIRED",
+        "use /extraction/enable with a fresh test_id to resume managed generation",
       );
     }
-    try {
-      const row = await this.store.toggleInstanceUpstreamGroup({
-        group_id: ext.group_id,
-        enabled: input.enabled,
-        expected_version: input.expected_version,
-      });
-      return this.toPublicExtraction(row);
-    } catch (e) {
-      throw this.translateUpstreamConflict(e);
-    }
+    return this.disableInstanceUpstreamExtraction(
+      { expected_version: input.expected_version },
+      supportedAgents,
+    );
   }
 
   async deleteInstanceUpstreamExtraction(
@@ -2849,6 +3341,9 @@ export class MetadataService {
     const draft = parseExtractionDraft(row);
     const configured = Boolean(row.base_url && row.api_key);
     const managed = configured || draft !== null;
+    const active = effectiveActiveSnapshot(row);
+    const test = parseExtractionSnapshot(row).test;
+    const matchesCurrent = testMatchesCurrent(test, currentConnectionConfig(row));
     return {
       configured,
       managed,
@@ -2857,6 +3352,7 @@ export class MetadataService {
       provider: row.provider,
       protocol: "openai-chat",
       enabled: row.enabled,
+      paused: row.enabled === false && active !== null,
       base_url: normalizeStoredBaseUrl(row.base_url),
       api_key_configured: Boolean(row.api_key),
       api_key_masked: row.api_key ? maskKeyValue(row.api_key) : "",
@@ -2864,6 +3360,25 @@ export class MetadataService {
       description: row.description,
       version: row.version,
       updated_at: row.updated_at,
+      active_snapshot: active ? {
+        snapshot_id: active.snapshot_id,
+        version: active.version,
+        provider: active.provider,
+        base_url: normalizeStoredBaseUrl(active.base_url),
+        api_key_configured: Boolean(active.api_key),
+        api_key_masked: active.api_key ? maskKeyValue(active.api_key) : "",
+        model_id: active.model_id,
+        description: active.description,
+        activated_at: active.activated_at,
+      } : null,
+      test: test ? {
+        test_id: test.test_id,
+        fingerprint: test.fingerprint,
+        passed: test.passed,
+        tested_at: test.tested_at,
+        expires_at: test.expires_at,
+        matches_current: matchesCurrent,
+      } : null,
       draft: draft ? {
         configured: true,
         provider: draft.provider,

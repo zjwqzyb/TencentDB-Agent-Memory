@@ -1,0 +1,14 @@
+{
+  "matches": true,
+  "count": 8,
+  "sha256ByRuntimePath": {
+    "/app/codegraph-canvasfix-source-manifest.json": "f3472b9625a1db55d1e1e21b2403206803121bf671d8a3c7de69ec56bca3823c",
+    "/app/panel/web/dist/assets/KnowledgeGraph-CcEZ1alE.js": "7067885b6acd9f92cf94281c1f2a321361cc9e1781550c412fa6eeb801f8bbf0",
+    "/app/panel/web/dist/assets/KnowledgeGraph-DEqMBSbC.css": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+    "/app/panel/web/dist/assets/main-D4Z9h8vb.css": "6b7493934155e37c7ed30269bd995023667535e03c1c2434e82ab8868c32a3c2",
+    "/app/panel/web/dist/assets/main-vBIlMdwD.js": "b3ae4e3878a07000321f9c9bb6edf03c531f5603a2d2c917e3d486450524f6b2",
+    "/app/panel/web/dist/downloads/tdai-memory-agents.zip": "03abac690ab736eb8d3d6b9a284ebd71e2a5963df13b9abf8a324ce91be72fde",
+    "/app/panel/web/dist/index.html": "b4a7b0e683f2f2e3dfcefa7d065c9a0beb04335c582eac6794dcae8c990638ed",
+    "/app/panel/web/dist/logo.png": "c3b0ebc4a6749d626817a116b0299bf81136f573a4731f6217de530a0e46d0f7"
+  }
+}

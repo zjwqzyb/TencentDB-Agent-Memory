@@ -57,6 +57,12 @@ export interface WikiBuildContext {
 
 export interface WikiBuildResult {
   pageCount?: number;
+  /**
+   * Model snapshot pinned when the job started. The post-build summary MUST
+   * reuse it (never re-resolve), otherwise a mid-job config switch would mix
+   * two model versions inside one job.
+   */
+  llm?: { config: import("../config.js").LlmConfig; meta: import("./llm-binding-store.js").ModelSnapshotMeta };
 }
 
 export type WikiWorker = (ctx: WikiBuildContext) => Promise<WikiBuildResult | void>;
@@ -1298,7 +1304,7 @@ export class WikiService {
       this.logger?.info?.(`[wiki] ${wikiId} ready (pages: ${result?.pageCount ?? '?'})`);
 
       // Auto-generate summary + callback TMC
-      await this.onBuildComplete(synced, "ready", null, ingestRunId);
+      await this.onBuildComplete(synced, "ready", null, ingestRunId, result?.llm);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       // worker 抛错，但若期间已被中止，视为取消而非失败：跳过 failed 状态/回调，做收尾。
@@ -1331,6 +1337,7 @@ export class WikiService {
     status: "ready" | "failed",
     errorMsg: string | null,
     ingestRunId?: string,
+    jobLlm?: WikiBuildResult["llm"],
   ): Promise<void> {
     if (!row || !this.callbackConfig) return;
 
@@ -1340,15 +1347,23 @@ export class WikiService {
       // Generate summary via LLM (即使部分源失败也尝试生成——只要有页面就生成)
       try {
         const pages = this.pageLs(row.service_id, row.team_id, row.wiki_id) ?? [];
-        this.logger?.info?.(`[wiki] summary generation start (wikiId=${row.wiki_id}, pages=${pages.length}, status=${status})`);
+        // Same snapshot as the body/merge/overview steps. Only fall back to a
+        // fresh resolve when the worker did not provide one (injected workers).
+        const llm = jobLlm?.config ?? this.callbackConfig.resolveLlm(row.service_id);
+        this.logger?.info?.(
+          `[wiki] summary generation start (wikiId=${row.wiki_id}, pages=${pages.length}, status=${status}, configId=${jobLlm?.meta.config_id ?? llm.modelConfig?.configId ?? "deployment"}, configVersion=${jobLlm?.meta.version ?? llm.modelConfig?.version ?? "-"}, provider=${jobLlm?.meta.provider ?? llm.provider}, model=${jobLlm?.meta.model ?? llm.model}, endpoint=${jobLlm?.meta.endpoint ?? "-"})`,
+        );
         const { generateWikiSummary } = await import("../callback.js");
         summary = await generateWikiSummary(
           row.wiki_id,
           row.name,
           pages.map((p) => ({ title: p.title, description: p.description })),
-          this.callbackConfig.resolveLlm(row.service_id),
+          llm,
+          jobLlm?.meta,
         );
-        this.logger?.info?.(`[wiki] summary generation done (wikiId=${row.wiki_id}, len=${summary?.length ?? 0}, empty=${!summary})`);
+        this.logger?.info?.(
+          `[wiki] summary generation done (wikiId=${row.wiki_id}, len=${summary?.length ?? 0}, empty=${!summary}, configId=${jobLlm?.meta.config_id ?? llm.modelConfig?.configId ?? "deployment"}, configVersion=${jobLlm?.meta.version ?? llm.modelConfig?.version ?? "-"}, outcome=${summary ? "ok" : "empty"})`,
+        );
         if (summary) {
           this.store.updateWikiStatus(row.service_id, row.wiki_id, { summary });
         }

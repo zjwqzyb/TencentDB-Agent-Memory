@@ -1,0 +1,40 @@
+[
+  {
+    "id": "R01",
+    "kind": "version_conflict",
+    "query": "mem:update-task 现在还能用吗，更新任务应使用什么命令？",
+    "expected": "2026-10-18 mem:update-task 已修复；mem:claim-task 和 mem:complete-task 是其他流程。",
+    "expected_L0": [
+      "msg-cddeaad982d147a496d83a5f1bfdc6b9"
+    ]
+  },
+  {
+    "id": "R02",
+    "kind": "natural_language",
+    "query": "MCP 和 Hooks 调用 Panel API 必须经过 SSH 吗？",
+    "expected": "2026-10-18 已迁移本地直连 Panel HTTP，SSH 不是调用 API 所需。",
+    "expected_L0": [
+      "msg-2336822d74b64b9ab6f81cd0dba284a4",
+      "msg-9a273d6fafed4928a66d68e781b2911e"
+    ]
+  },
+  {
+    "id": "R03",
+    "kind": "version_conflict",
+    "query": "CodeGraph 搜索 SvcClaim 还需要反复点击继续查找吗？",
+    "expected": "2026-10-19 已支持一次搜索返回多个同名类，自动继续搜索，取消与超时提示；不可将旧操作描述为现行固定流程。",
+    "expected_L0": [
+      "msg-c4e50db1c9d244f495bbc4b5aa568b42"
+    ]
+  },
+  {
+    "id": "R04",
+    "kind": "rule_exception",
+    "query": "初始化选择任务时暂不绑定任务的选项放在哪里？",
+    "expected": "绑定列表末尾固定展示暂不绑定任务，与真实任务并列。",
+    "expected_L0": [
+      "msg-cd940f0a7f484f94b93a9eb66a7bac87",
+      "msg-003a58f2ba7a44e08b8a9945733dc6bb"
+    ]
+  }
+]

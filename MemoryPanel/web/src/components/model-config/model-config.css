@@ -98,6 +98,86 @@
   margin-right: auto;
 }
 
+.model-config-test {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 8px;
+  background: var(--tea-color-bg-secondary-default);
+}
+
+.model-config-test-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.model-config-test-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  min-width: 0;
+}
+
+.model-config-test-meta div {
+  min-width: 0;
+}
+
+.model-config-test-meta dt {
+  color: var(--tea-color-text-secondary-default);
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.model-config-test-meta dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.model-config-test-meta code {
+  color: var(--tea-color-text-primary-default);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.model-config-test-capabilities {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.model-config-test-capability {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.model-config-test-capability-name {
+  min-width: 84px;
+  color: var(--tea-color-text-primary-default);
+  font-size: 13px;
+}
+
+.model-config-test-error {
+  min-width: 0;
+  color: var(--tea-color-text-danger-default, #d9363e);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 720px) {
   .settings-dialog {
     width: auto !important;
@@ -133,6 +213,11 @@
 
   .model-config-actions > button {
     width: 100%;
+  }
+
+  .model-config-test-capability {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

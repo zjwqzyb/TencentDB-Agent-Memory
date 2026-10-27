@@ -6,6 +6,8 @@
  * Real wiki worker: LLM ingest via wiki engine.
  */
 
+import { bjjhGitProvider } from "./code-source/providers/bjjh-git.js";
+
 import { join } from "node:path";
 import { mkdirSync, existsSync, rmSync } from "node:fs";
 import pLimit from "p-limit";
@@ -18,8 +20,9 @@ import { CodeGraphService, type CodeGraphWorker } from "./store/index.js";
 import { BuildQueue } from "./store/index.js";
 import {
   createLlmBindingStore,
-  resolveLlmConfig,
+  resolveLlmBinding,
   type ILlmBindingStore,
+  type LlmBindingResolution,
 } from "./store/llm-binding-store.js";
 import { createWikiSourceManager, type WikiSourceManager } from "./engines/wiki/index.js";
 import { indexProject, openIndex, syncIndex, getStats, closeIndex, type CodeGraphInstance } from "./engines/code/index.js";
@@ -139,8 +142,22 @@ export function createKnowledgeModule(config: KnowledgeModuleConfig): KnowledgeM
   // No binding → global LLM_MODE decides: 'custom' uses global LLM_* direct,
   // 'proxy' (default) blanks creds so ingest fails loudly (no silent fallback).
   const llmBindingStore = createLlmBindingStore(db);
-  const resolveLlm = (serviceId: string): LlmConfig =>
-    resolveLlmConfig(serviceId, llmBindingStore.get(serviceId), llmConfig);
+
+  /**
+   * Resolve the effective model config **once per wiki job**.
+   *
+   * Managed instance bindings fail closed (paused / incomplete / fingerprint
+   * mismatch) instead of falling back to the global `LLM_*` env or an older
+   * binding. Legacy deployment rows keep the historical env-driven behaviour.
+   */
+  const resolveJobLlm = (serviceId: string): LlmBindingResolution =>
+    resolveLlmBinding(serviceId, llmBindingStore.get(serviceId), llmConfig);
+
+  /** Summary-only fallback when no job snapshot is available (injected workers). */
+  const resolveLlm = (serviceId: string): LlmConfig => {
+    const resolved = resolveJobLlm(serviceId);
+    return resolved.ok ? resolved.config : { ...llmConfig, baseUrl: "", apiKey: "" };
+  };
 
   // Instance pool (code-graph) — lazy loading
   const _poolMap = new Map<string, CodeGraphInstance>();
@@ -176,6 +193,8 @@ export function createKnowledgeModule(config: KnowledgeModuleConfig): KnowledgeM
 
   // ── 代码来源 provider 注册中心（内置 + 部署启用列表） ──
   const codeSourceRegistry = new CodeSourceRegistry();
+  // Preserve the company provider enabled by the production deployment patch.
+  codeSourceRegistry.register(bjjhGitProvider);
 
   // ── wiki 来源 provider 注册中心（内置 + 部署启用列表） ──
   const wikiSourceRegistry = new WikiSourceRegistry();
@@ -400,7 +419,37 @@ export function createKnowledgeModule(config: KnowledgeModuleConfig): KnowledgeM
     setInternalStatus("ingesting");
 
     // Per-instance LLM routing (proxy/byo/global fallback), keyed by service_id.
-    const effectiveLlm = resolveLlm(serviceId);
+    // Take the snapshot ONCE here: body generation, merge, overview and summary
+    // all reuse it, so a mid-job config switch cannot affect this job.
+    const resolved = resolveJobLlm(serviceId);
+    if (!resolved.ok) {
+      log.error("wiki ingest refused: model config unavailable", {
+        wikiId,
+        serviceId,
+        reason: resolved.reason,
+        configSource: resolved.meta.source,
+        configId: resolved.meta.config_id ?? null,
+        configVersion: resolved.meta.version ?? null,
+        provider: resolved.meta.provider ?? null,
+        model: resolved.meta.model ?? null,
+        endpoint: resolved.meta.endpoint ?? null,
+        outcome: "fail_closed",
+      });
+      throw new Error(`MODEL_CONFIG_UNAVAILABLE(${resolved.reason}): ${resolved.message}`);
+    }
+    const effectiveLlm = resolved.config;
+    log.info("wiki ingest model snapshot pinned", {
+      wikiId,
+      serviceId,
+      configSource: resolved.meta.source,
+      configId: resolved.meta.config_id,
+      configVersion: resolved.meta.version,
+      provider: resolved.meta.provider,
+      protocol: resolved.meta.protocol,
+      model: resolved.meta.model,
+      endpoint: resolved.meta.endpoint,
+      outcome: "start",
+    });
     // 进度只推 Panel（Panel 内存 store + wiki/get 聚合）；KS 不落进度态
     const onProgress = config.tmcCallbackUrl
       ? buildProgressFn(config.tmcCallbackUrl, wikiId, serviceId, teamId, ingestRunId)
@@ -417,13 +466,26 @@ export function createKnowledgeModule(config: KnowledgeModuleConfig): KnowledgeM
         maxContextSize: effectiveLlm.maxTokens,
         timeoutMs: effectiveLlm.timeoutMs,
         stream: effectiveLlm.stream ?? false,
+        modelConfig: effectiveLlm.modelConfig,
       },
       { onProgress, globalLlmLimit },
     );
     setInternalStatus("rebuilding-index");
 
     const pages = wikiMgr.getPages(wikiId);
-    return { pageCount: pages.length };
+    log.info("wiki ingest completed with pinned model snapshot", {
+      wikiId,
+      serviceId,
+      configSource: resolved.meta.source,
+      configId: resolved.meta.config_id,
+      configVersion: resolved.meta.version,
+      provider: resolved.meta.provider,
+      model: resolved.meta.model,
+      endpoint: resolved.meta.endpoint,
+      pages: pages.length,
+      outcome: "ok",
+    });
+    return { pageCount: pages.length, llm: { config: effectiveLlm, meta: resolved.meta } };
   };
 
   // Services (shared BuildQueue for serial wiki + code tasks)

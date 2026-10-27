@@ -136,6 +136,7 @@ export async function generateWikiSummary(
   name: string,
   pages: Array<{ title: string; description?: string }>,
   llm: LlmConfig,
+  meta?: import("./store/llm-binding-store.js").ModelSnapshotMeta,
 ): Promise<string> {
   if (pages.length === 0) {
     console.warn(`${TAG} wiki summary skipped: no pages for ${wikiId}`);
@@ -153,7 +154,8 @@ export async function generateWikiSummary(
 包含的页面：
 ${pageList}`;
 
-  console.info(`${TAG} wiki summary LLM call start for ${wikiId} (model=${llm.model}, protocol=${llm.protocol}, pages=${pages.length})`);
+  const provenance = `configId=${meta?.config_id ?? llm.modelConfig?.configId ?? "deployment"} configVersion=${meta?.version ?? llm.modelConfig?.version ?? "-"} provider=${meta?.provider ?? llm.provider} model=${llm.model} endpoint=${meta?.endpoint ?? "-"}`;
+  console.info(`${TAG} wiki summary LLM call start for ${wikiId} (${provenance}, protocol=${llm.protocol}, pages=${pages.length})`);
   try {
     const client = createLlmClient(llm);
     const text = await client.chat({
@@ -164,10 +166,14 @@ ${pageList}`;
       label: `wiki-summary`,
     });
     const result = text.slice(0, 256); // enforce ≤256 char limit
-    console.info(`${TAG} wiki summary LLM call done for ${wikiId} (len=${result.length}, empty=${result.length === 0})`);
+    console.info(`${TAG} wiki summary LLM call done for ${wikiId} (${provenance}, len=${result.length}, empty=${result.length === 0}, outcome=${result ? "ok" : "empty"})`);
     return result;
   } catch (err) {
-    console.error(`${TAG} wiki summary generation failed for ${wikiId}:`, err);
+    const message = (err instanceof Error ? err.message : String(err))
+      .replace(/Bearer\s+[^\s"',;]+/gi, "Bearer [REDACTED]")
+      .replace(llm.apiKey, "[REDACTED]")
+      .slice(0, 300);
+    console.error(`${TAG} wiki summary generation failed for ${wikiId} (${provenance}, outcome=error): ${message}`);
     return "";
   }
 }

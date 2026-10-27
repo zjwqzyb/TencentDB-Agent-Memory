@@ -14,7 +14,7 @@ import type { Hono } from 'hono';
 import { validatePanelMetaHeaders } from '../../middleware/validate-panel-headers.js';
 import { respondControlError } from '../../envelope.js';
 import type { PanelDeps } from '../../../panel-deps.js';
-import type { WikiRawWriteFile } from '../../../kernel/ports/knowledge-client-port.js';
+import type { WikiRawWriteFile, WikiPageWriteItem } from '../../../kernel/ports/knowledge-client-port.js';
 import { respondEnvelope } from '../../envelope.js';
 import {
   buildCtx,
@@ -37,7 +37,7 @@ const MAX_FILES_PER_REQUEST = 10;        // 单次最多 10 个文件
 const MAX_TOTAL_SIZE = 5 * 1024 * 1024;  // 单次总大小 5MB
 
 /** 校验一批待写文件是否满足大小限制；违规返回错误码，否则返回 null。 */
-function checkFileSizes(files: WikiRawWriteFile[]): string | null {
+function checkFileSizes(files: ReadonlyArray<{ content: string }>): string | null {
   if (files.length > MAX_FILES_PER_REQUEST) {
     return `TOO_MANY_FILES (max ${MAX_FILES_PER_REQUEST})`;
   }
@@ -211,6 +211,27 @@ export function registerKnowledgeWikiRoutes(api: Hono, deps: PanelDeps): void {
     if ('error' in gate) return gate.error;
     const kc = deps.knowledgeClientFactory(ctx.instanceId);
     return runKs(c, () => kc.wikiPageRead(wikiId, refs));
+  });
+
+  // W13 page/write — write permission; team and actor come only from the access gate.
+  api.post('/knowledge/wiki/page/write', mw, async (c) => {
+    const ctx = buildCtx(c);
+    const body = await readJson(c);
+    const wikiId = str(body, 'wiki_id');
+    if (!wikiId) return respondControlError(c, 400, 'MISSING_WIKI_ID');
+    const pages = body.pages;
+    if (!Array.isArray(pages) || pages.length === 0)
+      return respondControlError(c, 400, 'MISSING_PAGES');
+    if (!pages.every((p): p is WikiPageWriteItem => p && typeof p.ref === 'string' && p.ref.trim() && typeof p.content === 'string'))
+      return respondControlError(c, 400, 'INVALID_PAGES');
+    const sizeErr = checkFileSizes(pages);
+    if (sizeErr) return respondControlError(c, 413, sizeErr);
+    const gate = await requireKnowledgeRead(deps, c, ctx, wikiId, { action: 'write' });
+    if ('error' in gate) return gate.error;
+    const teamId = gate.asset?.team_id;
+    if (!teamId) return respondControlError(c, 400, 'MISSING_TEAM_ID');
+    const kc = deps.knowledgeClientFactory(ctx.instanceId);
+    return runKs(c, () => kc.wikiPageWrite(teamId, wikiId, pages, gate.userId));
   });
 
   // W14 page/rm — id-only + write 权限；KS 需要 team_id，来自 meta_asset.team_id

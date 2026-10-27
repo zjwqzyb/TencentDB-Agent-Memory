@@ -68,6 +68,7 @@ import type {
   InstanceUpstreamConfigFilter,
   CreateInstanceUpstreamGroupInput,
   UpdateInstanceUpstreamGroupInput,
+  UpdateInstanceUpstreamSnapshotInput,
   ToggleInstanceUpstreamGroupInput,
   DeleteInstanceUpstreamGroupInput,
   SupportedAgent,
@@ -77,7 +78,8 @@ import type {
 } from "../types.js";
 import { DEFAULT_PAGINATION } from "../pagination.js";
 import { buildChatMemoryAssetId } from "../utils/chat-memory-asset.js";
-import { DuplicateUserKeyError } from "./interface.js";
+import { assertIssueGraphUnchanged, type IssueGraphSnapshot } from "./issue-write-guard.js";
+import { DuplicateUserKeyError, type IMetadataStore } from "./interface.js";
 
 const require = createRequire(import.meta.url);
 function requireNodeSqlite(): typeof import("node:sqlite") {
@@ -363,6 +365,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         model_id TEXT NOT NULL DEFAULT '',
         description TEXT NOT NULL DEFAULT '',
         draft_json TEXT NOT NULL DEFAULT '',
+        snapshot_json TEXT NOT NULL DEFAULT '',
         version INTEGER NOT NULL DEFAULT 1,
         supported_agents_snapshot TEXT NOT NULL DEFAULT '[]',
         created_at TEXT NOT NULL,
@@ -378,6 +381,7 @@ export class SqliteMetadataStore implements IMetadataStore {
     this.migrateLegacyUserKeys();
     this.migrateInstanceUpstreamProviderColumn();
     this.migrateInstanceUpstreamDraftColumn();
+    this.migrateInstanceUpstreamSnapshotColumn();
   }
 
   private migrateUserTypeColumn(): void {
@@ -415,6 +419,18 @@ export class SqliteMetadataStore implements IMetadataStore {
     this.db.exec(
       "ALTER TABLE meta_instance_upstream_config " +
         "ADD COLUMN draft_json TEXT NOT NULL DEFAULT ''",
+    );
+  }
+
+  /** extraction 的不可变 active 快照/测试证据；旧库按空快照迁移。 */
+  private migrateInstanceUpstreamSnapshotColumn(): void {
+    const columns = this.all<{ name: string }>(
+      "SELECT name FROM pragma_table_info('meta_instance_upstream_config')",
+    );
+    if (columns.some((column) => column.name === "snapshot_json")) return;
+    this.db.exec(
+      "ALTER TABLE meta_instance_upstream_config " +
+        "ADD COLUMN snapshot_json TEXT NOT NULL DEFAULT ''",
     );
   }
 
@@ -1125,7 +1141,10 @@ export class SqliteMetadataStore implements IMetadataStore {
     for (let attempt = 0; attempt < PK_RETRY_LIMIT; attempt++) {
       const taskId = input.task_id ?? generateId(ID_PREFIX.task);
       try {
-        return this.tx(() => {
+        return this.withImmediateTx(() => {
+          if (input.issue_graph_snapshot) {
+            assertIssueGraphUnchanged(this.all<TaskEntity>('SELECT task_id, metadata_json, status FROM meta_tasks WHERE team_id = ?', input.team_id), input.issue_graph_snapshot);
+          }
           this.run(
             `INSERT INTO meta_tasks
               (task_id, team_id, creator_user_id, title, description, source_type, source_url,
@@ -1183,6 +1202,15 @@ export class SqliteMetadataStore implements IMetadataStore {
     }
     this.applyUpdateRaw("meta_tasks", "task_id", taskId, normalized);
     return this.getTaskById(taskId);
+  }
+
+  compareAndSwapTask(taskId: string, expectedMetadata: string, patch: Partial<TaskEntity>, graph?: IssueGraphSnapshot): TaskEntity | null {
+    return this.withImmediateTx(() => {
+      const current = this.getTaskById(taskId);
+      if (!current || current.metadata_json !== expectedMetadata) return null;
+      if (graph) assertIssueGraphUnchanged(this.all<TaskEntity>('SELECT task_id, metadata_json, status FROM meta_tasks WHERE team_id = ?', current.team_id), graph);
+      return this.updateTask(taskId, patch);
+    });
   }
 
   deleteTasks(taskIds: string[]): BatchDeleteResult {
@@ -2238,8 +2266,8 @@ export class SqliteMetadataStore implements IMetadataStore {
       // 3. INSERT(custom/extraction 的 snapshot 恒 [];default 由 seed 路径独立处理,不走此 create 分支)
       this.run(
         `INSERT INTO meta_instance_upstream_config
-          (group_id, group_type, name, agents, enabled, mode, provider, base_url, api_key, model_id, description, draft_json, version, supported_agents_snapshot, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, '[]', ?, ?)`,
+          (group_id, group_type, name, agents, enabled, mode, provider, base_url, api_key, model_id, description, draft_json, snapshot_json, version, supported_agents_snapshot, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, '[]', ?, ?)`,
         groupId,
         input.group_type,
         input.name ?? "",
@@ -2252,6 +2280,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         input.model_id ?? "",
         input.description ?? "",
         input.draft_json ?? "",
+        input.snapshot_json ?? "",
         now,
         now,
       );
@@ -2322,11 +2351,12 @@ export class SqliteMetadataStore implements IMetadataStore {
         model_id: input.model_id ?? current.model_id,
         description: input.description ?? current.description,
         draft_json: input.draft_json ?? current.draft_json,
+        snapshot_json: input.snapshot_json ?? current.snapshot_json,
       };
       const now = nowIso();
       this.run(
         `UPDATE meta_instance_upstream_config
-         SET name = ?, agents = ?, enabled = ?, mode = ?, provider = ?, base_url = ?, api_key = ?, model_id = ?, description = ?, draft_json = ?, version = version + 1, updated_at = ?
+         SET name = ?, agents = ?, enabled = ?, mode = ?, provider = ?, base_url = ?, api_key = ?, model_id = ?, description = ?, draft_json = ?, snapshot_json = ?, version = version + 1, updated_at = ?
          WHERE group_id = ?`,
         merged.name,
         JSON.stringify(merged.agents),
@@ -2338,8 +2368,62 @@ export class SqliteMetadataStore implements IMetadataStore {
         merged.model_id,
         merged.description,
         merged.draft_json,
+        merged.snapshot_json,
         now,
         input.group_id,
+      );
+      return this.getInstanceUpstreamGroup(input.group_id)!;
+    });
+  }
+
+  updateInstanceUpstreamSnapshotJson(
+    input: UpdateInstanceUpstreamSnapshotInput,
+  ): InstanceUpstreamConfigEntity {
+    return this.withImmediateTx(() => {
+      const row = this.get(
+        "SELECT * FROM meta_instance_upstream_config WHERE group_id = ?",
+        input.group_id,
+      );
+      if (!row) {
+        throw new InstanceUpstreamWriteConflictError(
+          "group_not_found",
+          `group not found: ${input.group_id}`,
+        );
+      }
+      const current = this.mapInstanceUpstreamGroup(row)!;
+      if (current.group_type !== input.expected_group_type) {
+        throw new InstanceUpstreamWriteConflictError(
+          "group_type_mismatch",
+          `expected ${input.expected_group_type}, actual ${current.group_type}`,
+          { expected: input.expected_group_type, actual: current.group_type },
+        );
+      }
+      if (current.version !== input.expected_version) {
+        throw new InstanceUpstreamWriteConflictError(
+          "version_mismatch",
+          `version mismatch: expected ${input.expected_version}, actual ${current.version}`,
+          { expected: input.expected_version, actual: current.version },
+        );
+      }
+      if (current.snapshot_json !== input.expected_snapshot_json) {
+        throw new InstanceUpstreamWriteConflictError(
+          "version_mismatch",
+          "snapshot evidence changed concurrently",
+          {
+            expected: input.expected_version,
+            actual: current.version,
+            snapshot_changed: true,
+          },
+        );
+      }
+      this.run(
+        `UPDATE meta_instance_upstream_config
+         SET snapshot_json = ?
+         WHERE group_id = ? AND version = ? AND snapshot_json = ?`,
+        input.snapshot_json,
+        input.group_id,
+        input.expected_version,
+        input.expected_snapshot_json,
       );
       return this.getInstanceUpstreamGroup(input.group_id)!;
     });
@@ -2503,6 +2587,7 @@ export class SqliteMetadataStore implements IMetadataStore {
       model_id: String(r.model_id ?? ""),
       description: String(r.description ?? ""),
       draft_json: String(r.draft_json ?? ""),
+      snapshot_json: String(r.snapshot_json ?? ""),
       version: Number(r.version ?? 1),
       supported_agents_snapshot: snapshot,
       created_at: String(r.created_at),

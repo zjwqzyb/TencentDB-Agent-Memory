@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-19",
+  "scope": "Merge all 7 audited production patches into local source",
+  "productionModified": false,
+  "historicalDataModified": false,
+  "modelProviderChanged": false,
+  "gitCommitted": false,
+  "validation": {
+    "CoreAclAndTaskTests": 20,
+    "PanelWikiWriteTests": 9,
+    "KnowledgeTests": 25,
+    "totalTestsPassed": 54,
+    "KnowledgeTypecheck": "passed",
+    "KnowledgeBuild": "passed",
+    "PanelTypecheck": "passed",
+    "PanelBuild": "passed",
+    "diffCheck": "passed"
+  },
+  "files": {
+    "MemoryCore/src/metadata/service/metadata-service.ts": "cfed8eeb65f8fc3171aa2782659302870378a2dd19f16b9a2a945bc804acca9c",
+    "MemoryKnowledge/src/code-source/providers/bjjh-git.ts": "73a03b832556d093181dd6024e465f58bd0e362e371d6210fee1011057706863",
+    "MemoryKnowledge/src/module.ts": "29542d6f2f4e166891ffc3fe0f154b51e4e5c265ca87b2c33d3c172077bb4147",
+    "MemoryKnowledge/src/engines/wiki/manager.ts": "e61d9e22b439cae2a93a7e89e3cca21c7528cfecbc6247d680c8a6b8c28cb899",
+    "MemoryKnowledge/src/engines/wiki/ingest-v2/llm.ts": "c8a8a20ea73d6ef7a5c1087ad45b276639c5434751062553fa9cdec7db3b0f81",
+    "MemoryKnowledge/src/engines/wiki/ingest-v2/overview.ts": "6a9b86472e5d11ef7f7c5040a630371c4eacb64c075c046f7e11148c20944dd8",
+    "MemoryPanel/src/panel/http/routes/knowledge/wiki-routes.ts": "abf4a24ad547796c2020a1561e12cfdc412dad364dd9321c74973d03d1c5b86b",
+    "MemoryKnowledge/docker-compose.yml": "e85cf44fa871f37fbd79e119df3be99beb9bfad2dfb9e08f878e5afb16168f7a",
+    "MemoryKnowledge/docker/env.example": "e0be5b08b708c2020803f8e777c43759920b0e6e584a66a2c7724f57022a3577",
+    "MemoryKnowledge/README.md": "7cb90f5d7f7b68a529640f543a30d09355c946fe4b4266c60e2d465582814692"
+  },
+  "notes": [
+    "Local-only session and other existing features retained",
+    "Thinking budget remains opt-in via KNOWLEDGE_WIKI_THINKING_BUDGET; 2048 is documented as the production setting",
+    "Knowledge verification used Node 22 with the graphology-types peer dependency installed locally"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "passed": true,
+  "productionOrigin": "http://192.168.200.137:8125",
+  "browserAccess": "Authenticated production page and live API through SSH port forwarding (127.0.0.1:18126), no mocks",
+  "javascriptAsset": "main-DQRtf58I.js",
+  "assetId": "cg-rmlck25u",
+  "team": "营销产品部",
+  "checks": [
+    {
+      "name": "Java capability label",
+      "passed": true
+    },
+    {
+      "name": "process call graph and same-index source",
+      "nodes": 5,
+      "edges": 4,
+      "lines": [
+        69,
+        76
+      ],
+      "passed": true
+    },
+    {
+      "name": "relation list has before/check/doProcess/after with source lines71-74",
+      "passed": true
+    },
+    {
+      "name": "screenshot namespace has select callable guidance and no reload",
+      "passed": true
+    },
+    {
+      "name": "choose another symbol focuses search",
+      "passed": true
+    },
+    {
+      "name": "Java interface hierarchy includes extends HttpBaseOperator and3 implements",
+      "nodes": 5,
+      "edges": 4,
+      "passed": true
+    },
+    {
+      "name": "file dependencies with actual import evidence",
+      "pages": 102,
+      "nodes": 15,
+      "edges": 14,
+      "truncated": true,
+      "passed": true
+    },
+    {
+      "name": "file clusters with actual import evidence",
+      "pages": 102,
+      "nodes": 3,
+      "edges": 3,
+      "truncated": true,
+      "passed": true
+    },
+    {
+      "name": "impact before has process1-hop evidence path",
+      "nodes": 2,
+      "edges": 1,
+      "passed": true
+    }
+  ],
+  "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+  "canvasDpr": "Fixed by c9f6645 and independently passed final production DPR2/1 fit checks on main-vBIlMdwD.js; see ../codegraph-canvasfix-20261019/parent-final-browser.json",
+  "screenshots": [
+    "codegraph-java-production-calls.png",
+    "codegraph-java-production-namespace.png",
+    "codegraph-java-production-hierarchy.png",
+    "codegraph-java-production-dependencies.png",
+    "codegraph-java-production-clusters.png",
+    "codegraph-java-production-impact.png",
+    "codegraph-java-final-dpr1.png"
+  ]
+}

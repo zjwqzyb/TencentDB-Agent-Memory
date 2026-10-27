@@ -54,6 +54,7 @@ import type {
   InstanceUpstreamConfigFilter,
   CreateInstanceUpstreamGroupInput,
   UpdateInstanceUpstreamGroupInput,
+  UpdateInstanceUpstreamSnapshotInput,
   ToggleInstanceUpstreamGroupInput,
   DeleteInstanceUpstreamGroupInput,
   SupportedAgent,
@@ -142,6 +143,8 @@ export interface IMetadataStore {
   createTask(input: CreateTaskInput): MaybePromise<TaskEntity>;
   getTaskById(taskId: string): MaybePromise<TaskEntity | null>;
   updateTask(taskId: string, patch: Partial<TaskEntity>): MaybePromise<TaskEntity | null>;
+  /** Atomic optimistic update; null means a concurrent writer changed the metadata. */
+  compareAndSwapTask(taskId: string, expectedMetadata: string, patch: Partial<TaskEntity>, graph?: import("./issue-write-guard.js").IssueGraphSnapshot): MaybePromise<TaskEntity | null>;
   deleteTasks(taskIds: string[]): MaybePromise<BatchDeleteResult>;
   listTasksByTeam(teamId: string, pagination?: PaginationParams | null, filter?: TaskFilter): MaybePromise<ListPage<TaskEntity>>;
   listTasks(filter: TaskFilter, pagination?: PaginationParams | null): MaybePromise<ListPage<TaskEntity>>;
@@ -271,6 +274,16 @@ export interface IMetadataStore {
    */
   updateInstanceUpstreamGroup(
     input: UpdateInstanceUpstreamGroupInput,
+  ): MaybePromise<InstanceUpstreamConfigEntity>;
+
+  /**
+   * 仅替换 snapshot_json，不递增 version。启用写 active 快照仍走
+   * updateInstanceUpstreamGroup（同一 UPDATE 写 active 列 + snapshot + enabled）。
+   * expected_version + expected_snapshot_json 双重 CAS 防止测试证据写入覆盖
+   * 同时发生的启用/停用或另一份测试证据。
+   */
+  updateInstanceUpstreamSnapshotJson(
+    input: UpdateInstanceUpstreamSnapshotInput,
   ): MaybePromise<InstanceUpstreamConfigEntity>;
 
   /** toggle enabled 快捷接口(是 update 的语法糖,同样支持 expected_version)。 */

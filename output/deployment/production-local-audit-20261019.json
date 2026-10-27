@@ -1,0 +1,97 @@
+{
+  "auditDate": "2026-10-19",
+  "scope": [
+    "MemoryCore/src comparison (excluding .test.ts and .spec.ts)",
+    "Panel task action registration",
+    "fresh frontend rebuild and live HTTP asset checks",
+    "runtime mounts and image configuration"
+  ],
+  "frontend": {
+    "freshBuildMatches": {
+      "index.html": true,
+      "assets/main-CLxr8z3o.js": true,
+      "assets/KnowledgeGraph-SutH8Tum.js": true,
+      "assets/main-ClqFRUXj.css": true,
+      "assets/KnowledgeGraph-DEqMBSbC.css": true
+    },
+    "liveHttp": {
+      "indexMatches": true,
+      "assets": [
+        {
+          "asset": "/assets/main-CLxr8z3o.js",
+          "localExists": true,
+          "matches": true,
+          "sha256": "879d8dcf93f645efdf6f89f5ac9fba9484d9d40670326bfa0cb39e79725548e9"
+        },
+        {
+          "asset": "/assets/main-ClqFRUXj.css",
+          "localExists": true,
+          "matches": true,
+          "sha256": "d22512e1757ccf720594777f2a7950dd32d2edf21d8a8458f6ad64c701e146e8"
+        }
+      ]
+    }
+  },
+  "core": {
+    "identical": 296,
+    "different": [
+      "src/adapters/standalone/llm-runner.ts",
+      "src/config.ts",
+      "src/core/persona/persona-generator.ts",
+      "src/core/scene/scene-extractor.ts",
+      "src/core/store/sqlite/memory-store.ts",
+      "src/core/tdai-core.ts",
+      "src/gateway/server.ts",
+      "src/gateway/skill-handlers.ts",
+      "src/metadata/router/internal-meta-router.ts",
+      "src/metadata/router/v3-meta-router.ts",
+      "src/metadata/router/v3-meta-schemas.ts",
+      "src/metadata/service/metadata-service.ts",
+      "src/metadata/store/interface.ts",
+      "src/metadata/store/metadata-store.contract.ts",
+      "src/metadata/store/mongodb-adapter.ts",
+      "src/metadata/store/sqlite-adapter.ts",
+      "src/metadata/types.ts",
+      "src/offload/index.ts",
+      "src/utils/env-config.ts",
+      "src/utils/pipeline-factory.ts",
+      "src/utils/pipeline-manager.ts",
+      "src/utils/stateful-pipeline-manager.ts"
+    ],
+    "localOnly": [
+      "src/core/decision/providers/jev/client.ts",
+      "src/core/decision/registry.ts",
+      "src/core/decision/types.ts",
+      "src/core/persona/jev-diagnostics.ts",
+      "src/core/persona/jev-gate.ts",
+      "src/core/session/session-record.ts",
+      "src/gateway/v3-session-router.ts",
+      "src/metadata/service/user-session-default-service.ts"
+    ],
+    "productionOnly": [
+      "src/metadata/issue/._issue-schemas.ts",
+      "src/metadata/store/._issue-write-guard.ts"
+    ]
+  },
+  "taskCoreFilesByteIdentical": [
+    "issue-model.ts",
+    "issue-service.ts",
+    "issue-schemas.ts",
+    "issue-write-guard.ts"
+  ],
+  "importantDifferences": {
+    "productionOnlyLogic": "Restricted asset ACL explicit grants fix in metadata-service.ts absent locally",
+    "localOnlyFeatures": [
+      "UserSessionDefault API and storage",
+      "v3/session/add",
+      "JEV persona decision gate",
+      "structured skill candidates and other Core fixes"
+    ],
+    "runtime": "Hub serves updated frontend files over the previous running image; recreation config points to tasks-ui-20261018-01"
+  },
+  "limitations": [
+    "Not a full audit of MemoryKnowledge, MemoryProxy or MCP Hooks runtime",
+    "Production source includes two macOS ._ packaging metadata files, not functional source"
+  ],
+  "productionModified": false
+}

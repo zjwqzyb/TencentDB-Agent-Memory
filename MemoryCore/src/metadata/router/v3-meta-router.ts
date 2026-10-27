@@ -30,6 +30,7 @@ import { extractInstanceId } from "./instance.js";
 import { resolvePagination } from "./pagination.js";
 import { resolveUserId } from "../service/resolve-user-id.js";
 import type { AgentFilter, TaskFilter, ParticipationLogFilter } from "../types.js";
+import * as I from "../issue/issue-schemas.js";
 import * as S from "./v3-meta-schemas.js";
 import {
   createMetaApiTraceContext,
@@ -222,15 +223,26 @@ const routeTable: Record<string, Handler> = {
   }),
   [`${V3_PREFIX}/agent/archive`]: bind(S.agentArchiveSchema, (d, c, s) => s.archiveAgentForCaller(d.agent_id, c)),
 
+  // Issues share task identity and are scoped to active team members.
+  [`${V3_PREFIX}/issue/create`]: bind(I.issueCreateSchema, (d, c, s) => s.issues.create(d, c)),
+  [`${V3_PREFIX}/issue/get`]: bind(I.issueGetSchema, (d, c, s) => s.issues.get(d.task_id, c)),
+  [`${V3_PREFIX}/issue/list`]: bind(I.issueListSchema, (d, c, s) => s.issues.list(d, c)),
+  [`${V3_PREFIX}/issue/update`]: bind(I.issueUpdateSchema, (d, c, s) => s.issues.update(d, c)),
+  [`${V3_PREFIX}/issue/comment`]: bind(I.issueCommentSchema, (d, c, s) => s.issues.comment(d, c)),
+
   // Task
   [`${V3_PREFIX}/task/create`]: bind(S.taskCreateSchema, (d, c, s) => s.createTaskForCaller(d, c)),
-  [`${V3_PREFIX}/task/get`]: bind(S.taskGetSchema, async (d, _c, s) => orNotFound(await s.getTaskById(d.task_id), "task_not_found", d.task_id)),
+  [`${V3_PREFIX}/task/get`]: bind(S.taskGetSchema, async (d, c, s) => {
+    const task = orNotFound(await s.getTaskById(d.task_id), "task_not_found", d.task_id);
+    await s.assertExternalTaskImportAllowed(task.team_id, c);
+    return task;
+  }),
   [`${V3_PREFIX}/task/update`]: bind(S.taskUpdateSchema, (d, c, s) => {
     const { task_id, ...patch } = d;
     return s.updateTaskForCaller(task_id, patch, c);
   }),
   [`${V3_PREFIX}/task/delete`]: bind(S.taskDeleteSchema, (d, c, s) => s.deleteTasksForCaller(d.task_ids, c)),
-  [`${V3_PREFIX}/task/list`]: bind(S.taskListSchema, async (d, _c, s) => {
+  [`${V3_PREFIX}/task/list`]: bind(S.taskListSchema, async (d, c, s) => {
     const filter: TaskFilter = {};
     if (d.status) filter.status = d.status;
     if (d.title) filter.title = d.title;
@@ -240,7 +252,11 @@ const routeTable: Record<string, Handler> = {
       filter.creator_user_id = await resolveUserId(s, { user_key: d.creator_user_key });
     }
     const pagination = resolvePagination(d);
-    if (d.team_id) return s.listTasksByTeam(d.team_id, pagination, filter);
+    if (d.team_id) {
+      await s.assertExternalTaskImportAllowed(d.team_id, c);
+      return s.listTasksByTeam(d.team_id, pagination, filter);
+    }
+    if (filter.creator_user_id !== c.userId) throw new MetadataError('permission_denied', 'List your own tasks or select a team');
     return s.listTasks(filter, pagination);
   }),
   [`${V3_PREFIX}/task/archive`]: bind(S.taskArchiveSchema, (d, c, s) => s.archiveTaskForCaller(d.task_id, c)),
@@ -431,6 +447,14 @@ const routeTable: Record<string, Handler> = {
     s.assertCanManageUsers(c);
     return s.toggleInstanceUpstreamExtraction(d, deps.getSupportedAgents());
   }),
+  [`${V3_PREFIX}/instance-upstream/extraction/enable`]: bind(S.upstreamExtractionEnableSchema, async (d, c, s, _reqId, deps) => {
+    s.assertCanManageUsers(c);
+    return s.enableInstanceUpstreamExtraction(d, deps.getSupportedAgents());
+  }),
+  [`${V3_PREFIX}/instance-upstream/extraction/disable`]: bind(S.upstreamExtractionDisableSchema, async (d, c, s, _reqId, deps) => {
+    s.assertCanManageUsers(c);
+    return s.disableInstanceUpstreamExtraction(d, deps.getSupportedAgents());
+  }),
   [`${V3_PREFIX}/instance-upstream/extraction/delete`]: bind(S.upstreamExtractionDeleteSchema, async (_d, c, s, _reqId, deps) => {
     s.assertCanManageUsers(c);
     return s.deleteInstanceUpstreamExtraction(deps.getSupportedAgents());
@@ -452,6 +476,7 @@ function mapErrorCode(code: string): number {
     case "agent_not_accessible":
       return 403;
     case "asset_not_bindable":
+    case "issue_conflict":
     case "duplicate_entry":
     case "duplicate_user_key":
     case "key_limit_exceeded":
@@ -469,6 +494,7 @@ function mapErrorCode(code: string): number {
     case "invalid_instance_id":
     case "missing_team_id":
     case "filter_not_allowed":
+    case "invalid_issue":
     case "invalid_user_ids":
       return 400;
     case "user_inactive":
@@ -480,6 +506,8 @@ function mapErrorCode(code: string): number {
       return 404;
     case "EXTRACTION_ALREADY_CONFIGURED":
     case "WRITE_CONFLICT":
+    case "TEST_REQUIRED":
+    case "TEST_STALE":
       return 409;
     case "PERMISSION_DENIED":
       return 403;

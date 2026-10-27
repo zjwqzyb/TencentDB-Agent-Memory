@@ -1,0 +1,192 @@
+{
+  "layer": "L1",
+  "items": [
+    {
+      "id": "m_1792940000401_0d9a8c9b",
+      "title": "work_fact",
+      "body": "TencentDBMemory / 开发助手已完成初始化，本次会话暂不绑定任何 MCP 相关任务。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-25T14:53:20.407Z"
+    },
+    {
+      "id": "m_1792405507089_26b5ead3",
+      "title": "work_method",
+      "body": "CodeGraph Java 关系图已补齐并部署至 192.168.200.137:8125，支持调用、影响、依赖、聚类、继承五类视图；已在 backend/jinhui-cloud 仓库完成真实环境验收（process 视图正确显示 5 个节点、4 条调用）；本次修复包含 namespace 提示优化、画布缩放错位问题，以及页面布局优化：压缩页头和工具栏以保障画布在常用桌面尺寸下完整显示，搜索框与源码区域支持独立滚动，修复长分析报告导致关系列表被挤失的问题；其背后布局优化方法论确立为：优先压缩非核心 UI 区域（页头/工具栏），保障画布主视区完整性；对可变长内容（如分析报告、关系列表）实施容器级滚动隔离，防止相互挤压；为提升 CodeGraph 搜索功能可用性，需在'目录或文件范围'输入框增加明确示例（如 './src/main/java'）及用途说明文本，避免用户误用；当 CodeGraph 搜索提示'当前仅扫描了部分索引'时，用户需主动点击'继续查找'按钮以触发完整检索，该交互路径需在帮助文档或界面中显式提示；CodeGraph 搜索交互提示需统一优化：移除重复提示；路径输入框须标注‘可选，留空搜索整个仓库’；‘加载更多’按钮仅用于分页查看已检索出的匹配结果，不用于触发新检索；CodeGraph 前端已增强搜索交互体验：新增自动继续搜索、显式取消操作和超时提示，并清除重复提示；CodeGraph 前端需支持模糊搜索自动接续机制：显示‘正在搜索’状态、允许用户取消当前请求并立即发起新关键词搜索、在达到时间预算时明确提示‘检索尚未完成’，且仅当检索完全结束才可展示‘无结果’；CodeGraph 搜索功能的根本修复路径是优先构建名称精确匹配与前缀匹配的数据库索引，确保 SvcClaim 类在结果中优先于 SvcClaimMapper 等相关项，并将目录范围下推至数据库查询层以避免全量扫描后过滤；CodeGraph 搜索功能的验收标准为：用户输入 'SvcClaim' 后单次点击搜索，首屏必须呈现 SvcClaim 类实体，并支持直接打开其关系图与源码；同时需覆盖无结果、大小写敏感性、同名类歧义、连续换词响应性、大仓库耗时等边界场景；特别地，同名类（如 SvcClaim）识别问题已修复，支持在范围留空时一次搜索返回多个同名类结果，且其关系视图与源码均可正常打开；Java 关系图能力由子 Agent 实施，全部 9 个子任务均已完成，代码已推送；当前无需重建索引，刷新页面即可生效；但动态调用仍存在遗漏风险，大仓库聚合需支持分页；CodeGraph Java 关系图页面修复已部署至 192.168.200.137:8125，真实 erp-parent 页面共 19 项验收项全部通过，对应任务已关闭；《CodeGraph Java Release 验收报告》（2026-10-19）为正式验收资产，路径：/Users/zj/daydayup/TencentDB-Agent-Memory/docs/qa/codegraph/java-release-2026-10-19.md；此前部署阻塞于缺少 SSH 主机（或别名）、部署目录路径，或现有部署配置文件位置；CodeGraph 上线验收通过，涵盖五类图、源码、关系列表及任务看板；主任务与全部子任务均已闭环完成；回滚与发布操作记录存档于 /Users/zj/daydayup/TencentDB-Agent-Memory/docs/qa/codegraph/production-release-2026-10-19.md。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-19T10:26:18.822Z"
+    },
+    {
+      "id": "m_1792405507089_7837a39f",
+      "title": "work_method",
+      "body": "CodeGraph Java 关系图已补齐并部署至 192.168.200.137:8125，支持调用、影响、依赖、聚类、继承五类视图；已在 backend/jinhui-cloud 仓库完成真实环境验收（process 视图正确显示 5 个节点、4 条调用）；本次修复包含 namespace 提示优化、画布缩放错位问题，以及页面布局优化：压缩页头和工具栏以保障画布在常用桌面尺寸下完整显示，搜索框与源码区域支持独立滚动，修复长分析报告导致关系列表被挤失的问题；其背后布局优化方法论确立为：优先压缩非核心 UI 区域（页头/工具栏），保障画布主视区完整性；对可变长内容（如分析报告、关系列表）实施容器级滚动隔离，防止相互挤压；为提升 CodeGraph 搜索功能可用性，需在'目录或文件范围'输入框增加明确示例（如 './src/main/java'）及用途说明文本，避免用户误用；当 CodeGraph 搜索提示'当前仅扫描了部分索引'时，用户需主动点击'继续查找'按钮以触发完整检索，该交互路径需在帮助文档或界面中显式提示；CodeGraph 搜索交互提示需统一优化：移除重复提示；路径输入框须标注‘可选，留空搜索整个仓库’；‘加载更多’按钮仅用于分页查看已检索出的匹配结果，不用于触发新检索；CodeGraph 前端已增强搜索交互体验：新增自动继续搜索、显式取消操作和超时提示，并清除重复提示；CodeGraph 前端需支持模糊搜索自动接续机制：显示‘正在搜索’状态、允许用户取消当前请求并立即发起新关键词搜索、在达到时间预算时明确提示‘检索尚未完成’，且仅当检索完全结束才可展示‘无结果’；CodeGraph 搜索功能的根本修复路径是优先构建名称精确匹配与前缀匹配的数据库索引，确保 SvcClaim 类在结果中优先于 SvcClaimMapper 等相关项，并将目录范围下推至数据库查询层以避免全量扫描后过滤；CodeGraph 搜索功能的验收标准为：用户输入 'SvcClaim' 后单次点击搜索，首屏必须呈现 SvcClaim 类实体，并支持直接打开其关系图与源码；同时需覆盖无结果、大小写敏感性、同名类歧义、连续换词响应性、大仓库耗时等边界场景；特别地，同名类（如 SvcClaim）识别问题已修复，支持在范围留空时一次搜索返回多个同名类结果，且其关系视图与源码均可正常打开；Java 关系图能力由子 Agent 实施，全部 9 个子任务均已完成，代码已推送；当前无需重建索引，刷新页面即可生效；但动态调用仍存在遗漏风险，大仓库聚合需支持分页；CodeGraph Java 关系图页面修复已部署至 192.168.200.137:8125，真实 erp-parent 页面共 19 项验收项全部通过，对应任务已关闭；《CodeGraph Java Release 验收报告》（2026-10-19）为正式验收资产，路径：/Users/zj/daydayup/TencentDB-Agent-Memory/docs/qa/codegraph/java-release-2026-10-19.md；此前部署阻塞于缺少 SSH 主机（或别名）、部署目录路径，或现有部署配置文件位置；CodeGraph 上线验收通过，涵盖五类图、源码、关系列表及任务看板；主任务与全部子任务均已闭环完成；回滚与发布操作记录存档于 /Users/zj/daydayup/TencentDB-Agent-Memory/docs/qa/codegraph/production-release-2026-10-19.md。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-19T10:26:18.802Z"
+    },
+    {
+      "id": "m_1792405507089_6ab7a7e4",
+      "title": "work_method",
+      "body": "CodeGraph Java 关系图已补齐并部署至 192.168.200.137:8125，支持调用、影响、依赖、聚类、继承五类视图；已在 backend/jinhui-cloud 仓库完成真实环境验收（process 视图正确显示 5 个节点、4 条调用）；本次修复包含 namespace 提示优化、画布缩放错位问题，以及页面布局优化：压缩页头和工具栏以保障画布在常用桌面尺寸下完整显示，搜索框与源码区域支持独立滚动，修复长分析报告导致关系列表被挤失的问题；其背后布局优化方法论确立为：优先压缩非核心 UI 区域（页头/工具栏），保障画布主视区完整性；对可变长内容（如分析报告、关系列表）实施容器级滚动隔离，防止相互挤压；为提升 CodeGraph 搜索功能可用性，需在'目录或文件范围'输入框增加明确示例（如 './src/main/java'）及用途说明文本，避免用户误用；当 CodeGraph 搜索提示'当前仅扫描了部分索引'时，用户需主动点击'继续查找'按钮以触发完整检索，该交互路径需在帮助文档或界面中显式提示；CodeGraph 搜索交互提示需统一优化：移除重复提示；路径输入框须标注‘可选，留空搜索整个仓库’；‘加载更多’按钮仅用于分页查看已检索出的匹配结果，不用于触发新检索；CodeGraph 前端需支持模糊搜索自动接续机制：显示‘正在搜索’状态、允许用户取消当前请求并立即发起新关键词搜索、在达到时间预算时明确提示‘检索尚未完成’，且仅当检索完全结束才可展示‘无结果’；CodeGraph 搜索功能的根本修复路径是优先构建名称精确匹配与前缀匹配的数据库索引，确保 SvcClaim 类在结果中优先于 SvcClaimMapper 等相关项，并将目录范围下推至数据库查询层以避免全量扫描后过滤；CodeGraph 搜索功能的验收标准为：用户输入 'SvcClaim' 后单次点击搜索，首屏必须呈现 SvcClaim 类实体，并支持直接打开其关系图与源码；同时需覆盖无结果、大小写敏感性、同名类歧义、连续换词响应性、大仓库耗时等边界场景；特别地，同名类（如 SvcClaim）识别问题已修复，支持在范围留空时一次搜索返回多个同名类结果，且其关系视图与源码均可正常打开；Java 关系图能力由子 Agent 实施，全部 9 个子任务均已完成，代码已推送；当前无需重建索引，刷新页面即可生效；但动态调用仍存在遗漏风险，大仓库聚合需支持分页；CodeGraph Java 关系图页面修复已部署至 192.168.200.137:8125，真实 erp-parent 页面共 19 项验收项全部通过，对应任务已关闭；《CodeGraph Java Release 验收报告》（2026-10-19）为正式验收资产，路径：/Users/zj/daydayup/TencentDB-Agent-Memory/docs/qa/codegraph/java-release-2026-10-19.md；此前部署阻塞于缺少 SSH 主机（或别名）、部署目录路径，或现有部署配置文件位置；CodeGraph 上线验收通过，涵盖五类图、源码、关系列表及任务看板；主任务与全部子任务均已闭环完成；回滚与发布操作记录存档于 /Users/zj/daydayup/TencentDB-Agent-Memory/docs/qa/codegraph/production-release-2026-10-19.md。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-19T10:26:18.789Z"
+    },
+    {
+      "id": "m_1792349110434_47591437",
+      "title": "work_fact",
+      "body": "CodeGraph 图形化升级当前已完成全部开发与验收，但代码尚未提交或部署，处于待发布状态；当前仅完成任务规划与建模，尚未启动功能代码修改；首项结构化图接口子任务已就绪可领取。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T18:45:53.831Z"
+    },
+    {
+      "id": "m_1792349110434_2a18fbc0",
+      "title": "work_artifact",
+      "body": "CodeGraph 图形化升级的完整验收报告已生成，路径为 /Users/zj/daydayup/TencentDB-Agent-Memory/docs/qa/codegraph/final-acceptance.md，该文档为团队共享的正式验收资产；该升级包含七类核心视图（调用图、依赖图、影响范围图、聚类总览图、继承关系图）、结构化图接口与集成验收任务；当前仅完成任务规划与建模，尚未启动功能代码修改；采用统一交互布局：'目录/搜索—关系图—源码详情'，默认加载局部关系，支持搜索定位、上下游展开与源码下钻。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T18:45:53.826Z"
+    },
+    {
+      "id": "m_1792349110434_a1b978bf",
+      "title": "work_fact",
+      "body": "CodeGraph 图形化升级包含七类核心视图：调用图、依赖图、影响范围图、聚类总览图、继承关系图，以及配套的结构化图接口与集成验收任务；SDK 接口继承与星号再导出的限制已在验收中明确提示，构成后续开发需遵守的技术约束。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T18:45:53.821Z"
+    },
+    {
+      "id": "m_1792349110434_4dd12a43",
+      "title": "work_fact",
+      "body": "CodeGraph 图形化升级通过后端 220 项测试与浏览器端 126 项检查，构建成功，首图交互 p95 延迟为 117 毫秒，性能达标；当前仅完成任务规划与建模，尚未启动功能代码修改；首项结构化图接口子任务已就绪可领取；采用统一交互布局：'目录/搜索—关系图—源码详情'，默认加载局部关系，支持搜索定位、上下游展开与源码下钻。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T18:45:53.817Z"
+    },
+    {
+      "id": "m_1792349110434_2fcfaf0b",
+      "title": "work_fact",
+      "body": "CodeGraph 图形化升级交付包含调用视图、依赖视图、影响视图、目录聚类视图、继承实现视图共五种图形化视图；此外还包括配套的结构化图接口与集成验收任务。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T18:45:53.812Z"
+    },
+    {
+      "id": "m_1792349110434_1b406aab",
+      "title": "work_task",
+      "body": "CodeGraph 图形化升级主任务 ID 为 task-efu42brav1，下设 7 个子任务（结构化图接口、画布与调用图、影响范围图、模块依赖图、聚类总览、继承关系图及集成验收）；任务由父 agent 绑定并交由 3 个子 agent 开发，父 agent 负责审核验收；当前全部子任务均已标记完成。该升级覆盖七类核心视图，采用统一交互布局：'目录/搜索—关系图—源码详情'，默认加载局部关系，支持搜索定位、上下游展开与源码下钻。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T18:45:53.803Z"
+    },
+    {
+      "id": "m_1792343876807_c0b51ddf",
+      "title": "work_method",
+      "body": "‘暂不绑定任务’是任务绑定流程中的标准可选项，用于支持用户在无需关联任务时保持操作连续性，避免强制绑定导致的误操作或流程中断。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T17:17:56.834Z"
+    },
+    {
+      "id": "m_1792343876807_99111ba5",
+      "title": "work_fact",
+      "body": "该优化已发布新版，完成 90 项回归测试并通过；当前会话已按用户选择初始化为未绑定任务状态。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T17:17:56.831Z"
+    },
+    {
+      "id": "m_1792343876807_af7d0418",
+      "title": "work_fact",
+      "body": "任务绑定列表末尾固定显示“暂不绑定任务”选项，与现有任务并列可选，作为用户主动跳过绑定的明确操作入口。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T17:17:56.825Z"
+    },
+    {
+      "id": "m_1792343177507_468db15d",
+      "title": "work_fact",
+      "body": "本轮验证仅执行查询操作（get/list/ready），未触发创建、更新、评论等写操作；所有 task 相关工具接口（含写操作）均已加载，但本次未实测。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T17:06:27.104Z"
+    },
+    {
+      "id": "m_1792343177507_a3dcaa72",
+      "title": "work_method",
+      "body": "MCP 适配器部署链路已正式确定并落地为 Codex → 本地 MCP / Hooks → Panel HTTP API 直连架构，完全替代原有 SSH 中继方案；该架构要求将认证、会话绑定、权限校验、去重账本等关键逻辑前移至本地或由 Panel 承接，不可省略；Hooks 必须直接调用 Panel HTTPS API，禁止经 SSH 中转；当前实现已通过 76 项测试及真实 HTTP 调用验证，功能完整可靠；mem:task 查询类接口（mem:get-task、mem:list-tasks、mem:ready-tasks）已实测确认全部走 HTTP 直连生效，revision=4，任务指令修复与 HTTP 迁移两项任务均已完成。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T17:06:27.096Z"
+    },
+    {
+      "id": "m_1792342128446_cec202a8",
+      "title": "work_artifact",
+      "body": "新链路代码与说明已提交至 commit `fe6b3d8`，位于分支 `feat/server_team`。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T16:49:06.809Z"
+    },
+    {
+      "id": "m_1792340391135_055db84b",
+      "title": "work_artifact",
+      "body": "MCP Hooks 任务模块 CLI 更新配套文档已发布：/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/TASK-COMMANDS.md；模块主 README.md 已同步更新说明。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T16:20:24.818Z"
+    },
+    {
+      "id": "m_1792340391135_7e8709fe",
+      "title": "work_artifact",
+      "body": "MCP Hooks 模块已完成代码提交（feat/server_team 分支，提交哈希 65c10f4 → 7888097）、文档补齐（/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/README.md 及新增 TASK-COMMANDS.md）、CLI 任务指令全面升级：原 mem:update-task 失效并已修复，新增 9 个任务指令（mem:list-tasks、mem:ready-tasks、mem:get-task、mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 并引入 revision 校验机制；更新后需重连 team_assets MCP 并刷新工具定义方可生效；本次更新通过 68 项端到端测试（覆盖更新、评论、去重及冲突拒绝），且离线敏感信息检查通过，但尚未升级线上部署。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T16:20:24.814Z"
+    },
+    {
+      "id": "m_1792340391135_8586f172",
+      "title": "work_method",
+      "body": "MCP Hooks 任务模块 CLI 更新后，需重连 team_assets MCP 并刷新工具定义，否则新指令不可用；配套文档已发布：/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/TASK-COMMANDS.md；模块主 README.md 已同步更新说明。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T16:20:24.810Z"
+    },
+    {
+      "id": "m_1792340391135_03017141",
+      "title": "work_fact",
+      "body": "新增 9 个任务相关 CLI 指令：查询类（mem:list-tasks、mem:ready-tasks、mem:get-task）和操作类（mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 实现。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T16:20:24.809Z"
+    },
+    {
+      "id": "m_1792340391135_b2bd48de",
+      "title": "work_fact",
+      "body": "MCP Hooks 模块已完成代码提交（feat/server_team 分支，提交哈希 65c10f4 → 7888097）、文档补齐（/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/README.md 及新增 TASK-COMMANDS.md）、CLI 任务指令全面升级：原 mem:update-task 失效并已修复，新增 9 个任务指令（mem:list-tasks、mem:ready-tasks、mem:get-task、mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 并引入 revision 校验机制；更新后需重连 team_assets MCP 并刷新工具定义方可生效；本次更新通过 68 项端到端测试（覆盖更新、评论、去重及冲突拒绝），且离线敏感信息检查通过，但尚未升级线上部署。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T16:20:24.800Z"
+    },
+    {
+      "id": "m_1792336441791_9307947b",
+      "title": "work_fact",
+      "body": "该测试用例已由助理完成初步检查，确认其执行范围限于技术接入验证，不涉及业务逻辑判断或结论输出。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T15:14:01.800Z"
+    },
+    {
+      "id": "m_1792336441791_916b8c80",
+      "title": "work_fact",
+      "body": "TENCENTDB_ISOLATION_1792336417 是一项接入验收测试用例，目标是验证项目级工作记忆的保存与召回能力，不产出业务资料或业务结论。",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T15:14:01.797Z"
+    }
+  ],
+  "total": 23,
+  "limit": 100,
+  "offset": 0
+}

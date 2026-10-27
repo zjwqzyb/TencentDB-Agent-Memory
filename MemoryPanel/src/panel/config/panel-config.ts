@@ -114,6 +114,16 @@ export interface PanelConfig {
   featureAnalyticsEnabled: boolean;
   /** 可选 ClickHouse API 调用审计。不配则全静默不上报。 */
   clickhouse: PanelClickHouseConfig;
+  /**
+   * 未保存模型配置的连通性测试（Panel 服务端发起 Chat Completions 探针）。
+   *
+   * `allowLoopback` 默认 false：生产只允许 https 公网端点，避免管理员把实例
+   * 当成内网探测跳板；仅在本地跑确定性 fixture 时显式打开。
+   */
+  modelTest: {
+    timeoutMs: number;
+    allowLoopback: boolean;
+  };
   auth: PanelAuthConfig;
 }
 
@@ -269,6 +279,11 @@ export function loadPanelConfig(): PanelConfig {
       flushThreshold: envInt('PANEL_CLICKHOUSE_FLUSH_THRESHOLD', 50),
       ttlDays: envInt('PANEL_CLICKHOUSE_TTL_DAYS', 90),
       requestTimeoutMs: envInt('PANEL_CLICKHOUSE_REQUEST_TIMEOUT_MS', 5000),
+    },
+    modelTest: {
+      timeoutMs: envInt('PANEL_MODEL_TEST_TIMEOUT_MS', 20_000),
+      // 默认关闭：生产不允许 http/loopback，防止实例被当成内网探测跳板。
+      allowLoopback: envBool('PANEL_MODEL_TEST_ALLOW_LOOPBACK', false),
     },
     auth: buildAuthConfig(),
   };

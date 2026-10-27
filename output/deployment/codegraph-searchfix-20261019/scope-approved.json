@@ -1,0 +1,55 @@
+{
+  "status": "approved-frozen",
+  "paths": [
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.ts",
+      "sha256": "ab9b8db9f31fd8be027ec0b514f1ef9efaccce08c617515694db01f390d05b87",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.test.ts",
+      "sha256": "146c6182979b6527d956a4091ddff0df2f68b0811e29d7c41d040947c341435b",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured.ts",
+      "sha256": "8e49a8812945ac1e5b16efd6b51940432db18a674d5f961d0919e4d7a18ce57e",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-snapshot.test.ts",
+      "sha256": "4438f1173db55031f60799947480a1b3fb1555fb4d870140d99fca83fb690927",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphWorkspace.tsx",
+      "sha256": "5e7755757bd6eb88a7f70cc9b37364437c349b90f2ba2e720dc0e0ddfaa3bb3b",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/useCodeGraphWorkspace.ts",
+      "sha256": "0ca2f123fe8474c93b0ee7170a6f27f5f0cc3dc30867e45b8215a66d19eb6111",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+      "sha256": "71b25fb4c06f12be0e178182280b424c4477c1ec2cf98cb3869a2e9eba893d07",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/i18n/code-graph.ts",
+      "sha256": "5b70a4a1ecde73332c26f5e279319b5884b446c84f9a48fba6ec416ed12b9c97",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-fixture.js",
+      "sha256": "21fd9285e1e90a1eaa1f12f3d25694bc13f8717fdaba92a38a489732d0b41f3e",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-search.js",
+      "sha256": "247d2691f161c249c32c02beac675180b12c48efbb7ab27581adbb548c07b99d",
+      "freeze": "parent final accepted"
+    }
+  ]
+}

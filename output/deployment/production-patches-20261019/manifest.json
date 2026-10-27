@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-19",
+  "scope": "Current Core/Hub mounted production code patches, compared with installed-20261013 image and local source",
+  "localIntegration": "These production changes have not been fully incorporated into local source",
+  "patches": [
+    {
+      "id": 1,
+      "name": "受限资产显式 ACL 授权修复",
+      "file": "metadata-service.ts",
+      "behavior": "活跃团队成员访问 restricted 资产时，读取显式 ACL 并重新判断，而不是在快速检查阶段直接拒绝。"
+    },
+    {
+      "id": 2,
+      "name": "企业 Git 来源接入",
+      "file": "knowledge-server.mjs",
+      "behavior": "注册 bjjh_git，支持用户名+密码/PAT；凭据注入严格限于 https://git.bjjhltd.com。"
+    },
+    {
+      "id": 3,
+      "name": "Wiki 标题精确命中优先",
+      "file": "knowledge-server.mjs",
+      "behavior": "标题做 NFKC、小写和标点/空白归一化；精确命中不受 FTS 候选截断影响，置于普通 BM25 结果前，同标题优先 source 页并去重。"
+    },
+    {
+      "id": 4,
+      "name": "Wiki 页面写入 Panel 路由",
+      "file": "panel-wiki-routes.js",
+      "behavior": "增加 /knowledge/wiki/page/write；校验页面内容和大小，检查资产写权限，团队和操作者从鉴权结果取得。"
+    },
+    {
+      "id": 5,
+      "name": "Wiki 生成来源忠实性约束",
+      "file": "knowledge-wiki-llm.mjs",
+      "behavior": "在分析、生成、合并和摘要等调用追加来源、版本、状态、范围、例外、冲突及实施状态约束；禁止把来源内容当指令或无证据推断导入状态。"
+    },
+    {
+      "id": 6,
+      "name": "Qwen Wiki 思考预算",
+      "file": "knowledge-wiki-llm.mjs",
+      "behavior": "OpenAI 兼容客户端仅对 qwen3.8- 前缀模型注入 thinking_budget，当前环境值 2048；保留输出 token 配置。",
+      "configuredBudget": 2048
+    },
+    {
+      "id": 7,
+      "name": "Wiki overview 改为确定性知识导航",
+      "file": "wiki-overview.mjs",
+      "behavior": "由页面和 raw/sources 元信息生成来源、版本、状态、范围及概念/实体导航，不再调用 LLM 编写全局叙事。"
+    }
+  ],
+  "productionModified": false,
+  "excluded": "Backup files and company-provider.js snippet duplicated inside knowledge-server.mjs; previous task feature/UI deployment; other MCP/Proxy deployments"
+}

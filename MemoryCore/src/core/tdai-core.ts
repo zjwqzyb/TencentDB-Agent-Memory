@@ -57,6 +57,14 @@ import { MetricTrackingRunnerFactory } from "./report/metric-tracking-runner.js"
 import type { L3JevExecutionContext, L2SceneDiffDiagnostic } from "./persona/jev-gate.js";
 import { warnIfFullDiagnostics } from "./persona/jev-diagnostics.js";
 import { hasDecisionProvider, listDecisionProviders } from "./decision/registry.js";
+import {
+  ModelSnapshotResolver,
+  createSnapshotLLMRunner,
+  logModelSnapshot,
+  type ActiveModelSnapshot,
+  type ModelJobType,
+  type ModelSnapshotSource,
+} from "./model-snapshot/index.js";
 
 // ── Skill module (v2 redesign 2026-06-17) ──
 import {
@@ -141,6 +149,16 @@ export interface TdaiCoreOptions {
    * （零耦合：OpenClaw 无 MetadataService 场景仍可安全构造）。
    */
   skillAssetHooks?: SkillAssetHooks;
+  /**
+   * Optional factory returning the managed-model snapshot source for an
+   * instance (gateway wires this to MetadataService).
+   *
+   * When absent — open-source standalone / OpenClaw in-process deployment —
+   * background jobs keep using the deployment default (`cfg.llm` or the host
+   * runner). Once a managed snapshot exists, jobs bind to it and fail closed
+   * when it becomes paused/invalid/unreadable; they never fall back.
+   */
+  modelSnapshotSourceFactory?: (instanceId: string) => Promise<ModelSnapshotSource>;
 }
 
 // ============================
@@ -153,6 +171,8 @@ export class TdaiCore {
   private logger: Logger;
   private dataDir: string;
   private runnerFactory: LLMRunnerFactory;
+  /** Managed-model snapshot source factory (per instance), see TdaiCoreOptions. */
+  private modelSnapshotSourceFactory?: (instanceId: string) => Promise<ModelSnapshotSource>;
   private sessionFilter: SessionFilter;
   private instanceId?: string;
   private storage?: StorageAdapter;
@@ -235,6 +255,7 @@ export class TdaiCore {
     this.instanceId = opts.instanceId;
     this.storage = opts.storage;
     this.skillAssetHooks = opts.skillAssetHooks;
+    this.modelSnapshotSourceFactory = opts.modelSnapshotSourceFactory;
   }
 
   // ============================
@@ -657,6 +678,106 @@ export class TdaiCore {
     };
   }
 
+  // ============================
+  // Managed model snapshot (Panel-configured extraction model)
+  // ============================
+
+  /**
+   * Resolve the managed model snapshot for exactly one background job.
+   *
+   * `null` means "this instance never had a managed configuration" — the
+   * deployment default (`cfg.llm` / host runner) applies. Any other anomaly
+   * throws `ModelSnapshotError`, which fails the job instead of silently
+   * routing to the global upstream.
+   */
+  async resolveActiveModelSnapshot(
+    instanceId: string | undefined,
+    jobType: ModelJobType,
+  ): Promise<ActiveModelSnapshot | null> {
+    if (!this.modelSnapshotSourceFactory) return null;
+    if (!instanceId || instanceId === "__unset__") return null;
+    const source = await this.modelSnapshotSourceFactory(instanceId);
+    const resolver = new ModelSnapshotResolver({
+      instanceId,
+      source,
+      logger: this.logger,
+    });
+    return resolver.resolveForJob(jobType);
+  }
+
+  /** Standalone runner config derived ONLY from a frozen snapshot. */
+  private snapshotLlmConfig(snapshot: ActiveModelSnapshot) {
+    return {
+      baseUrl: snapshot.baseUrl,
+      apiKey: snapshot.apiKey,
+      model: snapshot.modelId,
+      maxTokens: this.cfg.llm?.maxTokens ?? 4096,
+      timeoutMs: this.cfg.llm?.timeoutMs ?? 120_000,
+      stream: false,
+    };
+  }
+
+  /**
+   * Build the runner factory for one job.
+   *
+   * Order of precedence:
+   *   1. Managed snapshot exists → standalone runner bound to that snapshot,
+   *      regardless of `cfg.llm.provider` (Core direct and Proxy deployments
+   *      must hit the same endpoint/model/credential).
+   *   2. No managed configuration ever → historical behaviour
+   *      (`cfg.llm` override or the host-provided runner).
+   */
+  private async resolveJobRunnerFactory(
+    jobType: ModelJobType,
+    useStandaloneRunner: boolean,
+    /** Pre-resolved snapshot for the current job (avoids a second read). */
+    resolved?: ActiveModelSnapshot | null,
+  ): Promise<{ factory: LLMRunnerFactory; standalone: boolean }> {
+    const snapshot = resolved === undefined
+      ? await this.resolveActiveModelSnapshot(this.instanceId, jobType)
+      : resolved;
+    if (snapshot) {
+      return {
+        factory: new StandaloneLLMRunnerFactory({
+          config: this.snapshotLlmConfig(snapshot),
+          logger: this.logger,
+        }),
+        standalone: true,
+      };
+    }
+    if (this.shouldOverrideRunnerFactory(useStandaloneRunner)) {
+      const runtimeLlm = this.resolveRuntimeLlm();
+      this.logger.debug?.(
+        `${TAG} [${jobType}] Using deployment default standalone LLM: provider=${this.cfg.llm.provider ?? "openai"}, ` +
+        `model=${runtimeLlm.model}, baseUrl=${runtimeLlm.baseUrl}`,
+      );
+      return {
+        factory: new StandaloneLLMRunnerFactory({ config: runtimeLlm, logger: this.logger }),
+        standalone: true,
+      };
+    }
+    return { factory: this.runnerFactory, standalone: useStandaloneRunner };
+  }
+
+  /** Structured job outcome line (never contains credentials or request bodies). */
+  private logJobOutcome(
+    jobType: ModelJobType,
+    snapshot: ActiveModelSnapshot | null,
+    outcome: "started" | "succeeded" | "failed",
+    error?: unknown,
+  ): void {
+    const reason = error instanceof Error
+      ? `${error.name}:${String(error.message).slice(0, 160)}`
+      : undefined;
+    logModelSnapshot(this.logger, `model.job.${outcome}`, {
+      jobType,
+      outcome,
+      snapshot,
+      instanceId: this.instanceId,
+      reason,
+    });
+  }
+
   /**
    * Whether this call site must override the host-provided runner factory
    * with a `StandaloneLLMRunnerFactory` built from `cfg.llm`.
@@ -692,71 +813,53 @@ export class TdaiCore {
       ? (this.hostAdapter as { getOpenClawConfig?(): unknown }).getOpenClawConfig?.()
       : undefined;
 
-    // When standalone runner is active, create LLM runners from the factory.
-    // Override the host-provided factory whenever `cfg.llm` is enabled and
-    // either (a) we're in OpenClaw in-process mode, or (b) the user set
-    // `provider=proxy` (which requires resolver-rewritten baseUrl + sk-mem
-    // apiKey and MUST NOT go through the raw host runner). See
-    // `shouldOverrideRunnerFactory` for the full rationale.
-    //
-    // Note: in service mode this factory is a fallback — every request
-    // routes through `runL{1,2,3}WithStore` below, which reconstructs its
-    // own factory with the per-request instanceId. `wirePipelineRunners`
-    // runs at construction time (instanceId may still be `__unset__`), so
-    // if resolver would throw we swallow it and keep the host runner as
-    // fallback — the per-call site will succeed once instanceId is set.
-    let runnerFactory = this.runnerFactory;
-    if (this.shouldOverrideRunnerFactory(useStandaloneRunner)) {
-      try {
-        const runtimeLlm = this.resolveRuntimeLlm();
-        runnerFactory = new StandaloneLLMRunnerFactory({
-          config: runtimeLlm,
-          logger: this.logger,
-        });
-        this.logger.debug?.(
-          `${TAG} Using standalone LLM override: provider=${this.cfg.llm.provider ?? "openai"}, ` +
-          `model=${runtimeLlm.model}, baseUrl=${runtimeLlm.baseUrl}`,
-        );
-      } catch (err) {
-        // Most common at construction time: instanceId is still `__unset__`
-        // (service mode) and provider=proxy resolver refuses to build a URL.
-        // Not fatal — per-call sites (runL1WithStore etc.) will rebuild the
-        // factory with the real instanceId when the request lands.
-        this.logger.debug?.(
-          `${TAG} wirePipelineRunners: standalone LLM override deferred: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-    }
-
-    // 用 MetricTrackingRunnerFactory 装饰器包装（非侵入式 credit 上报）
-    // Kafka 未配置时 metricProducer.send() 是 no-op，零开销
-    const trackingFactory = new MetricTrackingRunnerFactory(runnerFactory, () => this.instanceId);
-
-    const l1LlmRunner = useStandaloneRunner
-      ? trackingFactory.createRunner({ enableTools: false })
-      : undefined;
-    const l2l3LlmRunner = useStandaloneRunner
-      ? trackingFactory.createRunner({ enableTools: true })
-      : undefined;
+    // In standalone mode the scheduler callbacks below are the job boundary:
+    // each invocation resolves the managed snapshot exactly once and keeps it
+    // for the whole job (all tool-loop / upstream requests). Service mode never
+    // reaches these runners — it goes through runL{1,2,3}WithStore below.
+    const buildJobRunner = async (
+      jobType: ModelJobType,
+      enableTools: boolean,
+    ): Promise<{ runner?: import("./types.js").LLMRunner; snapshot: ActiveModelSnapshot | null }> => {
+      const snapshot = await this.resolveActiveModelSnapshot(this.instanceId, jobType);
+      const { factory, standalone } = await this.resolveJobRunnerFactory(jobType, useStandaloneRunner, snapshot);
+      if (!standalone) return { runner: undefined, snapshot };
+      const trackingFactory = new MetricTrackingRunnerFactory(factory, () => this.instanceId);
+      return { runner: trackingFactory.createRunner({ enableTools }), snapshot };
+    };
 
     // L1 runner
-    this.scheduler.setL1Runner(createL1Runner({
-      pluginDataDir: this.dataDir,
-      cfg: this.cfg,
-      openclawConfig,
-      vectorStore: this.vectorStore,
-      embeddingService: this.embeddingService,
-      logger: this.logger,
-      getInstanceId: () => this.instanceId,
-      llmRunner: l1LlmRunner,
-      storage: this.storage,
-    }));
+    this.scheduler.setL1Runner(async (params: { sessionKey: string }) => {
+      const { runner, snapshot } = await buildJobRunner("l1", false);
+      this.logJobOutcome("l1", snapshot, "started");
+      const l1Runner = createL1Runner({
+        pluginDataDir: this.dataDir,
+        cfg: this.cfg,
+        openclawConfig,
+        vectorStore: this.vectorStore,
+        embeddingService: this.embeddingService,
+        logger: this.logger,
+        getInstanceId: () => this.instanceId,
+        llmRunner: runner,
+        storage: this.storage,
+      });
+      try {
+        const result = await l1Runner(params);
+        this.logJobOutcome("l1", snapshot, "succeeded");
+        return result;
+      } catch (err) {
+        this.logJobOutcome("l1", snapshot, "failed", err);
+        throw err;
+      }
+    });
 
     // Persister
     this.scheduler.setPersister(createPersister(this.dataDir, this.logger, this.storage));
 
     // L2 runner
     this.scheduler.setL2Runner(async (sessionKey: string, cursor?: string) => {
+      const { runner, snapshot } = await buildJobRunner("l2", true);
+      this.logJobOutcome("l2", snapshot, "started");
       const l2Runner = createL2Runner({
         pluginDataDir: this.dataDir,
         cfg: this.cfg,
@@ -764,14 +867,23 @@ export class TdaiCore {
         vectorStore: this.vectorStore,
         logger: this.logger,
         instanceId: this.instanceId,
-        llmRunner: l2l3LlmRunner,
+        llmRunner: runner,
         storage: this.storage,
       });
-      return l2Runner(sessionKey, cursor);
+      try {
+        const result = await l2Runner(sessionKey, cursor);
+        this.logJobOutcome("l2", snapshot, "succeeded");
+        return result;
+      } catch (err) {
+        this.logJobOutcome("l2", snapshot, "failed", err);
+        throw err;
+      }
     });
 
     // L3 runner
     this.scheduler.setL3Runner(async () => {
+      const { runner, snapshot } = await buildJobRunner("l3", true);
+      this.logJobOutcome("l3", snapshot, "started");
       const l3Runner = createL3Runner({
         pluginDataDir: this.dataDir,
         cfg: this.cfg,
@@ -779,10 +891,16 @@ export class TdaiCore {
         vectorStore: this.vectorStore,
         logger: this.logger,
         instanceId: this.instanceId,
-        llmRunner: l2l3LlmRunner,
+        llmRunner: runner,
         storage: this.storage,
       });
-      await l3Runner();
+      try {
+        await l3Runner();
+        this.logJobOutcome("l3", snapshot, "succeeded");
+      } catch (err) {
+        this.logJobOutcome("l3", snapshot, "failed", err);
+        throw err;
+      }
     });
 
     this.logger.debug?.(`${TAG} Pipeline runners wired`);
@@ -948,38 +1066,25 @@ export class TdaiCore {
         // 见 2026-07-17 skill_extract 收敛方案。standalone 模式下 wire 层
         // 通过 core.getSkillExtractor() 拿这个单例; service 模式忽略, 走
         // per-instance factory (buildSkillExtractorForInstance)。
-        let llmRunner: ExtractorLLMRunner | undefined;
-        try {
-          llmRunner = this.buildSkillLlmRunner();
-        } catch (err) {
-          this.logger.warn(
-            `${TAG} Skill singleton llm runner build failed (non-fatal in service mode): ` +
-              `${err instanceof Error ? err.message : String(err)}`,
-          );
-          llmRunner = undefined;
-        }
-        if (llmRunner) {
-          this.skillExtractor = new SkillExtractor({
-            core: this.skillCore,
-            runner: llmRunner,
-            systemPrompt: SKILL_REVIEW_PROMPT,
-            // 冷启动/批量导入 (asset-import) 会在请求 body 传 strict_mode:true,
-            // 经 SkillTaskEntry.mode 一路带到这里的 extract({mode:'strict'})。
-            // 默认 (mode 未传) 一律走上面的 SKILL_REVIEW_PROMPT, 老流量零影响。
-            strictSystemPrompt: SKILL_REVIEW_PROMPT_STRICT,
-            maxIterations: resolved.extraction.maxIterations,
-            headChars: resolved.extraction.headChars,
-            tailChars: resolved.extraction.tailChars,
-            maxTokens: resolved.extraction.maxTokens,
-            prefixSkillsLimit: resolved.extraction.prefixSkillsLimit,
-            logger: this.logger,
-          });
-        } else {
-          this.logger.warn(
-            `${TAG} Skill singleton extractor not constructed — service mode 会走 per-instance factory；` +
-              `standalone/openclaw 模式下 /skill/extract 会因缺 extractor 无法抽取, 请检查 cfg.llm。`,
-          );
-        }
+        // The runner is resolved per extract job (see buildSkillRunnerForInstance):
+        // a managed model snapshot is frozen at job start, a later enable/disable
+        // only affects the next job, and paused/invalid state fails closed.
+        this.skillExtractor = new SkillExtractor({
+          core: this.skillCore,
+          // Read the instance id at job start so a later setInstanceId() is honored.
+          runnerProvider: async () => this.buildSkillRunnerForInstance(this.instanceId ?? "default"),
+          systemPrompt: SKILL_REVIEW_PROMPT,
+          // 冷启动/批量导入 (asset-import) 会在请求 body 传 strict_mode:true,
+          // 经 SkillTaskEntry.mode 一路带到这里的 extract({mode:'strict'})。
+          // 默认 (mode 未传) 一律走上面的 SKILL_REVIEW_PROMPT, 老流量零影响。
+          strictSystemPrompt: SKILL_REVIEW_PROMPT_STRICT,
+          maxIterations: resolved.extraction.maxIterations,
+          headChars: resolved.extraction.headChars,
+          tailChars: resolved.extraction.tailChars,
+          maxTokens: resolved.extraction.maxTokens,
+          prefixSkillsLimit: resolved.extraction.prefixSkillsLimit,
+          logger: this.logger,
+        });
       }
 
       this.logger.info(
@@ -1010,7 +1115,7 @@ export class TdaiCore {
    * skips constructing SkillExtractor in that case (M0 records the
    * 'extraction.runtime: enabled→noop' degradation).
    */
-  private buildSkillLlmRunner(): ExtractorLLMRunner | undefined {
+  private buildLegacySkillLlmRunner(): ExtractorLLMRunner | undefined {
     const cfg = this.cfg.llm;
     if (!cfg?.enabled) return undefined;
     // provider=proxy 时 cfg.apiKey 可能为空（真正的 apiKey 由 resolver 从 env 注入），
@@ -1043,6 +1148,59 @@ export class TdaiCore {
         return runner.run(params);
       },
     };
+  }
+
+  /**
+   * Build the Skill-extraction runner for ONE job.
+   *
+   * Job-scoped by design: the managed model snapshot is resolved when the
+   * extract job starts and reused for that job's query-gen + review calls.
+   * Paused / invalid / unreadable configuration throws (fail closed) instead
+   * of degrading to "no runner".
+   */
+  async buildSkillRunnerForInstance(
+    instanceId: string,
+    fallback?: () => ExtractorLLMRunner | undefined,
+  ): Promise<ExtractorLLMRunner | undefined> {
+    const snapshot = await this.resolveActiveModelSnapshot(instanceId, "skill");
+    if (snapshot) {
+      const runner = createSnapshotLLMRunner(snapshot, {
+        enableTools: true,
+        maxTokens: this.cfg.llm?.maxTokens,
+        timeoutMs: this.cfg.llm?.timeoutMs,
+        logger: this.logger,
+      });
+      const logger = this.logger;
+      this.logJobOutcome("skill", snapshot, "started");
+      return {
+        async run(params) {
+          try {
+            const out = await runner.run(params as Parameters<typeof runner.run>[0]);
+            logModelSnapshot(logger, "model.job.succeeded", {
+              jobType: "skill",
+              outcome: "succeeded",
+              snapshot,
+              instanceId,
+            });
+            return out;
+          } catch (err) {
+            logModelSnapshot(logger, "model.job.failed", {
+              jobType: "skill",
+              outcome: "failed",
+              snapshot,
+              instanceId,
+              reason: err instanceof Error ? `${err.name}:${String(err.message).slice(0, 160)}` : undefined,
+            });
+            throw err;
+          }
+        },
+      };
+    }
+
+    // No managed snapshot: keep the deployment default. Returning undefined
+    // here mirrors the historical "no runner" degradation (empty candidates),
+    // NOT a fallback from a broken managed configuration.
+    return fallback ? fallback() : this.buildLegacySkillLlmRunner();
   }
 
   // ============================
@@ -1078,23 +1236,16 @@ export class TdaiCore {
       ? (this.hostAdapter as { getOpenClawConfig?(): unknown }).getOpenClawConfig?.()
       : undefined;
 
-    let runnerFactory = this.runnerFactory;
-    if (this.shouldOverrideRunnerFactory(useStandaloneRunner)) {
-      const runtimeLlm = this.resolveRuntimeLlm();
-      runnerFactory = new StandaloneLLMRunnerFactory({
-        config: runtimeLlm,
-        logger: this.logger,
-      });
-      this.logger.debug?.(
-        `${TAG} [L1] Using standalone LLM override: provider=${this.cfg.llm.provider ?? "openai"}, ` +
-        `model=${runtimeLlm.model}, baseUrl=${runtimeLlm.baseUrl}`,
-      );
-    }
-    // 用 MetricTrackingRunnerFactory 装饰器包装（非侵入式 credit 上报）
-    const trackingFactory = new MetricTrackingRunnerFactory(runnerFactory, () => this.instanceId);
-    const llmRunner = useStandaloneRunner
+    // Job start: freeze the managed model snapshot once. Every upstream
+    // request this job makes reuses it; a later enable/disable only affects
+    // the next job.
+    const snapshot = await this.resolveActiveModelSnapshot(this.instanceId, "l1");
+    const { factory, standalone } = await this.resolveJobRunnerFactory("l1", useStandaloneRunner, snapshot);
+    const trackingFactory = new MetricTrackingRunnerFactory(factory, () => this.instanceId);
+    const llmRunner = standalone
       ? trackingFactory.createRunner({ enableTools: false })
       : undefined;
+    this.logJobOutcome("l1", snapshot, "started");
 
     const runner = createL1Runner({
       pluginDataDir: this.dataDir,
@@ -1108,7 +1259,14 @@ export class TdaiCore {
       storage: storage ?? this.getStorage(),
       checkpointLock,
     });
-    const result = await runner({ sessionKey, msg: [], bg_msg: [] });
+    let result: Awaited<ReturnType<typeof runner>>;
+    try {
+      result = await runner({ sessionKey, msg: [], bg_msg: [] });
+      this.logJobOutcome("l1", snapshot, "succeeded");
+    } catch (err) {
+      this.logJobOutcome("l1", snapshot, "failed", err);
+      throw err;
+    }
 
     // Read accumulated credit from the tracking runner (原始浮点数，与监控侧严格一致)
     const creditUsed: number = (llmRunner as any)?.accumulatedCredit ?? 0;
@@ -1140,23 +1298,16 @@ export class TdaiCore {
       ? (this.hostAdapter as { getOpenClawConfig?(): unknown }).getOpenClawConfig?.()
       : undefined;
 
-    let runnerFactory = this.runnerFactory;
-    if (this.shouldOverrideRunnerFactory(useStandaloneRunner)) {
-      const runtimeLlm = this.resolveRuntimeLlm();
-      runnerFactory = new StandaloneLLMRunnerFactory({
-        config: runtimeLlm,
-        logger: this.logger,
-      });
-      this.logger.debug?.(
-        `${TAG} [L2] Using standalone LLM override: provider=${this.cfg.llm.provider ?? "openai"}, ` +
-        `model=${runtimeLlm.model}, baseUrl=${runtimeLlm.baseUrl}`,
-      );
-    }
-    // 用 MetricTrackingRunnerFactory 装饰器包装（非侵入式 credit 上报）
-    const trackingFactory = new MetricTrackingRunnerFactory(runnerFactory, () => this.instanceId);
-    const llmRunner = useStandaloneRunner
+    // Job start: freeze the managed model snapshot once. Every upstream
+    // request this job makes reuses it; a later enable/disable only affects
+    // the next job.
+    const snapshot = await this.resolveActiveModelSnapshot(this.instanceId, "l2");
+    const { factory, standalone } = await this.resolveJobRunnerFactory("l2", useStandaloneRunner, snapshot);
+    const trackingFactory = new MetricTrackingRunnerFactory(factory, () => this.instanceId);
+    const llmRunner = standalone
       ? trackingFactory.createRunner({ enableTools: true })
       : undefined;
+    this.logJobOutcome("l2", snapshot, "started");
 
     const runner = createL2Runner({
       pluginDataDir: this.dataDir,
@@ -1170,7 +1321,14 @@ export class TdaiCore {
       executionContext,
       checkpointLock,
     });
-    const runnerResult = await runner(sessionKey, cursor);
+    let runnerResult: Awaited<ReturnType<typeof runner>>;
+    try {
+      runnerResult = await runner(sessionKey, cursor);
+      this.logJobOutcome("l2", snapshot, "succeeded");
+    } catch (err) {
+      this.logJobOutcome("l2", snapshot, "failed", err);
+      throw err;
+    }
     const creditUsed: number = (llmRunner as any)?.accumulatedCredit ?? 0;
     // L2 runner returns undefined when no new L1 records, or { skipped: true } on empty extraction
     const skipped = (runnerResult === undefined && creditUsed === 0) || (runnerResult?.skipped === true);
@@ -1196,23 +1354,16 @@ export class TdaiCore {
       ? (this.hostAdapter as { getOpenClawConfig?(): unknown }).getOpenClawConfig?.()
       : undefined;
 
-    let runnerFactory = this.runnerFactory;
-    if (this.shouldOverrideRunnerFactory(useStandaloneRunner)) {
-      const runtimeLlm = this.resolveRuntimeLlm();
-      runnerFactory = new StandaloneLLMRunnerFactory({
-        config: runtimeLlm,
-        logger: this.logger,
-      });
-      this.logger.debug?.(
-        `${TAG} [L3] Using standalone LLM override: provider=${this.cfg.llm.provider ?? "openai"}, ` +
-        `model=${runtimeLlm.model}, baseUrl=${runtimeLlm.baseUrl}`,
-      );
-    }
-    // 用 MetricTrackingRunnerFactory 装饰器包装（非侵入式 credit 上报）
-    const trackingFactory = new MetricTrackingRunnerFactory(runnerFactory, () => this.instanceId);
-    const llmRunner = useStandaloneRunner
+    // Job start: freeze the managed model snapshot once. Every upstream
+    // request this job makes reuses it; a later enable/disable only affects
+    // the next job.
+    const snapshot = await this.resolveActiveModelSnapshot(this.instanceId, "l3");
+    const { factory, standalone } = await this.resolveJobRunnerFactory("l3", useStandaloneRunner, snapshot);
+    const trackingFactory = new MetricTrackingRunnerFactory(factory, () => this.instanceId);
+    const llmRunner = standalone
       ? trackingFactory.createRunner({ enableTools: true })
       : undefined;
+    this.logJobOutcome("l3", snapshot, "started");
 
     const runner = createL3Runner({
       pluginDataDir: this.dataDir,
@@ -1225,7 +1376,13 @@ export class TdaiCore {
       storage: storage ?? this.getStorage(),
       checkpointLock,
     });
-    await runner(executionContext);
+    try {
+      await runner(executionContext);
+      this.logJobOutcome("l3", snapshot, "succeeded");
+    } catch (err) {
+      this.logJobOutcome("l3", snapshot, "failed", err);
+      throw err;
+    }
     const creditUsed: number = (llmRunner as any)?.accumulatedCredit ?? 0;
     return { creditUsed };
   }

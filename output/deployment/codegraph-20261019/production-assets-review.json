@@ -1,0 +1,36 @@
+{
+  "scope": "Production response bytes versus original clean c8 + four preserved task UI files build output",
+  "checks": [
+    {
+      "file": "index.html",
+      "sha256": "60d861cc733016f82cf9f22ab431c1c25981d0905b0881709462a0cfc6bc27f3",
+      "expectedFromLocalBuild": "60d861cc733016f82cf9f22ab431c1c25981d0905b0881709462a0cfc6bc27f3",
+      "matches": true
+    },
+    {
+      "file": "main-C37_cp_s.js",
+      "sha256": "c8193113cd695dffcd0029439fd305d5585a5eacadde040a58b21c602605599f",
+      "expectedFromLocalBuild": "c8193113cd695dffcd0029439fd305d5585a5eacadde040a58b21c602605599f",
+      "matches": true
+    },
+    {
+      "file": "main-BrQtKVsl.css",
+      "sha256": "bb09685e4bb015d1a0cec224ee206899381c66d1e17101c0b4521b339b328687",
+      "expectedFromLocalBuild": "bb09685e4bb015d1a0cec224ee206899381c66d1e17101c0b4521b339b328687",
+      "matches": true
+    },
+    {
+      "file": "KnowledgeGraph-jCtOX3Uf.js",
+      "sha256": "0602c86ee597b6ca6a8cbde9e98787090ae1570d083032fa55428706e40deb72",
+      "expectedFromLocalBuild": "0602c86ee597b6ca6a8cbde9e98787090ae1570d083032fa55428706e40deb72",
+      "matches": true
+    },
+    {
+      "file": "KnowledgeGraph-DEqMBSbC.css",
+      "sha256": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+      "expectedFromLocalBuild": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+      "matches": true
+    }
+  ],
+  "passed": true
+}

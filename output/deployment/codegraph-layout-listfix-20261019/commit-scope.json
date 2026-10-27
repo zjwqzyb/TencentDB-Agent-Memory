@@ -1,0 +1,13 @@
+{
+  "baseCommit": "23fe05b77f9c549b983568bf9cb32881c250190e",
+  "paths": [
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+      "sha256": "ba611c791c608847c57ac2761f9057d077a90586d89cf24e92ba738b5def0bc6"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-layout.js",
+      "sha256": "ed0afa23a4ca1fa853d80293ac46a25e881ed27268f4f07a4182bdab1cceb8b8"
+    }
+  ]
+}

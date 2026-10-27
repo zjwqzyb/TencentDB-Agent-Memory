@@ -10,6 +10,7 @@ export const META_LIST_ACTIONS = new Set([
   'team/list',
   'team-member/list',
   'agent/list',
+  'issue/list',
   'task/list',
   'task-agent/list',
   'asset/list',
@@ -50,10 +51,15 @@ export const META_ACTIONS = [
   'agent/archive',
   'agent/set-default-template',
   'agent/get-default-template',
+  'issue/create',
+  'issue/get',
+  'issue/update',
+  'issue/comment',
   'task/create',
   'task/get',
   'task/update',
   'task/delete',
+  'issue/list',
   'task/list',
   'task/archive',
   'task-agent/link',
@@ -80,6 +86,14 @@ export const META_ACTIONS = [
   'instance-upstream/extraction/get',
   'instance-upstream/extraction/create',
   'instance-upstream/extraction/update',
+  // 未保存配置的连通性探针由 Panel 本地执行（system_admin enforced in Panel），
+  // 不转发内核：表单留空 Key 时需由 Panel 在服务端复用已存 Key。
+  'instance-upstream/extraction/test',
+  // 启用/停用受管模型：Core 侧强制 system_admin + 必填 expected_version + 测试证据门禁。
+  'instance-upstream/extraction/enable',
+  'instance-upstream/extraction/disable',
+  // 启用后 KS 同步失败的手动恢复入口（Panel 本地处理，不转发内核）。
+  'instance-upstream/extraction/resync-knowledge',
   'auth/verify',
   'instance-quota/get',
   'config/user/get',

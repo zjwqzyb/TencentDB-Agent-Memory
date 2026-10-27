@@ -1,0 +1,8 @@
+{
+  "container": "/tdai-codegraph-searchfix-health",
+  "image": "sha256:48a42344a8a26e8868e2509629ac2e28defe5f54c9d77dfe07bbcb3372029762",
+  "network": "none",
+  "readonlyRoot": true,
+  "health": "healthy",
+  "mounts": []
+}

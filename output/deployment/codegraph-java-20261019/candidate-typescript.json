@@ -1,0 +1,113 @@
+{
+  "ok": true,
+  "assetId": "cg-4oc687yt",
+  "language": "typescript",
+  "node": "v22.23.3",
+  "sdk": "1.6.2",
+  "durationMs": 10853,
+  "copiedSources": 986,
+  "sourceFailures": 0,
+  "checks": [
+    "typescript-calls-baseline-23-31",
+    "typescript-source",
+    "typescript-hierarchy",
+    "typescript-impact",
+    "dependencies-import-and-source-evidence",
+    "clusters-import-and-source-evidence"
+  ],
+  "observations": [
+    {
+      "name": "typescript-calls-baseline-23-31",
+      "state": "ready",
+      "nodes": 23,
+      "edges": 31,
+      "warnings": [],
+      "truncated": false
+    },
+    {
+      "name": "typescript-source",
+      "state": "ready",
+      "nodes": 1,
+      "edges": 0,
+      "warnings": [],
+      "truncated": true
+    },
+    {
+      "name": "typescript-hierarchy",
+      "state": "ready",
+      "nodes": 2,
+      "edges": 1,
+      "warnings": [
+        "typescript_interface_extends_not_extracted"
+      ],
+      "truncated": false
+    },
+    {
+      "name": "typescript-impact",
+      "state": "ready",
+      "nodes": 9,
+      "edges": 16,
+      "warnings": [
+        "static_analysis_potential_impact",
+        "unresolved_or_dynamic_relations_not_complete"
+      ],
+      "truncated": false
+    },
+    {
+      "name": "dependencies-import-and-source-evidence",
+      "state": "ready",
+      "nodes": 28,
+      "edges": 27,
+      "warnings": [
+        "sdk_import_extraction_incomplete",
+        "partial_dependency_counts",
+        "cycles_only_in_observed_graph"
+      ],
+      "truncated": true,
+      "pages": 37,
+      "evidencePages": 22,
+      "evidenceItems": 1,
+      "sourceState": "ready",
+      "firstEvidence": {
+        "id": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:edge:34839",
+        "sourceId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/module.ts",
+        "targetId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/db/client.ts",
+        "sourceFile": "MemoryKnowledge/src/module.ts",
+        "targetFile": "MemoryKnowledge/src/db/client.ts",
+        "line": 14,
+        "column": 0,
+        "kind": "imports",
+        "resolution": "internal"
+      },
+      "completenessClaim": "bounded sample; full index completion is not asserted"
+    },
+    {
+      "name": "clusters-import-and-source-evidence",
+      "state": "ready",
+      "nodes": 2,
+      "edges": 2,
+      "warnings": [
+        "sdk_import_extraction_incomplete",
+        "partial_dependency_counts",
+        "cycles_only_in_observed_graph"
+      ],
+      "truncated": true,
+      "pages": 37,
+      "evidencePages": 37,
+      "evidenceItems": 31,
+      "sourceState": "ready",
+      "firstEvidence": {
+        "id": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:edge:34839",
+        "sourceId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/module.ts",
+        "targetId": "cg-4oc687yt@a693dea1260f62ec12f0e311c4404ee4:file:MemoryKnowledge/src/db/client.ts",
+        "sourceFile": "MemoryKnowledge/src/module.ts",
+        "targetFile": "MemoryKnowledge/src/db/client.ts",
+        "line": 14,
+        "column": 0,
+        "kind": "imports",
+        "resolution": "internal"
+      },
+      "completenessClaim": "bounded sample; full index completion is not asserted"
+    }
+  ]
+}

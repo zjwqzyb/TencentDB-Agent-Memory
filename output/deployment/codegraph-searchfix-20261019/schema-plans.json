@@ -1,0 +1,723 @@
+{
+  "readonly": true,
+  "schema": [
+    {
+      "type": "index",
+      "name": "idx_nodes_file_line",
+      "tbl_name": "nodes",
+      "sql": "CREATE INDEX idx_nodes_file_line ON nodes(file_path, start_line)"
+    },
+    {
+      "type": "index",
+      "name": "idx_nodes_file_path",
+      "tbl_name": "nodes",
+      "sql": "CREATE INDEX idx_nodes_file_path ON nodes(file_path)"
+    },
+    {
+      "type": "index",
+      "name": "idx_nodes_kind",
+      "tbl_name": "nodes",
+      "sql": "CREATE INDEX idx_nodes_kind ON nodes(kind, file_path, start_line, id)"
+    },
+    {
+      "type": "index",
+      "name": "idx_nodes_language",
+      "tbl_name": "nodes",
+      "sql": "CREATE INDEX idx_nodes_language ON nodes(language)"
+    },
+    {
+      "type": "index",
+      "name": "idx_nodes_lower_name",
+      "tbl_name": "nodes",
+      "sql": "CREATE INDEX idx_nodes_lower_name ON nodes(lower(name))"
+    },
+    {
+      "type": "index",
+      "name": "idx_nodes_name",
+      "tbl_name": "nodes",
+      "sql": "CREATE INDEX idx_nodes_name ON nodes(name)"
+    },
+    {
+      "type": "index",
+      "name": "idx_nodes_qualified_name",
+      "tbl_name": "nodes",
+      "sql": "CREATE INDEX idx_nodes_qualified_name ON nodes(qualified_name)"
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_nodes_1",
+      "tbl_name": "nodes",
+      "sql": null
+    },
+    {
+      "type": "table",
+      "name": "nodes",
+      "tbl_name": "nodes",
+      "sql": "CREATE TABLE nodes (\n    id TEXT PRIMARY KEY,\n    kind TEXT NOT NULL,\n    name TEXT NOT NULL,\n    qualified_name TEXT NOT NULL,\n    file_path TEXT NOT NULL,\n    language TEXT NOT NULL,\n    start_line INTEGER NOT NULL,\n    end_line INTEGER NOT NULL,\n    start_column INTEGER NOT NULL,\n    end_column INTEGER NOT NULL,\n    docstring TEXT,\n    signature TEXT,\n    visibility TEXT,\n    is_exported INTEGER DEFAULT 0,\n    is_async INTEGER DEFAULT 0,\n    is_static INTEGER DEFAULT 0,\n    is_abstract INTEGER DEFAULT 0,\n    decorators TEXT, -- JSON array\n    type_parameters TEXT, -- JSON array\n    return_type TEXT, -- normalized return/result type name (e.g. C++ method return, for receiver-type inference)\n    updated_at INTEGER NOT NULL\n)"
+    },
+    {
+      "type": "table",
+      "name": "nodes_fts",
+      "tbl_name": "nodes_fts",
+      "sql": "CREATE VIRTUAL TABLE nodes_fts USING fts5(\n    id,\n    name,\n    qualified_name,\n    docstring,\n    signature,\n    content='nodes',\n    content_rowid='rowid'\n)"
+    },
+    {
+      "type": "table",
+      "name": "nodes_fts_config",
+      "tbl_name": "nodes_fts_config",
+      "sql": "CREATE TABLE 'nodes_fts_config'(k PRIMARY KEY, v) WITHOUT ROWID"
+    },
+    {
+      "type": "table",
+      "name": "nodes_fts_data",
+      "tbl_name": "nodes_fts_data",
+      "sql": "CREATE TABLE 'nodes_fts_data'(id INTEGER PRIMARY KEY, block BLOB)"
+    },
+    {
+      "type": "table",
+      "name": "nodes_fts_docsize",
+      "tbl_name": "nodes_fts_docsize",
+      "sql": "CREATE TABLE 'nodes_fts_docsize'(id INTEGER PRIMARY KEY, sz BLOB)"
+    },
+    {
+      "type": "table",
+      "name": "nodes_fts_idx",
+      "tbl_name": "nodes_fts_idx",
+      "sql": "CREATE TABLE 'nodes_fts_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID"
+    },
+    {
+      "type": "trigger",
+      "name": "nodes_ad",
+      "tbl_name": "nodes",
+      "sql": "CREATE TRIGGER nodes_ad AFTER DELETE ON nodes BEGIN\n    INSERT INTO nodes_fts(nodes_fts, rowid, id, name, qualified_name, docstring, signature)\n    VALUES ('delete', OLD.rowid, OLD.id, OLD.name, OLD.qualified_name, OLD.docstring, OLD.signature);\nEND"
+    },
+    {
+      "type": "trigger",
+      "name": "nodes_ai",
+      "tbl_name": "nodes",
+      "sql": "CREATE TRIGGER nodes_ai AFTER INSERT ON nodes BEGIN\n    INSERT INTO nodes_fts(rowid, id, name, qualified_name, docstring, signature)\n    VALUES (NEW.rowid, NEW.id, NEW.name, NEW.qualified_name, NEW.docstring, NEW.signature);\nEND"
+    },
+    {
+      "type": "trigger",
+      "name": "nodes_au",
+      "tbl_name": "nodes",
+      "sql": "CREATE TRIGGER nodes_au AFTER UPDATE ON nodes BEGIN\n    INSERT INTO nodes_fts(nodes_fts, rowid, id, name, qualified_name, docstring, signature)\n    VALUES ('delete', OLD.rowid, OLD.id, OLD.name, OLD.qualified_name, OLD.docstring, OLD.signature);\n    INSERT INTO nodes_fts(rowid, id, name, qualified_name, docstring, signature)\n    VALUES (NEW.rowid, NEW.id, NEW.name, NEW.qualified_name, NEW.docstring, NEW.signature);\nEND"
+    }
+  ],
+  "indexes": [
+    {
+      "seq": 0,
+      "name": "idx_nodes_lower_name",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": -2,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    },
+    {
+      "seq": 1,
+      "name": "idx_nodes_file_line",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": 4,
+          "name": "file_path",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": 6,
+          "name": "start_line",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 2,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    },
+    {
+      "seq": 2,
+      "name": "idx_nodes_language",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": 5,
+          "name": "language",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    },
+    {
+      "seq": 3,
+      "name": "idx_nodes_file_path",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": 4,
+          "name": "file_path",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    },
+    {
+      "seq": 4,
+      "name": "idx_nodes_qualified_name",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": 3,
+          "name": "qualified_name",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    },
+    {
+      "seq": 5,
+      "name": "idx_nodes_name",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": 2,
+          "name": "name",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    },
+    {
+      "seq": 6,
+      "name": "idx_nodes_kind",
+      "unique": 0,
+      "origin": "c",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": 1,
+          "name": "kind",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": 4,
+          "name": "file_path",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 2,
+          "cid": 6,
+          "name": "start_line",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 3,
+          "cid": 0,
+          "name": "id",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 4,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    },
+    {
+      "seq": 7,
+      "name": "sqlite_autoindex_nodes_1",
+      "unique": 1,
+      "origin": "pk",
+      "partial": 0,
+      "columns": [
+        {
+          "seqno": 0,
+          "cid": 0,
+          "name": "id",
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 1
+        },
+        {
+          "seqno": 1,
+          "cid": -1,
+          "name": null,
+          "desc": 0,
+          "coll": "BINARY",
+          "key": 0
+        }
+      ]
+    }
+  ],
+  "plans": {
+    "nameExact": {
+      "sql": "SELECT rowid,id FROM nodes WHERE name = ? ORDER BY rowid LIMIT 100",
+      "plan": [
+        {
+          "id": 5,
+          "parent": 0,
+          "notused": 48,
+          "detail": "SEARCH nodes USING INDEX idx_nodes_name (name=?)"
+        }
+      ]
+    },
+    "nameNoCase": {
+      "sql": "SELECT rowid,id FROM nodes WHERE name = ? COLLATE NOCASE ORDER BY rowid LIMIT 100",
+      "plan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 199,
+          "detail": "SCAN nodes"
+        }
+      ]
+    },
+    "namePrefixRange": {
+      "sql": "SELECT rowid,id FROM nodes WHERE name >= ? COLLATE BINARY AND name < ? COLLATE BINARY ORDER BY name,id LIMIT 100",
+      "plan": [
+        {
+          "id": 5,
+          "parent": 0,
+          "notused": 146,
+          "detail": "SEARCH nodes USING INDEX idx_nodes_name (name>? AND name<?)"
+        },
+        {
+          "id": 33,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR LAST TERM OF ORDER BY"
+        }
+      ]
+    },
+    "nameLikePrefix": {
+      "sql": "SELECT rowid,id FROM nodes WHERE name LIKE ? ORDER BY rowid LIMIT 100",
+      "plan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 199,
+          "detail": "SCAN nodes"
+        }
+      ]
+    },
+    "pathRange": {
+      "sql": "SELECT rowid,id FROM nodes WHERE file_path >= ? COLLATE BINARY AND file_path < ? COLLATE BINARY ORDER BY file_path,id LIMIT 100",
+      "plan": [
+        {
+          "id": 5,
+          "parent": 0,
+          "notused": 146,
+          "detail": "SEARCH nodes USING INDEX idx_nodes_file_path (file_path>? AND file_path<?)"
+        },
+        {
+          "id": 33,
+          "parent": 0,
+          "notused": 0,
+          "detail": "USE TEMP B-TREE FOR LAST TERM OF ORDER BY"
+        }
+      ]
+    },
+    "fallback": {
+      "sql": "SELECT rowid,id FROM nodes WHERE rowid > ? AND (instr(lower(name),lower(?))>0 OR instr(lower(qualified_name),lower(?))>0 OR instr(lower(file_path),lower(?))>0) ORDER BY rowid LIMIT 100",
+      "plan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 179,
+          "detail": "SEARCH nodes USING INTEGER PRIMARY KEY (rowid>?)"
+        }
+      ]
+    }
+  },
+  "family": [
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultMapper.java",
+      "count": 2,
+      "firstRowid": 8611,
+      "lastRowid": 272020
+    },
+    {
+      "kind": "interface",
+      "name": "SvcClaimFaultMapper",
+      "count": 2,
+      "firstRowid": 8615,
+      "lastRowid": 272024
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultPartMapper.java",
+      "count": 2,
+      "firstRowid": 8616,
+      "lastRowid": 272025
+    },
+    {
+      "kind": "interface",
+      "name": "SvcClaimFaultPartMapper",
+      "count": 2,
+      "firstRowid": 8620,
+      "lastRowid": 272029
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimMapper.java",
+      "count": 2,
+      "firstRowid": 8621,
+      "lastRowid": 272035
+    },
+    {
+      "kind": "interface",
+      "name": "SvcClaimMapper",
+      "count": 2,
+      "firstRowid": 8625,
+      "lastRowid": 272043
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaim.java",
+      "count": 2,
+      "firstRowid": 8626,
+      "lastRowid": 272074
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaim",
+      "count": 2,
+      "firstRowid": 8641,
+      "lastRowid": 272090
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFault.java",
+      "count": 2,
+      "firstRowid": 9006,
+      "lastRowid": 272612
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimFault",
+      "count": 2,
+      "firstRowid": 9015,
+      "lastRowid": 272622
+    },
+    {
+      "kind": "field",
+      "name": "svcClaimCode",
+      "count": 120,
+      "firstRowid": 9017,
+      "lastRowid": 334448
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultPart.java",
+      "count": 2,
+      "firstRowid": 9044,
+      "lastRowid": 272651
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimFaultPart",
+      "count": 2,
+      "firstRowid": 9055,
+      "lastRowid": 272662
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultPartVO.java",
+      "count": 2,
+      "firstRowid": 9156,
+      "lastRowid": 278338
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimFaultPartVO",
+      "count": 2,
+      "firstRowid": 9165,
+      "lastRowid": 278349
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultVO.java",
+      "count": 2,
+      "firstRowid": 9275,
+      "lastRowid": 278493
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimFaultVO",
+      "count": 2,
+      "firstRowid": 9284,
+      "lastRowid": 278502
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultPartService.java",
+      "count": 2,
+      "firstRowid": 9313,
+      "lastRowid": 279948
+    },
+    {
+      "kind": "interface",
+      "name": "SvcClaimFaultPartService",
+      "count": 2,
+      "firstRowid": 9319,
+      "lastRowid": 279959
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultService.java",
+      "count": 2,
+      "firstRowid": 9320,
+      "lastRowid": 279989
+    },
+    {
+      "kind": "interface",
+      "name": "SvcClaimFaultService",
+      "count": 2,
+      "firstRowid": 9326,
+      "lastRowid": 280002
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimService.java",
+      "count": 3,
+      "firstRowid": 9327,
+      "lastRowid": 334634
+    },
+    {
+      "kind": "interface",
+      "name": "SvcClaimService",
+      "count": 3,
+      "firstRowid": 9333,
+      "lastRowid": 334639
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultPartServiceImpl.java",
+      "count": 2,
+      "firstRowid": 9334,
+      "lastRowid": 280637
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimFaultPartServiceImpl",
+      "count": 2,
+      "firstRowid": 9344,
+      "lastRowid": 280666
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimFaultServiceImpl.java",
+      "count": 2,
+      "firstRowid": 9347,
+      "lastRowid": 280712
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimFaultServiceImpl",
+      "count": 2,
+      "firstRowid": 9357,
+      "lastRowid": 280743
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimServiceImpl.java",
+      "count": 3,
+      "firstRowid": 9360,
+      "lastRowid": 334732
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimServiceImpl",
+      "count": 3,
+      "firstRowid": 9371,
+      "lastRowid": 334757
+    },
+    {
+      "kind": "field",
+      "name": "svcClaimVin",
+      "count": 5,
+      "firstRowid": 9802,
+      "lastRowid": 334449
+    },
+    {
+      "kind": "field",
+      "name": "svcClaimService",
+      "count": 17,
+      "firstRowid": 11941,
+      "lastRowid": 337086
+    },
+    {
+      "kind": "field",
+      "name": "svcClaimFaultService",
+      "count": 5,
+      "firstRowid": 11942,
+      "lastRowid": 281044
+    },
+    {
+      "kind": "field",
+      "name": "svcClaimFaultPartService",
+      "count": 15,
+      "firstRowid": 11943,
+      "lastRowid": 305185
+    },
+    {
+      "kind": "field",
+      "name": "svcClaimType",
+      "count": 35,
+      "firstRowid": 12978,
+      "lastRowid": 304329
+    },
+    {
+      "kind": "field",
+      "name": "svcClaimPartId",
+      "count": 15,
+      "firstRowid": 12979,
+      "lastRowid": 300084
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimJudgementFileMSRPReqDTO.java",
+      "count": 1,
+      "firstRowid": 249025,
+      "lastRowid": 249025
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimJudgementFileMSRPReqDTO",
+      "count": 1,
+      "firstRowid": 249028,
+      "lastRowid": 249028
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimReqsChangeQmsReqDTO.java",
+      "count": 1,
+      "firstRowid": 249038,
+      "lastRowid": 249038
+    },
+    {
+      "kind": "class",
+      "name": "SvcClaimReqsChangeQmsReqDTO",
+      "count": 1,
+      "firstRowid": 249043,
+      "lastRowid": 249043
+    },
+    {
+      "kind": "file",
+      "name": "SvcClaimUpReqDTO.java",
+      "count": 1,
+      "firstRowid": 249068,
+      "lastRowid": 249068
+    }
+  ],
+  "caseVariants": [
+    {
+      "name": "SvcClaim",
+      "count": 2
+    }
+  ],
+  "fts": [
+    {
+      "name": "nodes_fts",
+      "count": 814,
+      "plan": [
+        {
+          "id": 3,
+          "parent": 0,
+          "notused": 132,
+          "detail": "SCAN nodes_fts VIRTUAL TABLE INDEX 0:M5"
+        }
+      ]
+    }
+  ]
+}

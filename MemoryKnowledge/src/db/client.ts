@@ -170,14 +170,22 @@ export function migrate(_db: Db, raw: Database.Database): void {
       ON knowledge_source_credential(service_id, resource_type, resource_id);
 
     CREATE TABLE IF NOT EXISTS llm_binding (
-      service_id     TEXT PRIMARY KEY,
-      mode           TEXT NOT NULL DEFAULT 'proxy',
-      proxy_base_url TEXT,
-      api_key        TEXT,
-      model          TEXT,
-      base_url       TEXT,
-      enabled        INTEGER NOT NULL DEFAULT 1,
-      updated_at     TEXT NOT NULL
+      service_id         TEXT PRIMARY KEY,
+      mode               TEXT NOT NULL DEFAULT 'proxy',
+      proxy_base_url     TEXT,
+      api_key            TEXT,
+      model              TEXT,
+      base_url           TEXT,
+      provider           TEXT,
+      protocol           TEXT,
+      config_source      TEXT NOT NULL DEFAULT 'deployment',
+      config_id          TEXT,
+      config_version     INTEGER,
+      fingerprint        TEXT,
+      snapshot_id        TEXT,
+      unavailable_reason TEXT,
+      enabled            INTEGER NOT NULL DEFAULT 1,
+      updated_at         TEXT NOT NULL
     );
   `);
 
@@ -190,6 +198,17 @@ export function migrate(_db: Db, raw: Database.Database): void {
   // service_id on audit tables is nullable → safe to add to existing dev DBs.
   addColumnIfMissing(raw, "knowledge_wiki_audit", "service_id", "TEXT");
   addColumnIfMissing(raw, "knowledge_code_graph_audit", "service_id", "TEXT");
+  // Managed model snapshot provenance (ticket: wiki consumes the same active
+  // snapshot as the rest of Memhub). Existing rows stay 'deployment'.
+  addColumnIfMissing(raw, "llm_binding", "model", "TEXT");
+  addColumnIfMissing(raw, "llm_binding", "provider", "TEXT");
+  addColumnIfMissing(raw, "llm_binding", "protocol", "TEXT");
+  addColumnIfMissing(raw, "llm_binding", "config_source", "TEXT NOT NULL DEFAULT 'deployment'");
+  addColumnIfMissing(raw, "llm_binding", "config_id", "TEXT");
+  addColumnIfMissing(raw, "llm_binding", "config_version", "INTEGER");
+  addColumnIfMissing(raw, "llm_binding", "fingerprint", "TEXT");
+  addColumnIfMissing(raw, "llm_binding", "snapshot_id", "TEXT");
+  addColumnIfMissing(raw, "llm_binding", "unavailable_reason", "TEXT");
 }
 
 /** True iff the given table exists in the DB. */

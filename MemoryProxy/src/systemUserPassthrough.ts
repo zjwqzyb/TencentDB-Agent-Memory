@@ -60,10 +60,12 @@ import {
 } from "./langfuse.js";
 import type { ProxyConfig } from "./types.js";
 import type { SystemUserMatch } from "./systemUser.js";
+import { getInstanceUpstreamConfigState } from "./instance-upstream-cache.js";
 import {
-  getInstanceUpstreamConfigs,
-  resolveExtraction,
-} from "./instance-upstream-cache.js";
+  evaluateExtractionUpstream,
+  extractionDecisionError,
+  sanitizeUpstreamEndpoint,
+} from "./extraction-gate.js";
 import {
   enforceRateLimit,
   isRateLimitExceededError,
@@ -200,7 +202,7 @@ async function recordTracesAndUsage(params: {
   /**
    * true = 该请求走的是 custom extraction upstream(用户自定义 base_url + api_key)。
    * proxy 官方 tpm 桶不记这类 token —— 用户的 quota 用户自己管。
-   * caller 侧的判据:extractionApiKeyOverride 非空 ⇔ resolveExtraction 命中有效 row。
+   * caller 侧的判据:extractionApiKeyOverride 非空 ⇔ 受管 extraction 配置已就绪。
    */
   isCustomExtraction?: boolean;
 }): Promise<void> {
@@ -494,20 +496,59 @@ export async function handleSystemUserPassthrough(
   // instance has a custom extraction model configured. If so, override the
   // upstream URL and API key.
   //
-  // v2 model groups(§7.4):resolveExtraction 三态优雅回退:
-  //   - 未配置 / enabled=false / base_url 空 → null → 走全局 upstream + alias(不 block)
-  //   - 有效配置 → 替换 upstream + 跳过 alias + 不上报 credit(用户的模型归用户)
+  // 受管 extraction 模型门禁(与 Panel 快照同一份配置):
+  //   - 从未配置 → 走全局 upstream + alias(部署默认路径)
+  //   - enabled + base_url + api_key + model_id 齐全 → 替换 upstream + 跳过 alias
+  //   - paused / incomplete / unavailable → 明确失败,绝不回退全局 upstream
   let extractionApiKeyOverride: string | undefined;
   let extractionModelIdOverride: string | undefined;
+  let extractionConfigId: string | undefined;
+  let extractionConfigVersion: number | undefined;
   {
-    const instanceConfigs = await getInstanceUpstreamConfigs(config.coreSkill, spaceId, config.instanceUpstream);
-    const extractRow = resolveExtraction(instanceConfigs);
-    if (extractRow) {
+    // Force a fresh read: an enable/disable in Panel must take effect on the
+    // very next extraction request instead of waiting out `cacheTtlSec`.
+    const upstreamState = await getInstanceUpstreamConfigState(
+      config.coreSkill,
+      spaceId,
+      config.instanceUpstream,
+      { forceRefresh: true },
+    );
+    const decision = evaluateExtractionUpstream(upstreamState);
+
+    if (
+      decision.kind === "paused"
+      || decision.kind === "incomplete"
+      || decision.kind === "unavailable"
+    ) {
+      // Fail closed: never fall back to the global upstream / host model.
+      const err = extractionDecisionError(decision);
+      log.warn("systemUser.extraction_model_blocked", {
+        memoryId: spaceId || "(none)",
+        path,
+        error_code: err.code,
+        config_id: "row" in decision ? decision.row.group_id : undefined,
+        config_version: "row" in decision ? decision.row.version : undefined,
+        provider: "row" in decision ? decision.row.provider : undefined,
+        model: "row" in decision ? decision.row.model_id : undefined,
+        endpoint: "row" in decision ? sanitizeUpstreamEndpoint(decision.row.base_url) : undefined,
+        missing: "missing" in decision ? decision.missing : undefined,
+        reason: decision.kind === "unavailable" ? decision.reason : undefined,
+      });
+      return c.json({
+        code: err.status,
+        error_code: err.code,
+        message: err.message,
+        detail: err.detail,
+      }, err.status as 409 | 503);
+    }
+
+    if (decision.kind === "managed") {
+      const extractRow = decision.row;
+      extractionConfigId = extractRow.group_id;
+      extractionConfigVersion = extractRow.version;
       upstreamUrl = joinUrl(extractRow.base_url, path);
       extractionApiKeyOverride = extractRow.api_key;
-      if (extractRow.model_id) {
-        extractionModelIdOverride = extractRow.model_id;
-      }
+      extractionModelIdOverride = extractRow.model_id;
     }
   }
 
@@ -549,6 +590,10 @@ export async function handleSystemUserPassthrough(
     path,
     upstreamUrl,
     modelId,
+    job_type: "extraction",
+    managed_model: extractionConfigId !== undefined,
+    config_id: extractionConfigId,
+    config_version: extractionConfigVersion,
   });
 
   const headers = buildPassthroughHeaders(c, config);
@@ -561,8 +606,8 @@ export async function handleSystemUserPassthrough(
 
   let upstreamResp: Response;
   // custom extraction upstream(用户自定义 extraction base_url + api_key)不走 proxy
-  // 官方限流桶 —— 用户的 quota 自己管。extractionApiKeyOverride 非空 ⇔ resolveExtraction
-  // 命中了有效 row (§7.4:未配置 / disabled / base_url 空 都返 null;此处一定是 override)。
+  // 官方限流桶 —— 用户的 quota 自己管。extractionApiKeyOverride 非空 ⇔ 受管
+  // extraction 配置已启用且字段齐全(此处一定是 managed)。
   const isCustomExtraction = extractionApiKeyOverride !== undefined;
   try {
     const isAnthropicMain = /\/v1\/messages$/.test(path);

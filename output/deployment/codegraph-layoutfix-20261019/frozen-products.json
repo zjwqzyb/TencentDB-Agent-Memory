@@ -1,0 +1,27 @@
+{
+  "phase": "parent_approved_final_product_input",
+  "baseCommit": "1e61c9130295471c2f3232cf90b7face05c3b707",
+  "products": [
+    {
+      "path": "MemoryPanel/web/src/i18n/code-graph.ts",
+      "sha256": "f8bb5977724cbe0d40587de7f38911bb5b6d61c29a1383b59c065009b9ead89c"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/components/code-detail-view.tsx",
+      "sha256": "508d7e5bcaadf6cb22b39e444a9de5495f1b5258b664c9fe0e8018404ef518c2"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphWorkspace.tsx",
+      "sha256": "1a7cbb0af76a9630395d1992464d88c2d1dc4a6a516767393cfc46d8e16b7f74"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+      "sha256": "fb699d31b749bb527af87ede0db40f053b1927db50ae68e50c045fb4638c0754"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/styles/code-sources-panel.css",
+      "sha256": "8dbbca5fa6828f5d6864be2c8440c1c012280c882293c80fcd11a5148df14f16"
+    }
+  ],
+  "testsAndQa": "Two browser scripts approved in implementation scope; QA documents excluded"
+}

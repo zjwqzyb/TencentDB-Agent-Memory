@@ -66,6 +66,7 @@ import type {
   InstanceUpstreamConfigFilter,
   CreateInstanceUpstreamGroupInput,
   UpdateInstanceUpstreamGroupInput,
+  UpdateInstanceUpstreamSnapshotInput,
   ToggleInstanceUpstreamGroupInput,
   DeleteInstanceUpstreamGroupInput,
   SupportedAgent,
@@ -80,7 +81,8 @@ import {
 } from "../types.js";
 import { DEFAULT_PAGINATION } from "../pagination.js";
 import { buildChatMemoryAssetId } from "../utils/chat-memory-asset.js";
-import { DuplicateUserKeyError } from "./interface.js";
+import { assertIssueGraphUnchanged, IssueWriteConflictError, type IssueGraphSnapshot } from "./issue-write-guard.js";
+import { DuplicateUserKeyError, type IMetadataStore } from "./interface.js";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -1003,6 +1005,7 @@ export class MongoMetadataStore implements IMetadataStore {
       };
       try {
         await this.withTx(async (session) => {
+          if (input.issue_graph_snapshot) await this.guardIssueGraph(input.team_id, input.issue_graph_snapshot, session);
           await this.col("meta_tasks").insertOne({ ...task }, { session });
           const links = input.linked_agents ?? [];
           if (links.length > 0) {
@@ -1036,6 +1039,36 @@ export class MongoMetadataStore implements IMetadataStore {
   async updateTask(taskId: string, patch: Partial<TaskEntity>): Promise<TaskEntity | null> {
     await this.patchOne("meta_tasks", { task_id: taskId }, patch, ["title", "description", "source_type", "source_url", "status", "auto_assign_floating_assets", "risk_level", "metadata_json"], true);
     return this.getTaskById(taskId);
+  }
+
+  private async guardIssueGraph(teamId: string, expected: IssueGraphSnapshot, session?: ClientSession): Promise<void> {
+    if (!session) throw new IssueWriteConflictError('Issue graph writes require MongoDB replica-set transactions');
+    // All graph writers touch the same team document. Mongo transaction retries
+    // therefore recheck the snapshot after a competing graph commit (no write skew).
+    await this.col('meta_teams').updateOne({ team_id: teamId }, { $inc: { issue_graph_revision: 1 } }, { session });
+    const current = await this.col<TaskEntity>('meta_tasks').find({ team_id: teamId } as Document, {
+      session, projection: { task_id: 1, metadata_json: 1, status: 1, _id: 0 },
+    }).toArray();
+    assertIssueGraphUnchanged(current, expected);
+  }
+
+  async compareAndSwapTask(taskId: string, expectedMetadata: string, patch: Partial<TaskEntity>, graph?: IssueGraphSnapshot): Promise<TaskEntity | null> {
+    const fields: Record<string, unknown> = { updated_at: nowIso() };
+    for (const key of ['title', 'description', 'source_type', 'source_url', 'status', 'auto_assign_floating_assets', 'risk_level', 'metadata_json'] as const) {
+      if (patch[key] !== undefined) fields[key] = patch[key];
+    }
+    const update = async (session?: ClientSession) => {
+      if (graph) {
+        const current = await this.col<TaskEntity>('meta_tasks').findOne({ task_id: taskId } as Document, { session });
+        if (!current) return null;
+        await this.guardIssueGraph(current.team_id, graph, session);
+      }
+      return await this.col<TaskEntity>('meta_tasks').findOneAndUpdate(
+        { task_id: taskId, metadata_json: expectedMetadata } as Document,
+        { $set: fields }, { returnDocument: 'after', projection: { _id: 0 }, session },
+      ) as TaskEntity | null;
+    };
+    return graph ? this.withTx(update) : update();
   }
 
   async deleteTasks(taskIds: string[]): Promise<BatchDeleteResult> {
@@ -1665,6 +1698,8 @@ export class MongoMetadataStore implements IMetadataStore {
         api_key: "",
         model_id: "",
         description: "",
+        draft_json: "",
+        snapshot_json: "",
         version: 1,
         supported_agents_snapshot: agentsList,   // seed 时 snapshot = agents
         created_at: now,
@@ -1725,6 +1760,7 @@ export class MongoMetadataStore implements IMetadataStore {
         model_id: input.model_id ?? "",
         description: input.description ?? "",
         draft_json: input.draft_json ?? "",
+        snapshot_json: input.snapshot_json ?? "",
         version: 1,
         supported_agents_snapshot: [],   // custom/extraction 恒 [];default 由 seed 路径写入
         created_at: now,
@@ -1801,6 +1837,7 @@ export class MongoMetadataStore implements IMetadataStore {
       if (input.model_id !== undefined) setDoc.model_id = input.model_id;
       if (input.description !== undefined) setDoc.description = input.description;
       if (input.draft_json !== undefined) setDoc.draft_json = input.draft_json;
+      if (input.snapshot_json !== undefined) setDoc.snapshot_json = input.snapshot_json;
 
       const result = await this.col("meta_instance_upstream_config").updateOne(
         { group_id: input.group_id, version: effectiveExpectedVersion } as Document,
@@ -1822,6 +1859,72 @@ export class MongoMetadataStore implements IMetadataStore {
       "version_mismatch",
       "concurrent write exceeded retry limit",
     );
+  }
+
+  async updateInstanceUpstreamSnapshotJson(
+    input: UpdateInstanceUpstreamSnapshotInput,
+  ): Promise<InstanceUpstreamConfigEntity> {
+    const current = await this.getInstanceUpstreamGroup(input.group_id);
+    if (!current) {
+      throw new InstanceUpstreamWriteConflictError(
+        "group_not_found",
+        `group not found: ${input.group_id}`,
+      );
+    }
+    if (current.group_type !== input.expected_group_type) {
+      throw new InstanceUpstreamWriteConflictError(
+        "group_type_mismatch",
+        `expected ${input.expected_group_type}, actual ${current.group_type}`,
+        { expected: input.expected_group_type, actual: current.group_type },
+      );
+    }
+    if (current.version !== input.expected_version) {
+      throw new InstanceUpstreamWriteConflictError(
+        "version_mismatch",
+        `version mismatch: expected ${input.expected_version}, actual ${current.version}`,
+        { expected: input.expected_version, actual: current.version },
+      );
+    }
+    if (current.snapshot_json !== input.expected_snapshot_json) {
+      throw new InstanceUpstreamWriteConflictError(
+        "version_mismatch",
+        "snapshot evidence changed concurrently",
+        {
+          expected: input.expected_version,
+          actual: current.version,
+          snapshot_changed: true,
+        },
+      );
+    }
+
+    const filter: Document = {
+      group_id: input.group_id,
+      version: input.expected_version,
+    };
+    if (input.expected_snapshot_json === "") {
+      filter.$or = [
+        { snapshot_json: "" },
+        { snapshot_json: { $exists: false } },
+      ];
+    } else {
+      filter.snapshot_json = input.expected_snapshot_json;
+    }
+    const result = await this.col("meta_instance_upstream_config").updateOne(
+      filter,
+      { $set: { snapshot_json: input.snapshot_json } },
+    );
+    if ((result.matchedCount ?? 0) !== 1) {
+      throw new InstanceUpstreamWriteConflictError(
+        "version_mismatch",
+        "snapshot evidence changed concurrently",
+        {
+          expected: input.expected_version,
+          actual: current.version,
+          snapshot_changed: true,
+        },
+      );
+    }
+    return (await this.getInstanceUpstreamGroup(input.group_id))!;
   }
 
   async toggleInstanceUpstreamGroup(
@@ -2081,6 +2184,7 @@ export class MongoMetadataStore implements IMetadataStore {
       model_id: String(doc.model_id ?? ""),
       description: String(doc.description ?? ""),
       draft_json: String(doc.draft_json ?? ""),
+      snapshot_json: String(doc.snapshot_json ?? ""),
       version: Number(doc.version ?? 1),
       supported_agents_snapshot: Array.isArray(doc.supported_agents_snapshot)
         ? (doc.supported_agents_snapshot as string[]) : [],

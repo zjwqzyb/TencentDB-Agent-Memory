@@ -1,0 +1,23 @@
+{
+  "release": "tasks-ui-20261018-01",
+  "url": "http://192.168.200.137:8125",
+  "scope": "frontend CSS only; JavaScript unchanged except generated asset names",
+  "assets": [
+    {
+      "asset": "/assets/main-CLxr8z3o.js",
+      "sha256": "879d8dcf93f645efdf6f89f5ac9fba9484d9d40670326bfa0cb39e79725548e9",
+      "matchesLocalBuild": true
+    },
+    {
+      "asset": "/assets/main-ClqFRUXj.css",
+      "sha256": "d22512e1757ccf720594777f2a7950dd32d2edf21d8a8458f6ad64c701e146e8",
+      "matchesLocalBuild": true
+    }
+  ],
+  "historicalDataUnchanged": true,
+  "databaseWrites": 0,
+  "servicesRestarted": false,
+  "backup": "/opt/tencent-agent-memory/releases/tasks-ui-20261018-01/backup",
+  "rollback": "/opt/tencent-agent-memory/releases/tasks-ui-20261018-01/rollback.sh",
+  "persistentHubImage": "local/tdai-memory-hub:tasks-ui-20261018-01"
+}

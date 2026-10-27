@@ -1,0 +1,158 @@
+{
+  "ok": true,
+  "asset": "cg-rmlck25u",
+  "version": "71afa6ffd985e14abb61f873a34e5d9a",
+  "checks": [
+    "screenshot-namespace-guidance",
+    "process-four-calls",
+    "process-source-same-index",
+    "class-inheritance",
+    "interface-inheritance",
+    "wrong-log-receiver-excluded",
+    "impact-real-call",
+    "dependencies-real-import-evidence",
+    "clusters-real-import-evidence"
+  ],
+  "observations": [
+    {
+      "name": "screenshot-namespace-guidance",
+      "state": "empty",
+      "warnings": [
+        "select_a_callable"
+      ],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": false,
+      "work": {
+        "rowsRead": 1,
+        "maxRows": 2000
+      },
+      "nodes": 1,
+      "edges": 0
+    },
+    {
+      "name": "process-four-calls",
+      "state": "ready",
+      "warnings": [
+        "java_static_analysis_incomplete"
+      ],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": false,
+      "work": {
+        "rowsRead": 23,
+        "maxRows": 2000
+      },
+      "nodes": 5,
+      "edges": 4
+    },
+    {
+      "name": "process-source-same-index",
+      "state": "ready",
+      "warnings": [],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": false,
+      "work": {
+        "rowsRead": 2,
+        "maxRows": 2000
+      },
+      "nodes": 1,
+      "edges": 0
+    },
+    {
+      "name": "class-inheritance",
+      "state": "ready",
+      "warnings": [],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": false,
+      "work": {
+        "rowsRead": 10,
+        "maxRows": 2000
+      },
+      "nodes": 2,
+      "edges": 1
+    },
+    {
+      "name": "interface-inheritance",
+      "state": "ready",
+      "warnings": [],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": false,
+      "work": {
+        "rowsRead": 8,
+        "maxRows": 2000
+      },
+      "nodes": 2,
+      "edges": 1
+    },
+    {
+      "name": "wrong-log-receiver-excluded",
+      "state": "ready",
+      "warnings": [
+        "java_static_analysis_incomplete",
+        "java_ambiguous_relations_omitted"
+      ],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": false,
+      "work": {
+        "rowsRead": 10,
+        "maxRows": 2000
+      },
+      "nodes": 2,
+      "edges": 1
+    },
+    {
+      "name": "impact-real-call",
+      "state": "ready",
+      "warnings": [
+        "static_analysis_potential_impact",
+        "unresolved_or_dynamic_relations_not_complete",
+        "java_static_analysis_incomplete",
+        "java_heuristic_relations_omitted"
+      ],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": false,
+      "work": {
+        "rowsRead": 25,
+        "maxRows": 2000
+      },
+      "nodes": 2,
+      "edges": 1
+    },
+    {
+      "name": "dependencies-real-import-evidence",
+      "state": "ready",
+      "warnings": [
+        "sdk_import_extraction_incomplete",
+        "partial_dependency_counts",
+        "cycles_only_in_observed_graph"
+      ],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": true,
+      "work": {
+        "rowsRead": 1998,
+        "maxRows": 2000
+      },
+      "nodes": 15,
+      "edges": 14,
+      "pages": 102
+    },
+    {
+      "name": "clusters-real-import-evidence",
+      "state": "ready",
+      "warnings": [
+        "sdk_import_extraction_incomplete",
+        "partial_dependency_counts",
+        "cycles_only_in_observed_graph"
+      ],
+      "indexVersion": "71afa6ffd985e14abb61f873a34e5d9a",
+      "truncated": true,
+      "work": {
+        "rowsRead": 1996,
+        "maxRows": 2000
+      },
+      "nodes": 3,
+      "edges": 3,
+      "pages": 102
+    }
+  ],
+  "aggregateCompleteness": "bounded sample; full index completion not asserted"
+}

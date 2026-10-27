@@ -56,6 +56,8 @@ export interface InstanceUpstreamRow {
   agents: string[];
   enabled: boolean;
   mode: UpstreamMode;
+  /** Provider preset (informational; present on real Core responses). */
+  provider?: string;
   base_url: string;
   api_key: string;      // 内部接口拿到明文,供 Proxy 转发上游
   model_id: string;
@@ -90,12 +92,51 @@ export type Resolution =
 interface CacheEntry {
   items: InstanceUpstreamRow[];
   expiresAt: number;
+  /** Unix ms of the successful fetch that produced this entry. */
+  fetchedAt: number;
+}
+
+/**
+ * Force-refresh coalescing window.
+ *
+ * `forceRefresh` bypasses the normal TTL so Panel enable/disable gestures are
+ * observable on the next request. Two call sites in the same HTTP request
+ * (early stage + passthrough) would otherwise each hit Core; entries younger
+ * than this window are reused. Kept well under a second so it can never mask a
+ * user-visible toggle for long.
+ */
+let forceRefreshWindowMs = 750;
+
+/** Test-only: shrink/expand the force-refresh coalescing window. */
+export function __setForceRefreshWindowForTests(ms: number): void {
+  forceRefreshWindowMs = ms;
+}
+
+/**
+ * Freshness of a lookup:
+ *   - fresh:       the value came from Core in this call (or a live TTL entry)
+ *   - stale:       Core could not be reached; `items` is the last known good value
+ *   - unavailable: Core could not be reached AND no historic value exists
+ *
+ * Write-side (extraction) call sites must treat `stale`/`unavailable` as
+ * "unknown", never as "not configured".
+ */
+export type InstanceUpstreamFreshness = "fresh" | "stale" | "unavailable";
+
+export interface InstanceUpstreamState {
+  items: InstanceUpstreamRow[];
+  freshness: InstanceUpstreamFreshness;
+  /** Unix ms of the last successful fetch (0 when never fetched). */
+  fetchedAt: number;
+  error?: string;
 }
 
 // ── Module state ─────────────────────────────────────────────────────────────
 
 const cache = new Map<string, CacheEntry>();
 const lastGood = new Map<string, InstanceUpstreamRow[]>();
+/** In-flight force-refresh dedupe (per instance) so bursty extraction calls share one read. */
+const inFlightStates = new Map<string, Promise<InstanceUpstreamState>>();
 
 // ── Fetch from Core ──────────────────────────────────────────────────────────
 
@@ -147,47 +188,95 @@ export async function getInstanceUpstreamConfigs(
   spaceId: string,
   cacheConfig?: Partial<InstanceUpstreamConfig>,
 ): Promise<InstanceUpstreamRow[]> {
-  if (!spaceId) return [];
+  const state = await getInstanceUpstreamConfigState(skillConfig, spaceId, cacheConfig);
+  return state.items;
+}
 
-  // Check cache (TTL-based, not LRU — access does NOT refresh expiry)
+/**
+ * Like {@link getInstanceUpstreamConfigs} but exposes freshness so the write
+ * side can distinguish "not configured" from "could not read the config".
+ *
+ * `forceRefresh` bypasses the TTL cache (still dedupes concurrent callers and
+ * still updates the last-known-good value). Extraction call sites use it so an
+ * enable/disable in Panel takes effect on the very next request instead of
+ * waiting out `cacheTtlSec`.
+ */
+export async function getInstanceUpstreamConfigState(
+  skillConfig: Pick<CoreSkillConfig, "endpoint" | "serviceToken" | "timeoutMs">,
+  spaceId: string,
+  cacheConfig?: Partial<InstanceUpstreamConfig>,
+  opts?: { forceRefresh?: boolean },
+): Promise<InstanceUpstreamState> {
+  if (!spaceId) {
+    // Non-instance (legacy global) traffic: no instance config can exist.
+    return { items: [], freshness: "fresh", fetchedAt: Date.now() };
+  }
+
+  const forceRefresh = opts?.forceRefresh === true;
+
   const cached = cache.get(spaceId);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.items;
+  if (cached) {
+    const now = Date.now();
+    const ttlHit = !forceRefresh && cached.expiresAt > now;
+    const coalesced = forceRefresh && now - cached.fetchedAt < forceRefreshWindowMs;
+    if (ttlHit || coalesced) {
+      return { items: cached.items, freshness: "fresh", fetchedAt: cached.fetchedAt };
+    }
   }
 
-  // Cache miss or expired → fetch from Core
-  let fresh: InstanceUpstreamRow[] | null = null;
-  let fetchErr: unknown = null;
-  try {
-    fresh = await fetchFromCore(skillConfig, spaceId);
-  } catch (err) {
-    fetchErr = err;
+  const pending = inFlightStates.get(spaceId);
+  if (pending) {
+    // A concurrent refresh is already in flight — reuse it instead of doubling
+    // the Core load.
+    return pending;
   }
 
-  if (fresh !== null) {
-    // Success → write cache + lastGood
-    evictIfNeeded();
-    const ttlMs = normalizeTtlMs(cacheConfig?.cacheTtlSec);
-    cache.set(spaceId, { items: fresh, expiresAt: Date.now() + ttlMs });
-    lastGood.set(spaceId, fresh);
-    return fresh;
-  }
+  const run = (async (): Promise<InstanceUpstreamState> => {
+    let fresh: InstanceUpstreamRow[] | null = null;
+    let fetchErr: unknown = null;
+    try {
+      fresh = await fetchFromCore(skillConfig, spaceId);
+    } catch (err) {
+      fetchErr = err;
+    }
 
-  // Fetch failed → stale-if-error fallback
-  const stale = lastGood.get(spaceId);
-  if (stale !== undefined) {
-    const reason = fetchErr instanceof Error ? fetchErr.message : "unknown";
-    console.warn(`${TAG} stale-if-error for spaceId=${spaceId} (reason: ${reason})`);
-    return stale;
-  }
+    if (fresh !== null) {
+      evictIfNeeded();
+      const ttlMs = normalizeTtlMs(cacheConfig?.cacheTtlSec);
+      const fetchedAt = Date.now();
+      cache.set(spaceId, { items: fresh, expiresAt: fetchedAt + ttlMs, fetchedAt });
+      lastGood.set(spaceId, fresh);
+      return { items: fresh, freshness: "fresh", fetchedAt: Date.now() };
+    }
 
-  // First-time failure, no history → return empty (= resolveForAgent 零行 fallback = official)
-  if (fetchErr) {
-    console.warn(
-      `${TAG} fetch failed for spaceId=${spaceId}, no stale fallback: ${fetchErr instanceof Error ? fetchErr.message : String(fetchErr)}`,
-    );
-  }
-  return [];
+    const error = fetchErr instanceof Error ? fetchErr.message : String(fetchErr ?? "unknown");
+    const stale = lastGood.get(spaceId);
+    if (stale !== undefined) {
+      console.warn(`${TAG} stale-if-error for spaceId=${spaceId} (reason: ${error})`);
+      return { items: stale, freshness: "stale", fetchedAt: 0, error };
+    }
+
+    console.warn(`${TAG} fetch failed for spaceId=${spaceId}, no stale fallback: ${error}`);
+    return { items: [], freshness: "unavailable", fetchedAt: 0, error };
+  })();
+
+  inFlightStates.set(spaceId, run);
+  void run
+    .catch(() => undefined)
+    .finally(() => {
+      if (inFlightStates.get(spaceId) === run) inFlightStates.delete(spaceId);
+    });
+
+  return run;
+}
+
+/**
+ * Drop the cached config for one instance. Used by admin mutation paths (and
+ * tests) so an enable/disable is observable immediately.
+ */
+export function invalidateInstanceUpstreamConfigs(spaceId: string): void {
+  cache.delete(spaceId);
+  inFlightStates.delete(spaceId);
 }
 
 /**
@@ -239,14 +328,13 @@ export function resolveForAgent(
 }
 
 /**
- * 抽取请求解析:systemUser 请求专用。
+ * @deprecated Legacy extraction lookup. DO NOT use on the write side.
  *
- * 三种情况都返回 null(优雅回退到全局 upstream + alias,永远不 block):
- *   1. 未配置:extraction 行不存在
- *   2. 已配置但停用:enabled=false
- *   3. 配置残缺(理论上写入校验应拦住):base_url 空串
- *
- * 与 default/custom 组的 disabled 语义**明确区分** —— 抽取是系统行为,不能拒绝服务。
+ * It silently maps disabled/incomplete rows to `null` (= "use the global
+ * upstream"), which is exactly the fallback the managed-model gate forbids.
+ * Use {@link getInstanceUpstreamConfigState} + `evaluateExtractionUpstream`
+ * instead; they distinguish "never configured" from "paused / incomplete /
+ * unreadable".
  */
 export function resolveExtraction(
   items: InstanceUpstreamRow[],
@@ -295,6 +383,7 @@ export function clearCache(): void {
  * 而不需要跑起真 Core mock。ttlMs 默认 60s,足够单测生命周期。
  */
 export function __primeCacheForTests(spaceId: string, items: InstanceUpstreamRow[], ttlMs = 60_000): void {
-  cache.set(spaceId, { items, expiresAt: Date.now() + ttlMs });
+  const now = Date.now();
+  cache.set(spaceId, { items, expiresAt: now + ttlMs, fetchedAt: now });
   lastGood.set(spaceId, items);
 }

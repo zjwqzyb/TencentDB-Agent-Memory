@@ -42,6 +42,17 @@ export interface LlmConfig {
    * 个别只接受流式请求的兼容上游需置 true。per-instance binding 不覆盖此字段(部署级开关)。
    */
   stream?: boolean;
+  /**
+   * 生效模型配置的溯源信息。managed = 来自 Core 实例 active snapshot；
+   * deployment = 旧部署 env/binding。仅用于日志/诊断，不参与鉴权。
+   */
+  modelConfig?: {
+    source: "deployment" | "managed";
+    configId: string | null;
+    version: number | null;
+    fingerprint: string | null;
+    snapshotId: string | null;
+  };
 }
 
 export interface ClickHouseTelemetryConfig {

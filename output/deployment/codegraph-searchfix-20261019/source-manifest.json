@@ -1,0 +1,1478 @@
+{
+  "commit": "20b2d585132367a0ddb217c979b78c065a31af88",
+  "baseRuntimeImage": "sha256:4e14be68361b7aa9b3b7fb47decfcf84ab96c2603cfecaf98fa876d0838ada4f",
+  "approvedPaths": [
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.ts",
+      "sha256": "ab9b8db9f31fd8be027ec0b514f1ef9efaccce08c617515694db01f390d05b87",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.test.ts",
+      "sha256": "146c6182979b6527d956a4091ddff0df2f68b0811e29d7c41d040947c341435b",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured.ts",
+      "sha256": "8e49a8812945ac1e5b16efd6b51940432db18a674d5f961d0919e4d7a18ce57e",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-snapshot.test.ts",
+      "sha256": "4438f1173db55031f60799947480a1b3fb1555fb4d870140d99fca83fb690927",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphWorkspace.tsx",
+      "sha256": "5e7755757bd6eb88a7f70cc9b37364437c349b90f2ba2e720dc0e0ddfaa3bb3b",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/useCodeGraphWorkspace.ts",
+      "sha256": "0ca2f123fe8474c93b0ee7170a6f27f5f0cc3dc30867e45b8215a66d19eb6111",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+      "sha256": "71b25fb4c06f12be0e178182280b424c4477c1ec2cf98cb3869a2e9eba893d07",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/web/src/i18n/code-graph.ts",
+      "sha256": "5b70a4a1ecde73332c26f5e279319b5884b446c84f9a48fba6ec416ed12b9c97",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-fixture.js",
+      "sha256": "21fd9285e1e90a1eaa1f12f3d25694bc13f8717fdaba92a38a489732d0b41f3e",
+      "freeze": "parent final accepted"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-search.js",
+      "sha256": "247d2691f161c249c32c02beac675180b12c48efbb7ab27581adbb548c07b99d",
+      "freeze": "parent final accepted"
+    }
+  ],
+  "overlayCount": 14,
+  "overlays": [
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskWorkbench.tsx",
+      "sha256": "dc23c3e15b0116046dd43f29c9e9c3d6cb32f9a38f1d6fbb6c3bda543e32629e",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/IssueWorkbench.tsx",
+      "sha256": "9f9f311d972dff67b5ec94719a70e13c6c83d2030714a86c6434e0e5d6e1221e",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/styles/issue-workbench.css",
+      "sha256": "647146b5cc71d7483284b7d830c775972b097d3ab4eaf09050c92a0e8f6bf5ec",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/issues.ts",
+      "sha256": "53094dad30119743c5aae9bd6687c9645bab75b1ba86bf987f99840be76a0d44",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/src/panel/api/meta-actions.ts",
+      "sha256": "0ed7e484c79ef0a556c004e8dd5f2e373a10cc2ad8af599f6abbe30f916df52d",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryPanel/src/panel/http/routes/knowledge/wiki-routes.ts",
+      "sha256": "abf4a24ad547796c2020a1561e12cfdc412dad364dd9321c74973d03d1c5b86b",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/providers/bjjh-git.ts",
+      "sha256": "73a03b832556d093181dd6024e465f58bd0e362e371d6210fee1011057706863",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/module.ts",
+      "sha256": "29542d6f2f4e166891ffc3fe0f154b51e4e5c265ca87b2c33d3c172077bb4147",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/manager.ts",
+      "sha256": "e61d9e22b439cae2a93a7e89e3cca21c7528cfecbc6247d680c8a6b8c28cb899",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/llm.ts",
+      "sha256": "c8a8a20ea73d6ef7a5c1087ad45b276639c5434751062553fa9cdec7db3b0f81",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/overview.ts",
+      "sha256": "6a9b86472e5d11ef7f7c5040a630371c4eacb64c075c046f7e11148c20944dd8",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/docker-compose.yml",
+      "sha256": "e85cf44fa871f37fbd79e119df3be99beb9bfad2dfb9e08f878e5afb16168f7a",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/docker/env.example",
+      "sha256": "e0be5b08b708c2020803f8e777c43759920b0e6e584a66a2c7724f57022a3577",
+      "source": "reviewed prior release snapshot"
+    },
+    {
+      "path": "MemoryKnowledge/README.md",
+      "sha256": "7cb90f5d7f7b68a529640f543a30d09355c946fe4b4266c60e2d465582814692",
+      "source": "reviewed prior release snapshot"
+    }
+  ],
+  "knowledgeInputs": [
+    {
+      "path": "MemoryKnowledge/src/analytics-routes.ts",
+      "sha256": "4f1eba99f67199b0b9885374f97dafefe9cd94bc51b1a90952f8a9c79a8f0beb"
+    },
+    {
+      "path": "MemoryKnowledge/src/api-helpers.ts",
+      "sha256": "ab3492d3ddfe583d48839ba4b0534b3459cf59ba1a53899467f0e65da89f5011"
+    },
+    {
+      "path": "MemoryKnowledge/src/callback.ts",
+      "sha256": "29f1ee16c765f5e1f60e10f6110954df8a537e64ce870b1dfa4e8d4259f14292"
+    },
+    {
+      "path": "MemoryKnowledge/src/clickhouse-telemetry.ts",
+      "sha256": "cf02802725ebdb22fb5ef6053e434207aba3e279227e3bc04aa339b4e054f864"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/auth-methods/basic.ts",
+      "sha256": "7bc1dc3540c478fc1a8a07c72f2473602c4b0c1e581018b2730cfae3953c99d3"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/auth-methods/bearer.ts",
+      "sha256": "d99794f25ad6a81bff4b924650015c84ecd2ad430a40e1b3897b76f0dc698f81"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/auth-methods/index.ts",
+      "sha256": "e6b983ee1d0eeb27fed854431602afad0d5454c0725ea02953e068dd808e3ac1"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/auth-methods/ssh-key.ts",
+      "sha256": "a014d9c4e1a6cf3129a6ffc44f62dcfcaf3ecb38cf66b4a956a1ec3a3bffe606"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/auth-methods/types.ts",
+      "sha256": "f7ef14ccb71a7b291890814f7de12505fff5f716b4dfe134032f7d73e6b3a83d"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/clone-url.ts",
+      "sha256": "e6474ca65fd9df2836eee82d3c60f1963d8def20d00a90a7737f0ec19c5d3831"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/providers/bjjh-git.ts",
+      "sha256": "73a03b832556d093181dd6024e465f58bd0e362e371d6210fee1011057706863"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/providers/gongfeng.ts",
+      "sha256": "84d68111fa5687c6fc65830f6f8bb72c113bacde09db5f6dc3c8a8f3c518a350"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/providers/index.ts",
+      "sha256": "357a5301e812f1cb7dfaaf93cae4ee1819e90baed7e015f1a4bb5e14f0529b30"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/providers/ssh.ts",
+      "sha256": "c1bc2098e693bdec202df68809cc2f5f491dc970edfe1136653e8b8babc7f900"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/registry.ts",
+      "sha256": "c874c447301035514c7eb9596080cca98142709167929e99c314a41ab2a4198a"
+    },
+    {
+      "path": "MemoryKnowledge/src/code-source/types.ts",
+      "sha256": "7defa2b37c8f57a9dfbff6cda959077ea5ab5d46439c6616ae58d0b0b5e9a9ae"
+    },
+    {
+      "path": "MemoryKnowledge/src/config.ts",
+      "sha256": "4c83c71f097e7961cf65749c1d9775d17e7c38633f4c507223c5c3eee1f1c084"
+    },
+    {
+      "path": "MemoryKnowledge/src/contracts/code-graph.d.ts",
+      "sha256": "2ffec9373a39247ad7c08d3bd399e0390a6da024c76c59950ff33029b71be97e"
+    },
+    {
+      "path": "MemoryKnowledge/src/db/client.ts",
+      "sha256": "7dfb06bfa96de36c956af20a62ee83046efdbe30f51450171c78652f01f4efa6"
+    },
+    {
+      "path": "MemoryKnowledge/src/db/schema.ts",
+      "sha256": "069e102bf26b08775c35ef6054a604568c7f5d4e434931d44536317a1dc7c15b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/bridge.ts",
+      "sha256": "18837e8cbf0a84306d313a3179bdaad63ac74f59f0fc6542dce7e938a8ab543b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/index.ts",
+      "sha256": "7df95317d87f74fa517277e1aa05dc1a4f610b15b0417b1806d9db14eeff0ed4"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/java-import-declarations.ts",
+      "sha256": "e4dcff066981d50e0157c2803c32000c68b9c3f227c5e714042e6c098e2542a7"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/normalize.ts",
+      "sha256": "1fa751811043b3a115a69ee69af5b80a541b31c2e6dc5d9b2f0b31d93a433c53"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-aggregation-sdk.test.ts",
+      "sha256": "796c5f2686b205d0c29cdaa7a0f80f6daac43569082f58c999d41bcfb888ec2b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-aggregation.test.ts",
+      "sha256": "4d7264274fe013bce3e975e118eb0e35cf4dd639092fda52a9224d11e40a1700"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-aggregation.ts",
+      "sha256": "2e8af5172f4a822486e0298363be7b8d53adaddf58500eb20a76706466b5b9e8"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-clusters.test.ts",
+      "sha256": "e65e739eae29654f9e2d346dcb608a0ccd80fbf268ec986fdb0e981b32dd310e"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-java-aggregation.test.ts",
+      "sha256": "cf8b0ebc9e3f25a979f1067bd4cd482bd7a8b42c66efb38f4e674d0327ad67f0"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-java-budget.test.ts",
+      "sha256": "ee6308ee3e25efd73b95d526eecc4bde723c712047a0e7f88030b67b138e203b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-java-sdk.test.ts",
+      "sha256": "ec4a6a70dedf9ff99b494e71b934cb16cd0a4169e9488a1ccecd0383657d529a"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-java.test.ts",
+      "sha256": "d35c8ecad6e6f464f85bdc3755e2f899e8fc772d9d9e63d75f6bebf5a8f9c28f"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-java.ts",
+      "sha256": "ddc66de5c43fb0a8094b86632eb9a102912bf71e5ddd16761ded1bb2c9c9f013"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-mode-context.ts",
+      "sha256": "81de481835222b08c7fb6819ad37bf6009e2032f101e04d1bea26712ee90ba1a"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-neighborhood-sdk.test.ts",
+      "sha256": "42463f18290162a6a6b06322030cb63d869cbf3907c607ff80d49d9fa3f17ca2"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-neighborhood.test.ts",
+      "sha256": "4d681dcde6d36d3be352d0091daf8d93a9d3b02f804006ef3ba7c16e86445bf6"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-neighborhood.ts",
+      "sha256": "4dde9c089a7f3bce8f7fabb27680db4c543d90f8215a1578f48013ae1af1fc9f"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-performance.test.ts",
+      "sha256": "55917a3ce72935d9c1f122d22e7a3bcb71738dfcbbcc18ead0720e33cca91abd"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-sdk.test.ts",
+      "sha256": "ccab4c35bf80c2e85e82d48897970d3fe7b915ef5c8822f19c073f95de632ec4"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.test.ts",
+      "sha256": "146c6182979b6527d956a4091ddff0df2f68b0811e29d7c41d040947c341435b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.ts",
+      "sha256": "ab9b8db9f31fd8be027ec0b514f1ef9efaccce08c617515694db01f390d05b87"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-snapshot.test.ts",
+      "sha256": "4438f1173db55031f60799947480a1b3fb1555fb4d870140d99fca83fb690927"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured.test.ts",
+      "sha256": "f27e150eb9f7774d25a87f23ce1f1806bd9e24a5da0c6e406f507b9cf2f9ae33"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured.ts",
+      "sha256": "8e49a8812945ac1e5b16efd6b51940432db18a674d5f961d0919e4d7a18ce57e"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/graph-search.ts",
+      "sha256": "25914343c04494f334b714ccae73de78bdb0a8ab12ba086794caf2abf1ff94d5"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/index-db.ts",
+      "sha256": "e6e49a76e337194526fe30d481f527b81c0385b15c0d51c2ae8d79776b38a786"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/index.ts",
+      "sha256": "084d87e69a785a46044ecf00ba1020521b22e65c891f22341d70ec840fac92ba"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/cascade.ts",
+      "sha256": "dc27fa3f33256be663176cbf9e7acf4aba2a5429a81cccc36bd27186d38819a7"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/chunker.ts",
+      "sha256": "19fc71ba1dc3f62332f0d8e3b2de8c51c3eacf4fc2c7751fe06b2d5eb868a396"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/file-protocol.ts",
+      "sha256": "1fcdc62331f7ec02e4ae6a55cd25c944a8bc09699ec098e62cb277b51eea3c8b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/frontmatter.ts",
+      "sha256": "111932f6ea04bbf10caaec7d682e56a547530f02cc30e768673f195a6e801ba6"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/index-builder.ts",
+      "sha256": "2bacd9efdc91892d62df8bffb8f6d8856bbaddc0ef271fa955ce547a9df397b6"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/index.ts",
+      "sha256": "df8ce2cdc779cc974ab0260cd3a5b3fe5981aae4177dd4be8ea348044906d26d"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/llm.ts",
+      "sha256": "c8a8a20ea73d6ef7a5c1087ad45b276639c5434751062553fa9cdec7db3b0f81"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/log-writer.ts",
+      "sha256": "ed895e300fcdd79aec4b1f4bda40fd015b002aa6084042c84ed8f8716a4eeb72"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/merge.ts",
+      "sha256": "34b96a5460d96432f9a68bfc08fea53f2d540da159d12ed889218a0dc11a538a"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/overview.ts",
+      "sha256": "6a9b86472e5d11ef7f7c5040a630371c4eacb64c075c046f7e11148c20944dd8"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/prompts.ts",
+      "sha256": "8d3be0957b05770c5d88fcf4d6f7434c7cdfffc454ebb95f50ef7f59f4abc43c"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/safe-path.ts",
+      "sha256": "9cd5fe48dedf24198c5f4365d41f81fdcb1b43f236b69628f296b6ff6aff724b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/slug.ts",
+      "sha256": "01ad43bb4d1c1daf56397d0a123a9a84c17bf0f83f712f7af0b87d64d9ea496f"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/ingest-v2/template.ts",
+      "sha256": "cac86db146c359923c28c30b0ec52c467a8305214b4388883d213e1f33e95e87"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/manager.ts",
+      "sha256": "e61d9e22b439cae2a93a7e89e3cca21c7528cfecbc6247d680c8a6b8c28cb899"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/wiki/types.ts",
+      "sha256": "f46deb3eca6ebdcfa4d611026b04ce83d491a6aa95e1df0e558c850c4a891705"
+    },
+    {
+      "path": "MemoryKnowledge/src/logger.ts",
+      "sha256": "6e75f4753be51e577773e1c1912f72c7ddf974c4c4c9bf02718463726b64d6de"
+    },
+    {
+      "path": "MemoryKnowledge/src/mcp/http-client.ts",
+      "sha256": "11d52cd155b8223f482dd76a2436b97364429b2bc9faf3c840af635d54b20d89"
+    },
+    {
+      "path": "MemoryKnowledge/src/mcp/server.ts",
+      "sha256": "b417a36fda67aa7d42e83bd93c35f536371f466ee9079407f5e012aaac9493a1"
+    },
+    {
+      "path": "MemoryKnowledge/src/mcp/tools.ts",
+      "sha256": "fe8c25e6b4e90bb01477cb414b3edb8cd53d6d561a2ff4bc3a43b09f6b94db80"
+    },
+    {
+      "path": "MemoryKnowledge/src/middleware/auth.ts",
+      "sha256": "fd84ca88b4d339907eeeae950a732ecc5abc6a8b43e02ca7a98bb6b2d24b4c51"
+    },
+    {
+      "path": "MemoryKnowledge/src/middleware/error-handler.ts",
+      "sha256": "d265d2452a15a77777f074edc7be7295d303bc65ee6a50cb8a56408da4f3dc7f"
+    },
+    {
+      "path": "MemoryKnowledge/src/middleware/response-envelope.ts",
+      "sha256": "4ebe29d0f9579dc7351524c2a49e088498e3bc358cb1a685c848bffb978c5ac8"
+    },
+    {
+      "path": "MemoryKnowledge/src/module.ts",
+      "sha256": "29542d6f2f4e166891ffc3fe0f154b51e4e5c265ca87b2c33d3c172077bb4147"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/auto-sync.ts",
+      "sha256": "42c58bc18bbc549842caed863918f609e88ba4aa2901cc51f78c7dede253e4ea"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/code-graph-structured.test.ts",
+      "sha256": "3afa6687e53f625970bffb4e08f96f7e34db153a850fc431a8d154e3d4b41eef"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/code-graph.ts",
+      "sha256": "85fb38fab0e043793c78266df51457bfa096cf4d99918209f72f97ee898177c5"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/health.ts",
+      "sha256": "7284eff5a5f710ad83ea4609cee5f6ca6973da7e3bd87d1e261d4546a2f44cf9"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/llm-binding.ts",
+      "sha256": "8c26f9432c701b542bfc85459137510927367373af356c11cba314ac893494d0"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/source-credential.ts",
+      "sha256": "857544829d44ee3d6db602c7c4a4af29dea405693cb7e50c93156cd61b069974"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/source-provider.ts",
+      "sha256": "a6504f9d61c5608655f50a4e93eba7e69e8f2350363085bd5245fdb147b9815d"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/ssh-key.ts",
+      "sha256": "ff6f098aab124dd0867dd4aebaadccde9bf429ff923c6ca67f247dab0fc3cd7f"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/tools.ts",
+      "sha256": "f9762e16cbc77324c640021b4e0e63fb8e76f792f3e4a22a071fce0153df0281"
+    },
+    {
+      "path": "MemoryKnowledge/src/routes/wiki.ts",
+      "sha256": "a55b603deb979c63f5fb8c29582f7632ddc54f7ec8462dd20a01e14e060ff0b9"
+    },
+    {
+      "path": "MemoryKnowledge/src/server.ts",
+      "sha256": "322504ce3943368f945507dd75b232220b77b430932b3cc8dc7fefc87ea6ed0f"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-auth/credential-codec.ts",
+      "sha256": "ef6307f4dac959157b601b8dcbf3b29f7ce23f6c4dcdda4376720064ab880876"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-auth/credential-store.ts",
+      "sha256": "a6ec458435d23213dabe1251df9725061ae05a4fab085dfda2e59e1bd8defed6"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-auth/types.ts",
+      "sha256": "9c0c185cbf3ee6a7f1505a0bd4fc3f60b7777713ef752489041a9498eb0da687"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-fetcher/git-fetcher.ts",
+      "sha256": "f95383f9803385dba855eb09b649be1a2e32b165c958b7232b40b4d1365c0289"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-fetcher/index.ts",
+      "sha256": "e946c9d6708a94454ad59a45dc508699fb6a119bfe1a125168945e0235861cb4"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-fetcher/registry.ts",
+      "sha256": "40aa0333d5e409360dfbd3b88c58b435ad3c6074edd21d71e4fcefa3ecb66d0e"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-fetcher/ssh-options.ts",
+      "sha256": "d150635908f2a308c6117f839eee032c34b6b84d6e299e52e279a41854cdd153"
+    },
+    {
+      "path": "MemoryKnowledge/src/source-fetcher/types.ts",
+      "sha256": "b3fecd38f704b51f40ea81a63b59d7a81c3fe279374004d2f3cd6db102417cb6"
+    },
+    {
+      "path": "MemoryKnowledge/src/ssh-key/index.ts",
+      "sha256": "c1fb64746a7b0d9041c642d53a5b64635a31173d24a20906bfbaa6e605c3e3f0"
+    },
+    {
+      "path": "MemoryKnowledge/src/ssh-key/store.ts",
+      "sha256": "a92c4a2b8623d1b7986a5c7c36bfc59f6567fc823e43666c14aef5aac2622440"
+    },
+    {
+      "path": "MemoryKnowledge/src/ssh-key/types.ts",
+      "sha256": "24540dcbc0708e444c83af93434ac6fd01baebcbddf0a551eb559ac51a825fd5"
+    },
+    {
+      "path": "MemoryKnowledge/src/ssh-key/username.ts",
+      "sha256": "bc7ef75b00742528c10eb732f997149926b4d489f1486522369381ec01e97075"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/auto-sync-scheduler.ts",
+      "sha256": "7e82b7e7dbf9742e72eddf1b83b2af52aebe292581cb8bfefa7aa5dff7f0f3e8"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/auto-sync-target.ts",
+      "sha256": "0a24a1a6edc654ec1f09b969da371974d87de3eaf0082e9033faf98de640e5cf"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/build-queue.ts",
+      "sha256": "75b8cfc1dcdba0d16d823ba3e7253f4adcd1d14cd8a0cc23a548bc4be60625a6"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/code-graph-service.ts",
+      "sha256": "716389f206e223089fe04c205fe9714adfeaf1236e8cd53f1d2ca448d8786c99"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/ids.ts",
+      "sha256": "dc17a5a1b24be1713fc261a380ecbb48a0921810c65b07452739f96686f3e9aa"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/index.ts",
+      "sha256": "e6d5d0e3f76027ee74ce67835666b05dfc3bad9ac13b4d3962ccfb5e81708638"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/llm-binding-store.ts",
+      "sha256": "85a3745c091df21e6e67395f1fcb9a7d83424688d3269153d68e8e23ab53de86"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/serial-queue.ts",
+      "sha256": "71aec1e03e291cc4323ddae6e62a9828f7a862b937998203383049c9365c3a42"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/sqlite-store.ts",
+      "sha256": "9379857003a6d01e3fe943611156d2bdee9683577649f844a7c850512a8fbcac"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/types.ts",
+      "sha256": "6f8025f870dfacb777a4bdfacac3ec88a8412285d89969621c56aed6a8fc8a8a"
+    },
+    {
+      "path": "MemoryKnowledge/src/store/wiki-service.ts",
+      "sha256": "cd987bcaeac11c95317d7f96ae97b39f78c6951306229816943e2db2649ffd6c"
+    },
+    {
+      "path": "MemoryKnowledge/src/telemetry.ts",
+      "sha256": "99ba0fa8a62e2ec0fd55bdcd57761220d5c1dbc826c2d848425eec1f0919fac4"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/import-runner.ts",
+      "sha256": "954a376d98b92829894442e73f599bf7f047807bc3095c5003730de6d9dbf7b3"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/providers/index.ts",
+      "sha256": "647a3b6314fab85266630ba8b45215a5bf7b8002b4faedbcf062751bcef75067"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/providers/iwiki/crawlers/links.ts",
+      "sha256": "9455bd00f3b93fafbd87c2fa45b099eb36b9d8c1c8dd7fd83d9caa448d11d8d4"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/providers/iwiki/crawlers/tree.ts",
+      "sha256": "62b356b061ffc72608c689b53f484e43a8c62595431778b9a8f787d50a757604"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/providers/iwiki/index.ts",
+      "sha256": "b1dc6bf752e4f0bc26bc12c6ba3c035c2e256940c34bfbc67ef340cf334c435c"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/providers/iwiki/mcp-client.ts",
+      "sha256": "b9f121d56987b3848e6ac6262b0784fd73924a47cd4d29212f221ecfa86415b1"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/registry.ts",
+      "sha256": "648bf5fb293734b7a6742bfdfb97693181c9e5c9f8685ce056d4c700ecca5bb0"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/routes.ts",
+      "sha256": "036b8fd1d66769c5b5d90d2322fb8a278c7d7f6ee7039192cc409fcccd9004d0"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/types.ts",
+      "sha256": "431c7626b16437258a78de27d85ecc8744908222d178bb7907243aaef56e3031"
+    },
+    {
+      "path": "MemoryKnowledge/src/wiki-source/wiki-importer.ts",
+      "sha256": "b04af587a35810f8fe92f30f828bddb8e4222029826851ecbb11be346c85ee77"
+    },
+    {
+      "path": "MemoryKnowledge/package.json",
+      "sha256": "4da64febd355d6f76981ecd82a02c4cfb9ef7e84ec4e1c8ea55565f54167e100"
+    },
+    {
+      "path": "MemoryKnowledge/tsconfig.json",
+      "sha256": "b0ed2745b8c9727cbe67085656c5bb5e0914a85250a8f850b02718b26774157b"
+    },
+    {
+      "path": "MemoryKnowledge/tsdown.config.ts",
+      "sha256": "6517700419f6305283e1d84430084a50620da395b010dfb23d6c820a97730400"
+    }
+  ],
+  "knowledgePrebuildReproducedByteForByte": true,
+  "knowledgeOutputs": [
+    {
+      "path": "dist/callback-BCkkJJAa.mjs",
+      "sha256": "fb1dc5eea77056d5b66098c92c140ac0a5e583de01bbd59683a32a2b04856985",
+      "bytes": 188
+    },
+    {
+      "path": "dist/callback-DjcxSG96.mjs",
+      "sha256": "874b0bacfb24aca466f76d0c35ab3742bec5eaf2b1fea41da0388b279fc5ec67",
+      "bytes": 4119
+    },
+    {
+      "path": "dist/cascade-DDYvCNzz.mjs",
+      "sha256": "22e2cacb7a74536e9184f7c8fe401a143115a8e45fa148d2bf9aa57cdfbfa7ad",
+      "bytes": 5351
+    },
+    {
+      "path": "dist/frontmatter-Ce2kZn6q.mjs",
+      "sha256": "1e89c8f2fa4b632cb56b1e932a340a5e229eef5332c656704c64c8313d5a1ca6",
+      "bytes": 2865
+    },
+    {
+      "path": "dist/ingest-v2-DO9DJ5Z1.mjs",
+      "sha256": "e772bf3e10c1ebc8ffba07e7182685cdf7fb14ac44c27f5f2fe6a3b7f2285227",
+      "bytes": 38279
+    },
+    {
+      "path": "dist/llm-B7HSkSdx.mjs",
+      "sha256": "1942adbac98d6cd0e513860c9861a5066fb56e7f0b199be4cf8d897098b99d42",
+      "bytes": 87
+    },
+    {
+      "path": "dist/llm-CGiD6drV.mjs",
+      "sha256": "54d66cb70980305969c5eeaa070e450613789c3de9113e713ed0e347848c079a",
+      "bytes": 7047
+    },
+    {
+      "path": "dist/logger-CcNfQhS0.mjs",
+      "sha256": "94ce45108b46f6c0437fa3e08abae9050a6846a798cbb3ef874c042fce58ec83",
+      "bytes": 1061
+    },
+    {
+      "path": "dist/mcp/server.mjs",
+      "sha256": "5159230ac54a428831cee80b321ac30385a563ab0da6aa139a5e6f32711d1c49",
+      "bytes": 11979
+    },
+    {
+      "path": "dist/overview-BCBicShu.mjs",
+      "sha256": "41e93c136972263acefb6ada714bd8ad631b83cbe5a39fa96719e2a8d80756eb",
+      "bytes": 4370
+    },
+    {
+      "path": "dist/server.mjs",
+      "sha256": "ae028e3227b481cea0804b28a82c8ce20c1674559c40ec5882c493052aaad1a7",
+      "bytes": 391655
+    },
+    {
+      "path": "dist/slug-D2KxInte.mjs",
+      "sha256": "e547b7317b8e1bf70375fedb382de0576dfd74b064f40172caebd4bf4ecb48ae",
+      "bytes": 2759
+    },
+    {
+      "path": "dist/template-BGLLCFYb.mjs",
+      "sha256": "7987a40ebc2938cf8730d724f416b98b44f0afe57e9b468f3e22b37dfc2b6c49",
+      "bytes": 3931
+    }
+  ],
+  "webInputs": [
+    {
+      "path": "MemoryPanel/web/src/App.tsx",
+      "sha256": "93bb608e988ef96e35125c5cb9274a98bc0442b2f7b394d4751df698ce1a4e58"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/LoginGate.tsx",
+      "sha256": "b9eb5f82bb212b86c92cd5154850108e321d1f55a8f64aa5bf54f23228514c6a"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/MarkdownView.tsx",
+      "sha256": "3c9e14ed2ddddb1a250a17e25a31eff72f794e8841315a5b013abb9c90bf5753"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/OwnerLabel.tsx",
+      "sha256": "725c5e4f9aa15a8c616709ae96526ca871ed9ceb95d695625bd688da51a35bcb"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/ParticleWaveBackground.tsx",
+      "sha256": "8e16b8f597d2f8ad5b35329218b3ee39c9277067bd1d53d6e0b83803494d8740"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/RouteGuards.tsx",
+      "sha256": "ae2c6779424538fa2716d4bac699f4c34ec82c82ccecfb44814398cdc08def84"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/SettingsDialog.tsx",
+      "sha256": "51c38042de77453cc24025e26487ac8aa1dd59682118f2e2eedf0fda912064da"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/StatusTag.tsx",
+      "sha256": "b307a9ac4aa60565ed05b024e5cffb79407914c0924d5bc56ef402cd4266e3b5"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/AllocateAssetDialog.tsx",
+      "sha256": "a1e1ab7603969a4222824c835bd2d77a5ba424d3ccffb6945ce5364322ccb9dc"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/AssetListPanel.tsx",
+      "sha256": "1d5b52d182e01060201b03e2fcba433e289c8b77ed30f9c346f7d9597f26c1b9"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/AssetMarkdown.tsx",
+      "sha256": "7eae99246f4729e2f9309b29c16d6396df0fc1b568653fc33458031625fd6ff9"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/AssetPageHeader.tsx",
+      "sha256": "91dbec251b46d8083cbeff54f73e98798a565cba51f51d419962929f50179767"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/AssetSplitLayout.tsx",
+      "sha256": "b40a21f6a28723850f9ce6f6a681b69dcfdef44147c5277fae33d7570d8045ff"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/UserBadge.tsx",
+      "sha256": "0e12c4682e6652b55f243807aec57b4c55b71e5210fd478bf3f0acd280161813"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/allocate-dialog.css",
+      "sha256": "e1dbf8979a06889a59f147012802c1e74f4da0101fadcc01bbb146bea5835458"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/asset-card.css",
+      "sha256": "8b889c0a294575c7ed8382ae6edd51ce9d7d1cb5b49554a42faf65633e8976a1"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/asset-list-panel.css",
+      "sha256": "9f8989c2181272736fd15c38d3ebdbf5117f84248c150573e5dcb739bd67c4fc"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/asset-page-header.css",
+      "sha256": "c9cfdbf3140b54f00fa721c83817fac2630f0365df1831223d70a25d4f003a1e"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset/asset-split-layout.css",
+      "sha256": "e5ed45efd75c3a82c175051ee45081e335386c8934dcd7f0ad3db68e77f52e0a"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/asset-status.css",
+      "sha256": "9d6efb1e9c6856501198875af1ed4b0653bf11434918f073fcf1c6d3021d8ec1"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/login-gate.css",
+      "sha256": "0bd1813a235f75e5dbc7dab470d76937105bbdc13ef703a4344e0c1d753d7679"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/markdown-view.css",
+      "sha256": "21ffbb8542a68ec9552c179d99ff470baa0961ef647585570222bd98db2b3639"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/AgentEditDialog.tsx",
+      "sha256": "8830592b5917ebdd025a236e9810dd52faa6c12308070e518b595f4eca7fb69e"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/AgentGrid.tsx",
+      "sha256": "8afc614c7230959c00b07bb2629801bbbd6b6092a26d7eead3716c91e3ebd1d8"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/CreateAgentDialog.tsx",
+      "sha256": "a883b385d980f98a4d8a98dbc43c7a0f44ce15c1ca6039267567b6b62cf99bfc"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/CreateTeamDialog.tsx",
+      "sha256": "8c16816a6ebc08c53dc3edd489784bca4d9c3ef94bd939041d5035ec9de68736"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/DefaultAgentTemplateDialog.tsx",
+      "sha256": "0baf7167ba0ea0b8d57e93efdaacfbb7ed33b8e88e5ef5a53acbcea395de7494"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/DefaultAgentTemplateSection.tsx",
+      "sha256": "d54d3e25b5c837357dc05f90622658573dad93580c7cd23d1c56c6fe660af7f5"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/EditTeamDialog.tsx",
+      "sha256": "34a617757735e7439376fd6da3a604ea6e0970ca0627d4c08d06cdc4ad7a62c9"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/MemberSection.tsx",
+      "sha256": "53237d22b19636311492d62900404e80b9853216672ddfe3dea2f435bc8fd887"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/TeamHeaderCard.tsx",
+      "sha256": "7888de23e709b27454c9f079355f798588ae30de0fdb1323380968bec365ed0f"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/TeamManagementPanel.tsx",
+      "sha256": "e066fd67bc0b257212e4d91c30929c5f96333a04af5729997c2e8e70029f186c"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/shared.tsx",
+      "sha256": "3e1f6701343b3b9fb7ccfc3bfa727eef6c5a2335b2a76081c7ad237c762370b4"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/team-management-panel.css",
+      "sha256": "f89e175b8a803600ec57357aaf70befb47f342d8a1444805b730cdee4df1aa08"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/types.ts",
+      "sha256": "66bf55b16e13ecfc317b42b165a01da8035f45355ccb00b87d91cdaccd085fa8"
+    },
+    {
+      "path": "MemoryPanel/web/src/components/team/useAgentAssets.ts",
+      "sha256": "053c36b636dcfd27ebf3cda654f4dd1c9c43661dda7739f3dbd8dbaf5f985d87"
+    },
+    {
+      "path": "MemoryPanel/web/src/constants/menu.tsx",
+      "sha256": "d656e31afabb9511cff76eb0daebc807765496daef124a0db505222247a38ab1"
+    },
+    {
+      "path": "MemoryPanel/web/src/i18n/code-graph.ts",
+      "sha256": "5b70a4a1ecde73332c26f5e279319b5884b446c84f9a48fba6ec416ed12b9c97"
+    },
+    {
+      "path": "MemoryPanel/web/src/i18n/en-US.ts",
+      "sha256": "e07daaed9c3b68bedb140f404253b325f6d746e22c8322eb8f017edc993b0130"
+    },
+    {
+      "path": "MemoryPanel/web/src/i18n/index.ts",
+      "sha256": "2a5818cc8f6a799e290bfb10dc5b2840c75778734d26d3a0b6bb8e0e6bef041a"
+    },
+    {
+      "path": "MemoryPanel/web/src/i18n/zh-CN.ts",
+      "sha256": "9f017726e3e3a9e5597743b38df93d74239d1dff9416b67277b38c85935a0903"
+    },
+    {
+      "path": "MemoryPanel/web/src/index.css",
+      "sha256": "8b933cbd9ce3253296c03b22013eb57a7202478ff9b756e12ca3dbd0f47c0662"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/ConsoleLayout.tsx",
+      "sha256": "6d00691bec4154b726f2521114f64480107857d4ef3dc089bcc5a778c20c14e2"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/GlobalHeader/LanguageSwitcher.tsx",
+      "sha256": "2d9e09e998f1393eb88298b3ad6f05a96207256d23f25dfa3892bd4d25a68f0a"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/GlobalHeader/TeamSwitcher.tsx",
+      "sha256": "da30a7cc063890465ca4d7012ef4d3f116c77fae1397cb4e07b48826be535747"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/GlobalHeader/index.tsx",
+      "sha256": "5f3f0819c7170ecacc106c06560108122895fbd4b417bdc4b70f32a3d2b5d087"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/GlobalHeader/language-switcher.css",
+      "sha256": "756294f5e6f38aafd026e6e3115404541135e2bd00fd328d15491a514e440803"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/GlobalHeader/style.css",
+      "sha256": "e1d2532bca63dd3ae8c2fb071b0280ac4f4173074d60cb99d59dc915a2559e7f"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/GlobalHeader/team-switcher.css",
+      "sha256": "d7a9d71ade5f0a8be6dcea1890bfe3770165bf279e4e4d6887f2e06bbebec182"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/OnboardingGuide.tsx",
+      "sha256": "c4f4daa8ed55f50c4b07af8199ee782fabf26fe7d9dd9b34f85134321c223f5a"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/TabBar/index.tsx",
+      "sha256": "1b7909166227011ba9c4317cdbc12355dcec11aebba5bd9ea29ee207abd03304"
+    },
+    {
+      "path": "MemoryPanel/web/src/layouts/TabBar/style.css",
+      "sha256": "31587714b0e20561d3fdb0d735154b9e7329a88e85296e7b78f96cb93651eb47"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/agents.ts",
+      "sha256": "3c78e7c832a0edb797dd7794e498f9b54db020eec87a526b76a2b054a2ee47c9"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/analytics.ts",
+      "sha256": "0c0decfdd35bfedccd4dd75c380695976f3fe92d57b7911ca0f33b4986c7b1ca"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/assets.ts",
+      "sha256": "41c97d68fc735ad543633f26b8f6c250c2a4d2450c9f48c88056d280f8da3f34"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/auth.ts",
+      "sha256": "92ce3bd0bb089c2c1e364dd62873b7815f4b4e431543b71365c589f7f8ccf535"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/base.ts",
+      "sha256": "6427e83253717c49f307ddc17902c4a19136c50110acab1a53d5b8b0ced4d110"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/chat-memory.ts",
+      "sha256": "8f1177aa19101a992db3d18803e31849df40cd709f8a8ac22b0178e2b2203380"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/code-graph-contract.d.ts",
+      "sha256": "2ffec9373a39247ad7c08d3bd399e0390a6da024c76c59950ff33029b71be97e"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/issues.ts",
+      "sha256": "53094dad30119743c5aae9bd6687c9645bab75b1ba86bf987f99840be76a0d44"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/knowledge-api.ts",
+      "sha256": "ffdae7df4ef5b3de0a22f36bad9429fd3d3cab3fb9951cc7e75850cee8444de7"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/meta-instances.ts",
+      "sha256": "9172bd992abb54ba944b5e4e3f3aaede415be0fa63712a380c07224203bc02bf"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/skill-api.ts",
+      "sha256": "0a98c4f1f81ce2a052f01f2356e7608d37cd4924b10660f0f1df1635a83be1ac"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/skills.ts",
+      "sha256": "a32980cc21982d0d555adc7243e529399ee60fbd7071c2cc4c9175167fb4662c"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/taskSource.ts",
+      "sha256": "468142da317c6e9525d01c975abbe1ea1abf8a5052f2d7a7c764ccb900a96d7e"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/tasks.ts",
+      "sha256": "e55e1adb6d71fcb0d29aa2823db2d74e23ad18029b10b9ea5a9d8d031baa2e5d"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/teams.ts",
+      "sha256": "a4a80f493d40700471683bae23eccd608174157f9a11038b0cf75d2d62cc5dce"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/types.ts",
+      "sha256": "88c0f891412c81a2bf6c9a36b8cb8ba0759767707a80bff02f244a537a8b986e"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/api/users.ts",
+      "sha256": "8421dea07719e1c3de93fe7331310cd4c2695b7a0db012e01d1899581351d652"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/asset-common.ts",
+      "sha256": "14d7801e5d054c63811dfb3601d6455abb1290451a2093f0dd1a58757cbc78af"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/error-message.ts",
+      "sha256": "291f5016001b4d5fe2143ca9e63b1d1bf321f80d0fb78ad6f340128f3c5c78c3"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/panelSession.ts",
+      "sha256": "37cf190139e35a1bceeeae489c6431b8ab95898531c0d80d7f0d3abd95896425"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/tea-bridge.ts",
+      "sha256": "5d472cc09d367740df46d0869dbce515ccc2301344bf379cfbd4cb7c0f9b8f7f"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/teamApi.ts",
+      "sha256": "074bfaae73533918d6f0fc1e9cfcb6bd3e039f3a8441f7a55a7167cfa96b67ba"
+    },
+    {
+      "path": "MemoryPanel/web/src/lib/useResizable.ts",
+      "sha256": "34c99a9d23f739d28155c787f37574f4576f02f9ec426070c05c89230bf3e943"
+    },
+    {
+      "path": "MemoryPanel/web/src/main.tsx",
+      "sha256": "780147ea10de54ba9e691b0c2bf629a1d954818011206586f9fccaf47c1d908e"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AgentsPage/index.tsx",
+      "sha256": "52516755677fad7582eade2c174fabff9c88cc2f8a4bac75b655279441ec0e21"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/AssetCategoryCards.tsx",
+      "sha256": "f1cefb47fe4d75a8b0f0f8eb81e932c2fd2b9b6305a54eec1e7ac2358cf4456f"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/BehaviorPanel.tsx",
+      "sha256": "d152604103a10490d750216767a633ec0e90252b37c55c2f2f5b029ba3428789"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/CallDetailTable.tsx",
+      "sha256": "8681fba3e29353159676f88519e0a7762432145f33ecc483cfa2b4586ee63cb3"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/DeltaBadge.tsx",
+      "sha256": "6c0498daea3f6006f281b6f874a928b15975c6bab6496d412d5aabf1bca60feb"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/DetailPager.tsx",
+      "sha256": "4cf1f56718bab2abaf2763f5352c42caac5d54a2ecb724947c4f782db5095fa7"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/DrillDownDrawer.tsx",
+      "sha256": "14f57a796754169b428eb09ccca40f75702adcc129f093add9bdb62352a83f0d"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/KpiRow.tsx",
+      "sha256": "bc3bd021626fc71bc6e6cd8946e7709224d5bab31f6148b573f27f3a187e278d"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/MemberTable.tsx",
+      "sha256": "c8844de26d433d2e1b0deb761a70b35c026a04aa7860417e9a59717d1ff20769"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/ModelTable.tsx",
+      "sha256": "798b78ec766e3e511b2f6a77cee6c2cff7c8d497607f09bf92e65d9fa8defd3c"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/ShareBar.tsx",
+      "sha256": "b1c611551e92860566ba81ab80436c48c6aad65440629953fe319c9a3da04a49"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/TraceDetailList.tsx",
+      "sha256": "26513f2ea0c83a5013b2e42e01fc307f2d5585ef164f87d3e9009ca41755f306"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/TrendLines.tsx",
+      "sha256": "470a5b306408be34af545ecdcfeefc538cd809f36576a7eec6a1d3b00edb035b"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/UsageDetailList.tsx",
+      "sha256": "27dd6db2ca1cb8a9934a3e9c28f5ce4922e8caddad2d15ad9e0bdd5d3452a3f8"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/UsageKpiRow.tsx",
+      "sha256": "ed6478a0dfd070d10cbd131f40ec7b4794a552c3f4f061c76e2e23f633ee43d1"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/UsagePanel.tsx",
+      "sha256": "36f70a27451c185d41d516434735678556e1e62941b81c9d9841775132a5972c"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/UsageRawTable.tsx",
+      "sha256": "9c688b92a5d4b0afdc23fc61e3230a13361d94e4eda356dfbf6990b8c1482e2a"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/components/UserName.tsx",
+      "sha256": "3cfc7891c449ff82e6ba9e9fbf6c34f8dff8b186fb2f4527f0e10ce862f70519"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/hooks/useAnalyticsMetrics.ts",
+      "sha256": "9b0a76e8738421bc85fe52d66542fdf3e91ce7ceb3d45a20395772f6ee80b859"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/hooks/useCallDetail.ts",
+      "sha256": "6064dde781b1eb3906a0ea28965e4d135ef1786c6896e4304e8cb2cf4a4bb565"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/hooks/useMemberStats.ts",
+      "sha256": "e61ebcce7a2e1fddb49d956faeb9842bc2873c670991c0aa4d399ecb4a0f47e8"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/hooks/useUsageList.ts",
+      "sha256": "2cb750b361f1b5fb2c205c0c93b4213dba94b588084fc7b37701402f9b5a2df2"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/hooks/useUsageStats.ts",
+      "sha256": "e7d9394054f32c6e693ce84cd35020a8482a1c54840f70cda468e5a2e8e4e01b"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/hooks/useUserNames.ts",
+      "sha256": "5f098635da346ae8731e03f7839761daf086fd6591d447effe6bebc823ece9e7"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/index.tsx",
+      "sha256": "a3b2aaa0ec35aff3e1199105beb56866f130195975ab35f618bae746db1c578f"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/styles/analytics.css",
+      "sha256": "90f75c9674e975605a3e17a0ee72cf8fa7ec02a81380693c3a0d11646f4efb51"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/utils/asset-category.ts",
+      "sha256": "493e4bb697f4904d0b96e92b269fef8f1cb1d7e2fcd8f5993cfebc2a8073129b"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/utils/drill-target.ts",
+      "sha256": "041754ce1f328cf5eea1c6125e42c1ec7efa8a2a91fee6231f4489a2de521eca"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/utils/formatters.ts",
+      "sha256": "b6477f53a859663bf31e704e3c909fe5e558954fe6f83e5a3f35ee5c5aa85d15"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/AnalyticsPage/utils/member-stats.ts",
+      "sha256": "409d7c4f07fb6e8f82b03f320166cda4bae0fd0723332933cd8c0e8036b5fb62"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ApiKeysPage/components/ApiKeyPanel.tsx",
+      "sha256": "d73b050781433ada0d8ff2ab0c152f696d1c320ddb98347daf9e4a30aeedcdff"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ApiKeysPage/index.tsx",
+      "sha256": "6304c44869292d4674338b9c8b96670ec87e7317bced1d58c6228d9b079c286e"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ApiKeysPage/styles/api-key-panel.css",
+      "sha256": "219188820b5d55b844bbfec722ed91f061629bd41072a5c7dcd77c0326b8a713"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/components/AllocateMemoryDialog.tsx",
+      "sha256": "b12a5f7a880dc60e439a6c2a5385e0a5fafc9214a8999ae70087f75b90fd7385"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/components/BlockDetail.tsx",
+      "sha256": "22aa4c8c0976ca5c7ea1fecefe67685df94ab65f5cbabdb8d7f6571fdbf29511"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/components/ChatMemoryPanel.tsx",
+      "sha256": "db796a02c3129dca1a3d1b2eda69ccd58d7a17111a6a3e70e14fdf66c740701d"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/components/ImportBlockDialog.tsx",
+      "sha256": "5ed3b4a536ca4cc98de8f6b85be82ba3881d5ed60a1188b23454876c6b24de13"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/constants/constants.ts",
+      "sha256": "cd2ad589432863202a07de550f4e51624d80f94c65991900bf06242c6403e38b"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/constants/types.ts",
+      "sha256": "8c4b32394c17e4d68cc4d19349477272e0fd6cb88c385ccb3bd99d77c204b6cf"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/hooks/useChatMemory.ts",
+      "sha256": "b6b87d8bb7821c9c3ac5e6aa17c12f793821cd070ffeeb49800c95049c57dc20"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/index.tsx",
+      "sha256": "6049cbfff68c756b8e1c032677625d689cb021b0c0109480dbde3ec47a57cc61"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/styles/chat-memory-panel.css",
+      "sha256": "cdf3752d95430c1a80505aa283ccc9b68466ddd7af585efbf751870a65b52e48"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/utils/memory-utils.ts",
+      "sha256": "c200dfd8c78df61aa918649841d10a8cf13433d53bb5461ac21eb937d3ef9035"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ChatMemoryPage/utils/utils.ts",
+      "sha256": "b6e162588518528df3e53b68b79decabfc0b6243adf45be842bd3db225e05de1"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/components/CodeSourcesPanel.tsx",
+      "sha256": "a0fee7a8740c8c63a66859d8c08fa59a870508e9b957d0b8d7e22e052f3400e0"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/components/code-detail-view.tsx",
+      "sha256": "508d7e5bcaadf6cb22b39e444a9de5495f1b5258b664c9fe0e8018404ef518c2"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/components/code-ui.tsx",
+      "sha256": "fc16619460bcaa2930a8bc982f492008e08daf88013664cafde8d3c8bdad8e38"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/constants/code-constants.ts",
+      "sha256": "871f2545ddb8a382bb23e9f988db2dc71bef839e62df43c92ecec8c9cd385226"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphAnalysis.tsx",
+      "sha256": "4f53965906a1ed28e757bc0ede2bfaa430074c7e2348ed1b59eb069a7695e5cc"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphCanvas.tsx",
+      "sha256": "80168c9d06fcd35864fc970ef2e88c8bf80078cb56c3a35740125fbb6e14c12e"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphModeControls.tsx",
+      "sha256": "8aab92801dcf7126fd813520765289c2084c4a5ecf5031925d56911405fb7183"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphWorkspace.tsx",
+      "sha256": "5e7755757bd6eb88a7f70cc9b37364437c349b90f2ba2e720dc0e0ddfaa3bb3b"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+      "sha256": "71b25fb4c06f12be0e178182280b424c4477c1ec2cf98cb3869a2e9eba893d07"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/graph-model.ts",
+      "sha256": "daaaf30e54bd11d88b5240b3938a33e88d09d493bc627e7a49b0aba28da99143"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/useCodeGraphWorkspace.ts",
+      "sha256": "0ca2f123fe8474c93b0ee7170a6f27f5f0cc3dc30867e45b8215a66d19eb6111"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/hooks/useCodeSources.ts",
+      "sha256": "759f1568bccb6eaa98925c997abd8bbb6cfd2f2416f0367ef5fcc8f6184e7934"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/index.tsx",
+      "sha256": "2bf208399c6364a8d34401d6a9c27f3ed52c7bbf1d25d05be936cfe5b71b9173"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/styles/code-sources-panel.css",
+      "sha256": "8dbbca5fa6828f5d6864be2c8440c1c012280c882293c80fcd11a5148df14f16"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/GuidePage/CopyButton.tsx",
+      "sha256": "3eb7932601d159c3d78ec2e0eb51eacf54de6d14312765645d4da26e6db594aa"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/GuidePage/MemCommands.tsx",
+      "sha256": "edb5eb1e737f0756254350baf0ceb43111f9e7d3d7d66123587ece26e1b51a6e"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/GuidePage/index.tsx",
+      "sha256": "f49a0c8faf984e836a0b7286a91800e07d4a5c35c6adb24693915b0577a51f8f"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/GuidePage/memCommandsData.ts",
+      "sha256": "a379a08a3f0b8f4e480ba075ed62c25aec6a6957c6d17dcf48a201ed98960515"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/GuidePage/style.css",
+      "sha256": "3c226ed17b6e03bed5ae040033d4ccdb5e0dd713d80d7a2c61827860fedf5d9c"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/MembersPage/index.tsx",
+      "sha256": "9c45f99f5a84a1efd7b3025f7f8865918d9f03569c8b07da4122409a7b519aab"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ResourcePage/components/AdminResourceLock.tsx",
+      "sha256": "0e3a5893ff1321f82d8c043669b85c3c15df934c7aa7ecd2015dd0db89160c94"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ResourcePage/components/AssetScopeManager.tsx",
+      "sha256": "d68f6dbf07d79bfa02292a551905ae52f0aecaf40e1127d052f51ef740040c59"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ResourcePage/components/admin-resource-lock.css",
+      "sha256": "1c561b1a227de724dc2c69b6af0067a528bee4588ff90ff87e7c90a8c61379a7"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ResourcePage/components/asset-scope-manager.css",
+      "sha256": "464b9ad36c719557ac1515500c834a50152680756ed4aedc15d5c599ecfd61ba"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ResourcePage/index.tsx",
+      "sha256": "e0f2ea120be94933171d5da0019d92b8c51d3d48ffcb6698035b37f46a5e70ce"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/ResourcePage/styles/page-style.css",
+      "sha256": "3eafbc9cba50cc4937f39d7253b7cec6ee65f715c4e59cc8fe92259a317f42a6"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/components/ForkSkillDialog.tsx",
+      "sha256": "b878e19961c5ce9aa5864a8fb24bbfc5743f1fb297783771cf954dba0cf2b727"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/components/ImportSkillDialog.tsx",
+      "sha256": "8f334aaac05f1c8a95bad9abb8f778cab334d67123b84884d8507fe217080cbe"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/components/SkillDetailPane.tsx",
+      "sha256": "8e29db1f6e8de69df356335167a8046a933d80468442338bef9cc29dde57a5ec"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/components/SkillsPanel.tsx",
+      "sha256": "49dacc07d99d30cde8efdce2d0791d3dbfded5b767e3cb5c5844115833b01bbb"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/hooks/useSkillsPanel.ts",
+      "sha256": "5228050ad208114b10dad36b4950023431f3618694a561db484e9355f5e816a4"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/index.tsx",
+      "sha256": "0e09bf85fdee7f7f8a8a3c392eab1dc3187eb878f6483c4b95d39e49e8b0d221"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/styles/import-skill-dialog.css",
+      "sha256": "b1eaad518ab287e24300a391f2061ed818105bef6ea3e0efe5384e84124b9a7c"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/styles/skill-detail.css",
+      "sha256": "6f2a4f7099631e0164275d082927296f29f6bc96787bbf0ac785a43d1e262c16"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/SkillsPage/styles/skills-list.css",
+      "sha256": "c9843f3229875aedc7286b8c205c598f13c11a8d6b82a6f4ea58f5add1884bfa"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/components/KnowledgeGraph.tsx",
+      "sha256": "3dc75db8fadb8faea518a65326832dc8bba10d5a9cd2a1395e0acdc0c26b47a8"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/components/WikiSourcesPanel.tsx",
+      "sha256": "4d7b3459630fe56de19bfc4f5ef80f8ada9c976fd219486410b4cc3f8b2fcee4"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/components/import-and-ingest-modal.tsx",
+      "sha256": "60599968060a59677b8734dd338f9215423bcfd31e7aa8d4ffe18805b3656ad6"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/components/wiki-detail-components.tsx",
+      "sha256": "73a240018c8be66dba13b374c581210c73b3c09201c84be93e52c8575c3e18b8"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/components/wiki-detail-view.tsx",
+      "sha256": "f07fbcd3d90ba8ca718350992a9e57a3c72c727a4a34e311fec8d5debe009c53"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/components/wiki-source-page-tree.tsx",
+      "sha256": "64ade2fbf7f8e2136adfa42ad85ffbac56d2f1ac925ec0567f8393c4c2b842a1"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/components/wiki-ui.tsx",
+      "sha256": "c22ce667798567a8d504f6d17a4f1e65357d1d8bc759ad21283800831f503f0f"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/constants/wiki-constants.ts",
+      "sha256": "36bfe9063932387370fb5e5acacb7649e982c240db9abc19604d17af8f385aba"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/hooks/useWikiSources.ts",
+      "sha256": "bffec095c0ae3421fb9e69ee6743135924185f3a74aaf157b6bd5c320c13b773"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/index.tsx",
+      "sha256": "321f766c2cfc3cdf6ba1f5ded73f6c0b1218e08e4b63b16b773eeb9b9e058010"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/styles/wiki-sources-panel.css",
+      "sha256": "fda4c6fee697e1b2105378caee836701717b54bb9e80c234c181d6f6a41a7329"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WikiPage/utils/wiki-upload-utils.ts",
+      "sha256": "842d3d54a9595b1bfe961a7f0b13ad55e05860722880902cc0df26098fa40e2f"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/BoardView.tsx",
+      "sha256": "25436ffc3b7f7101b129d1e84f1615d5f187ba9c494fc50fada7ec0c927e3123"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/IssueWorkbench.tsx",
+      "sha256": "9f9f311d972dff67b5ec94719a70e13c6c83d2030714a86c6434e0e5d6e1221e"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskCreateDialog.tsx",
+      "sha256": "ca4a3f9bea429a86649ee3eacd7327fadb7bd23650cf13adfd6d4c757e971c01"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskDetail.tsx",
+      "sha256": "d107d1149e1d18681e7dc711f54f9190ab94f0ea092bcb91728cffa26aab6a91"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskImportDialog.tsx",
+      "sha256": "d184fcc0fc8aa8f19fa5768ef4c4a35e5aadbb00be04d99864a208d29d76154d"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/components/TaskWorkbench.tsx",
+      "sha256": "dc23c3e15b0116046dd43f29c9e9c3d6cb32f9a38f1d6fbb6c3bda543e32629e"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/hooks/useTeamParticipation.ts",
+      "sha256": "64010433c350e607a3254ac9cc664591a3e5cca3628b44b6b07f376431baf4d5"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/index.tsx",
+      "sha256": "37dd82e364374fc8ebb91afbb3322603ac3d059894b10053be36c3053d9cb1b9"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/styles/issue-workbench.css",
+      "sha256": "647146b5cc71d7483284b7d830c775972b097d3ab4eaf09050c92a0e8f6bf5ec"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/styles/task-create-dialog.css",
+      "sha256": "6289f819fad01b619378500ece09189071dc646c1ffb3a46cf3e29b026a88c54"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/styles/task-workbench.css",
+      "sha256": "267f9bf26ed661a72aa4f051a5f64013ea673906f6002775a74ca20ae73ff96f"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/WorkbenchPage/utils/workbench-utils.ts",
+      "sha256": "719bb493f74450b2d1cea9b40d9b20b1165dea178059a599acaec0abaabfd651"
+    },
+    {
+      "path": "MemoryPanel/web/src/routes/index.tsx",
+      "sha256": "35c138604576b5f88c37d5f6c01054d114856e3a6e93bc724ef38e21b913309c"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/account-store.ts",
+      "sha256": "d94a6cd6fd311cd33089c365c63986fd6b0996e70df22b701a80b03e06b33f34"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/agent-template-store.ts",
+      "sha256": "4cce9255524424b9d089d5aff7ca61c6ca98ffe0a4c92f3b969d49204ebf92bc"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/asset-scope-store.ts",
+      "sha256": "a3009b6f7712ca0456405d7134738fe95d00bce798d8559ec513260637cbc1b5"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/backendStore.ts",
+      "sha256": "ce36f1302dda38d0d3dbc015268b08dde90bc5154719f7e51db46a3d07ac7f4b"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/index.ts",
+      "sha256": "7ee80329d5634236a5c55b8edd410b7927624fe8ea3602466475a546109308c0"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/permissions.ts",
+      "sha256": "4a08f462a7198099b18959504639e3f58b6ed93c85e30ea6d94c846a4058b1ff"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/storage-utils.ts",
+      "sha256": "83dcefa05963da6749b5bcadde94b7f414023a47d5132d47ec03e04b8eb1d6bc"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/use-skill-detail-cache.ts",
+      "sha256": "3f1fdbf525b897fb20fc5167930ce3038c31916c5ae5fdc4fa8e92a2bb6808e8"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/useCurrentRole.ts",
+      "sha256": "f97a4ea95dad8b5da8cdab3ea16af90483c9745e66416e65621e5114e4aaa59a"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/usePanelCapabilities.ts",
+      "sha256": "d4205dc6c8169adbefbfeef027553fc3aaddaf951eab329476fbf9f8cbc9ecf3"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/user-asset-store.ts",
+      "sha256": "fdafc128353e36d18d4a98c9455393687a88294145245ac2e805233bd404043e"
+    },
+    {
+      "path": "MemoryPanel/web/src/services/user-profile-store.ts",
+      "sha256": "6eef82e2f5a5af343f6d34df8c060df868ed96227e0063aeb2e7158a5495ffcb"
+    },
+    {
+      "path": "MemoryPanel/web/src/stores/auth.ts",
+      "sha256": "c257e26140f0987429107a983c6bcc6ea7f43da88cd09b013423c5729efeb8ed"
+    },
+    {
+      "path": "MemoryPanel/web/src/stores/backend.ts",
+      "sha256": "4578d6847d81ca6b0a7831834d340b6e35496025250a2dda12def383b1f513b6"
+    },
+    {
+      "path": "MemoryPanel/web/src/tea-override.css",
+      "sha256": "67fba8eb6c797349dacab5d2981be2727f7da5090844ffe3b4fcfd543f3648f5"
+    },
+    {
+      "path": "MemoryPanel/web/src/utils/color.ts",
+      "sha256": "0119f6526f1b35523155f07f5d89440335c74824887b471dbbaf927216a89994"
+    },
+    {
+      "path": "MemoryPanel/web/package.json",
+      "sha256": "73da5d318e4117c94ef308ef21519cea0e4a893e17af6af4987a26ead73bbc32"
+    },
+    {
+      "path": "MemoryPanel/web/package-lock.json",
+      "sha256": "bebe46ae2252690a98c4d5bc73ddba0e7b7d49bd906c354ec93bd819c3c29121"
+    },
+    {
+      "path": "MemoryPanel/web/vite.config.ts",
+      "sha256": "a4c05c16b36a18eaa189828d4b87326eea90fff6852721b0460675c4fe40a0c1"
+    },
+    {
+      "path": "MemoryPanel/web/tsconfig.json",
+      "sha256": "babf184e3eab393bad321b323ec802a7e3cd4225cda912f7d60c251be8d278df"
+    }
+  ],
+  "replaces": "Knowledge dist + Web dist; Panel backend/runtime inherited"
+}

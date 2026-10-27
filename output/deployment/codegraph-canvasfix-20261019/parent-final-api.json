@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "Java original index5nodes4calls",
+    "Java same-snapshot source",
+    "TypeScript baseline23nodes31calls"
+  ],
+  "javaIndexVersion": "71afa6ffd985e14abb61f873a34e5d9a"
+}

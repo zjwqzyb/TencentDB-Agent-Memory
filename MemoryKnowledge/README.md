@@ -127,3 +127,15 @@ KNOWLEDGE_AUTO_SYNC_MAX_CONCURRENT=3       # 最大并发 sync worker 数，范�
 ```
 
 启动后延迟 30 秒执行首次扫描；禁用期间调用 `POST /v3/auto-sync/trigger` 为空操作（返回 `triggered: false`）。
+
+## 生产补丁的源码集成
+
+企业 Git 来源 `bjjh_git` 保留生产环境的默认注册行为，复用 Basic 认证表单，
+凭据只允许注入 `https://git.bjjhltd.com` 同源仓库地址。该来源的专用域名限制不会放宽其他来源的认证规则。
+
+Wiki 搜索优先返回归一化标题精确匹配的页面，同标题优先来源页。抽取、生成与合并调用保留来源、版本、适用范围及冲突约束；
+`overview.md` 根据当前页面和 `raw/sources` 元信息生成确定性知识导航，不再由模型从页面标题推断关系或实施状态。
+
+可选环境变量 `KNOWLEDGE_WIKI_THINKING_BUDGET=2048` 为 OpenAI 兼容调用中 `qwen3.8-` 前缀模型设置思考预算。
+默认不注入该参数，其他模型及 Anthropic 协议不受影响，原有输出 token 上限保持不变。
+这些改动作用于后续检索和生成；升级代码不会自动重写历史 Wiki 内容或触发重新摄取。

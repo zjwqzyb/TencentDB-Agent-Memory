@@ -74,9 +74,13 @@ export {
   instanceUpstreamApi,
   type ExtractionConfig,
   type ExtractionDraft,
+  type ExtractionSnapshot,
+  type ExtractionTestEvidence,
   type UpstreamProvider,
   type CreateExtractionDraft,
   type UpdateExtractionDraft,
+  type EnableExtractionConfig,
+  type DisableExtractionConfig,
 } from './api/instance-upstream';
 
 // ── Assets ──

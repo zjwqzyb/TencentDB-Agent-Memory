@@ -4,6 +4,7 @@
  * 对应设计文档 §7.1。每个 schema 校验对应路由的请求体；
  * 路由 handler 用 `schema.safeParse(body)` 校验后再调用 MetadataService。
  */
+import * as issueSchemas from "../issue/issue-schemas.js";
 import { z } from "zod";
 import { UPSTREAM_PROVIDERS } from "../types.js";
 import { paginationInputSchema } from "./pagination.js";
@@ -212,7 +213,9 @@ export const taskCreateSchema = z.object({
   status: taskStatus.optional(),
   auto_assign_floating_assets: z.boolean().optional(),
   risk_level: z.string().optional(),
-  metadata_json: z.string().optional(),
+  metadata_json: z.string().refine(value => {
+    try { return !JSON.parse(value)?.issue; } catch { return true; }
+  }, 'Use issue/create for issue metadata').optional(),
   linked_agents: z.array(linkedAgent).optional(),
 });
 export const taskGetSchema = z.object({ task_id: nonEmpty });
@@ -467,6 +470,28 @@ export const supportedAgentsSchema = z.object({}).catchall(z.unknown());
 
 export const instanceUpstreamInternalListSchema = z.object({}).catchall(z.unknown());
 
+/**
+ * 内部路由专用：Panel 控制面在服务端探测“未保存的提取配置”时，解析当前实例
+ * extraction 行的明文生效字段（active + draft）。只注册在
+ * /v3/internal/meta/instance-upstream/extraction/resolve，不进入公开 V3_SCHEMAS。
+ */
+export const instanceUpstreamExtractionResolveSchema = z.object({}).catchall(z.unknown());
+
+/** Internal-only evidence write from Panel after an unsaved-form probe. */
+export const instanceUpstreamExtractionTestResultSchema = z.object({
+  test_id: z.string().min(1),
+  provider: upstreamProvider,
+  base_url: z.string().min(1),
+  model_id: z.string().min(1),
+  api_key: z.string().min(1).optional(),
+  capabilities: z.record(z.string()),
+  passed: z.boolean(),
+  ttl_seconds: z.number().int().nonnegative().max(3600).optional(),
+});
+
+/** Internal-only immutable active snapshot resolver. */
+export const instanceUpstreamExtractionSnapshotSchema = z.object({}).catchall(z.unknown());
+
 // ── B 类:conversation groups ──
 
 /** B1 groups/list */
@@ -545,6 +570,15 @@ export const upstreamExtractionToggleSchema = z.object({
   expected_version: z.number().int().nonnegative(),
 });
 
+export const upstreamExtractionEnableSchema = z.object({
+  expected_version: z.number().int().nonnegative(),
+  test_id: z.string().min(1),
+});
+
+export const upstreamExtractionDisableSchema = z.object({
+  expected_version: z.number().int().nonnegative(),
+});
+
 export const upstreamExtractionDeleteSchema = z.object({}).catchall(z.unknown());
 
 export const V3_SCHEMAS = {
@@ -573,6 +607,11 @@ export const V3_SCHEMAS = {
   "/v3/meta/agent/delete": agentDeleteSchema,
   "/v3/meta/agent/list": agentListSchema,
   "/v3/meta/agent/archive": agentArchiveSchema,
+  "/v3/meta/issue/create": issueSchemas.issueCreateSchema,
+  "/v3/meta/issue/get": issueSchemas.issueGetSchema,
+  "/v3/meta/issue/list": issueSchemas.issueListSchema,
+  "/v3/meta/issue/update": issueSchemas.issueUpdateSchema,
+  "/v3/meta/issue/comment": issueSchemas.issueCommentSchema,
   "/v3/meta/task/create": taskCreateSchema,
   "/v3/meta/task/get": taskGetSchema,
   "/v3/meta/task/update": taskUpdateSchema,
@@ -618,6 +657,8 @@ export const V3_SCHEMAS = {
   "/v3/meta/instance-upstream/extraction/create": upstreamExtractionCreateSchema,
   "/v3/meta/instance-upstream/extraction/update": upstreamExtractionUpdateSchema,
   "/v3/meta/instance-upstream/extraction/toggle": upstreamExtractionToggleSchema,
+  "/v3/meta/instance-upstream/extraction/enable": upstreamExtractionEnableSchema,
+  "/v3/meta/instance-upstream/extraction/disable": upstreamExtractionDisableSchema,
   "/v3/meta/instance-upstream/extraction/delete": upstreamExtractionDeleteSchema,
 } as const;
 

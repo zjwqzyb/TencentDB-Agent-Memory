@@ -1,0 +1,328 @@
+{
+  "run_id": "20261025-memhub-current-agent-01a17368",
+  "read_at": "2026-10-26T00:03:29.904392+08:00",
+  "timezone": "Asia/Shanghai",
+  "access_mode": "live native team_assets APIs; frozen local project sources for comparison",
+  "session_id": "01a17368-3f46-7912-84f4-e3daafdd5265",
+  "generation": 1,
+  "team_id": "team-d6wsrcwehz",
+  "agent_id": "agt-d6ymqoh19z",
+  "task_id": null,
+  "scope": "Current Agent mounted assets only; excludes all-team inventory, other projects and globally installed local skills",
+  "purpose": "Diagnostic reliability review for practical task execution",
+  "counts": {
+    "mounted_wikis": 0,
+    "mounted_skills": 0,
+    "mounted_code_graphs": 1,
+    "memory_blocks": 1,
+    "L0_total": 108,
+    "L0_read": 108,
+    "L0_source_messages_saved": 11,
+    "L1_total": 23,
+    "L1_read": 23,
+    "L2_total": 4,
+    "L2_full_read": 4,
+    "L3_total": 1,
+    "L3_full_read": 1,
+    "semantic_clauses_sampled": 12,
+    "memory_retrieval_cases": 4
+  },
+  "source_baseline": "source-manifest.json; no comparable prior hash baseline",
+  "model_and_index_version": "unknown for knowledge generation and online memory retrieval",
+  "completeness_note": "All listed memory records were fetched. Semantic review targets 12 explicit claims, not every rule. L0 persistence contains selected relevant source messages only. Asset metadata memory counts are placeholders and not used.",
+  "checks": {
+    "technical": "PASS scoped live inventory and full-body read",
+    "semantic": "FAIL on confirmed critical distortions",
+    "retrieval": "PARTIAL, four targeted L0 memory probes only",
+    "end_to_end_qa": "NOT_RUN, no isolated target assistant invocation",
+    "Wiki_documents": "NOT_APPLICABLE for current mounted scope; no Wiki attached",
+    "Skill_execution": "NOT_RUN, no mounted Skill to evaluate",
+    "production_behavior": "NOT_RUN"
+  },
+  "records": [
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792940000401_0d9a8c9b",
+      "updated_or_created": "2026-10-25T14:53:20.407Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "d0a3cd640618497240a400c06472ae34f9ca010070ed49aeaa2a38b5c7265e38",
+      "body_chars": 49
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792405507089_26b5ead3",
+      "updated_or_created": "2026-10-19T10:26:18.822Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "6b12d92c245f9ead15fe427219d4991ad1412e303377a0bd74883a4cf41573d7",
+      "body_chars": 1505
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792405507089_7837a39f",
+      "updated_or_created": "2026-10-19T10:26:18.802Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "6b12d92c245f9ead15fe427219d4991ad1412e303377a0bd74883a4cf41573d7",
+      "body_chars": 1505
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792405507089_6ab7a7e4",
+      "updated_or_created": "2026-10-19T10:26:18.789Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "7cff19c1827ddfcc2bff37caa288ebaf63dcb69f85910fe7a034f726f7421b33",
+      "body_chars": 1454
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792349110434_47591437",
+      "updated_or_created": "2026-10-18T18:45:53.831Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "66aafd8dd5da14dd8fdb31894975308112b2c9b9697c3d591b7d502fd52d149f",
+      "body_chars": 89
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792349110434_2a18fbc0",
+      "updated_or_created": "2026-10-18T18:45:53.826Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "9ea66ad3c6779a2ca5cccd8a459591cd69cf4037296c5119311676ca4f4278f7",
+      "body_chars": 256
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792349110434_a1b978bf",
+      "updated_or_created": "2026-10-18T18:45:53.821Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "60d3ac0222c0e8db221014c944e8891209d01766fcf4ca326fe2d9dccf870999",
+      "body_chars": 111
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792349110434_4dd12a43",
+      "updated_or_created": "2026-10-18T18:45:53.817Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "8ad66496e5af89450798ba369845f4d5242b5af288a57e7387d0d385901bcf94",
+      "body_chars": 166
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792349110434_2fcfaf0b",
+      "updated_or_created": "2026-10-18T18:45:53.812Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "dd62f2f9b426e10d05822757722c70666f16506b1ecac8353726f1de4f1f2a25",
+      "body_chars": 78
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792349110434_1b406aab",
+      "updated_or_created": "2026-10-18T18:45:53.803Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "003735905bccabe979c4eb03df200aa6909e1da88996394fe54b238d2d9b75cf",
+      "body_chars": 218
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792343876807_c0b51ddf",
+      "updated_or_created": "2026-10-18T17:17:56.834Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "529bb0fa1e9f7a87c01d5c4b0f155f60e89ebbb3133f2c581adb6c13dee5fdc7",
+      "body_chars": 63
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792343876807_99111ba5",
+      "updated_or_created": "2026-10-18T17:17:56.831Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "ea4b52d04c9650227a48ae916f49d79d9f501106f178edd34db23c87558d3b3f",
+      "body_chars": 46
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792343876807_af7d0418",
+      "updated_or_created": "2026-10-18T17:17:56.825Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "fb1723f47be16313bd90b4ddfe9a55ed3f50256f8480810fe1def005951dc3cb",
+      "body_chars": 51
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792343177507_468db15d",
+      "updated_or_created": "2026-10-18T17:06:27.104Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "179f81524a4b565604e300c2caedcc39884fc39ee3b8c4121a6dbccf998d98b1",
+      "body_chars": 76
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792343177507_a3dcaa72",
+      "updated_or_created": "2026-10-18T17:06:27.096Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "5c508ef4025b896d845a28973237ee39da9adb801f47342d3b26f7bec5193533",
+      "body_chars": 320
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792342128446_cec202a8",
+      "updated_or_created": "2026-10-18T16:49:06.809Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "8f0c7b4856a44c64c9b9419d97483422a0a70404a22c4d6f14b10296afb2f474",
+      "body_chars": 54
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792340391135_055db84b",
+      "updated_or_created": "2026-10-18T16:20:24.818Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "1207247c3372d254f62b36b66fa940fd3be4b2caf55293a2f5521beeb8b7e76d",
+      "body_chars": 133
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792340391135_7e8709fe",
+      "updated_or_created": "2026-10-18T16:20:24.814Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "e9a95524dc0e8d7bf48198331298e51d7dfca12871cb8f832273a7f1ec5bae7b",
+      "body_chars": 466
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792340391135_8586f172",
+      "updated_or_created": "2026-10-18T16:20:24.810Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "b6634f902d94f6cab42332ce4b294f1bbeb913d12c18ce8a8b5b9acc0f50309f",
+      "body_chars": 172
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792340391135_03017141",
+      "updated_or_created": "2026-10-18T16:20:24.809Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "4c3cd3f7cfd34a3ce6dc44ca10e7df3a792445e270427667f708a1f2a1898b98",
+      "body_chars": 172
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792340391135_b2bd48de",
+      "updated_or_created": "2026-10-18T16:20:24.800Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "e9a95524dc0e8d7bf48198331298e51d7dfca12871cb8f832273a7f1ec5bae7b",
+      "body_chars": 466
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792336441791_9307947b",
+      "updated_or_created": "2026-10-18T15:14:01.800Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "ed3bbe2f7635760a1865256b4d42ad01e407f91886b03ffd96799110882f33bf",
+      "body_chars": 47
+    },
+    {
+      "container": "evidence/l1.json",
+      "id": "m_1792336441791_916b8c80",
+      "updated_or_created": "2026-10-18T15:14:01.797Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "cd4764c0af13c29a30b211cd7d2dbc186fc3a1f60fb3a93b4cbed1ddb49f0bf3",
+      "body_chars": 77
+    },
+    {
+      "container": "evidence/l2/CodeGraph-图形化升级-交付方法.md",
+      "id": "CodeGraph-图形化升级-交付方法.md",
+      "read_complete": true,
+      "body_sha256": "afbe4e1b5b9e4f914c3716b25f697de088b4ff36f28ad3a05747e7cc7013a6e9",
+      "authority": "historical model-derived scene",
+      "version": "unknown"
+    },
+    {
+      "container": "evidence/l2/MCP-Hooks-架构-SOP与约束.md",
+      "id": "MCP-Hooks-架构-SOP与约束.md",
+      "read_complete": true,
+      "body_sha256": "0365e70b778e59774cf28e66d15630d772df8eb76f289f66d10ff303bd31c911",
+      "authority": "historical model-derived scene",
+      "version": "unknown"
+    },
+    {
+      "container": "evidence/l2/任务绑定-UX-SOP与交互原则.md",
+      "id": "任务绑定-UX-SOP与交互原则.md",
+      "read_complete": true,
+      "body_sha256": "c6859312ad468884dca195acc7b5a465b0fa86db6ebdf029dc7f423afdae3439",
+      "authority": "historical model-derived scene",
+      "version": "unknown"
+    },
+    {
+      "container": "evidence/l2/后端交付-部署准入-SOP.md",
+      "id": "后端交付-部署准入-SOP.md",
+      "read_complete": true,
+      "body_sha256": "b7900af466c0f4ea7588304b97b0d8540fd67c7b8081092603ae08ac0703e430",
+      "authority": "historical model-derived scene",
+      "version": "unknown"
+    },
+    {
+      "container": "evidence/l2-index.json",
+      "id": "CodeGraph-图形化升级-交付方法.md",
+      "updated_or_created": "2026-10-19T08:45:06.546Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "body_chars": 0
+    },
+    {
+      "container": "evidence/l2-index.json",
+      "id": "MCP-Hooks-架构-SOP与约束.md",
+      "updated_or_created": "2026-10-18T16:49:16.823Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "body_chars": 0
+    },
+    {
+      "container": "evidence/l2-index.json",
+      "id": "任务绑定-UX-SOP与交互原则.md",
+      "updated_or_created": "2026-10-18T17:18:06.844Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "body_chars": 0
+    },
+    {
+      "container": "evidence/l2-index.json",
+      "id": "后端交付-部署准入-SOP.md",
+      "updated_or_created": "2026-10-19T08:11:43.875Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "body_chars": 0
+    },
+    {
+      "container": "evidence/l3.json",
+      "id": "core",
+      "updated_or_created": "2026-10-25T14:54:12.953Z",
+      "authority": "historical model-derived evidence",
+      "read_complete": true,
+      "body_sha256": "7df06f5a42fe6b5c9a617178fa760303546737a51abc96e0a36f54a2cc6c17f2",
+      "body_chars": 1292
+    }
+  ]
+}

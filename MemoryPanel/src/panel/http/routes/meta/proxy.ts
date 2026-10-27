@@ -11,6 +11,13 @@ import type { MetaCallContext } from '../../../kernel/types.js';
 import { KNOWLEDGE_SERVICE_USERNAME } from '../../../startup/ensure-knowledge-llm-binding.js';
 import { DEFAULT_SKILLS } from './default-skills.js';
 import { extractListItems, isCallerSystemAdmin, resolveCallerUserId } from '../knowledge/common.js';
+import { handleModelConfigTest } from './model-config-test.js';
+import { handleModelConfigResync } from './model-config-resync.js';
+import {
+  syncKnowledgeBindingAfterDisable,
+  syncKnowledgeBindingAfterEnable,
+  type EnableDto,
+} from '../knowledge/model-binding-sync.js';
 import {
   getAgentTemplate as readTemplateFile,
   saveAgentTemplate as writeTemplateFile,
@@ -182,6 +189,18 @@ export function registerMetaProxyRoutes(api: Hono, deps: PanelDeps): void {
       return respondControlError(c, 409, duplicateMsg);
     }
 
+    // ── 模型绑定手动再同步：Panel 本地执行（不转发内核）──
+    if (action === 'instance-upstream/extraction/resync-knowledge') {
+      return handleModelConfigResync(c, deps);
+    }
+
+    // ── 未保存模型配置探针：Panel 本地执行（不转发内核）──
+    // 需要 Panel 进程解析服务端已存 Key，且必须能把客户端取消转成上游 abort，
+    // 因此不能用"透明转发一条内核 action"实现。见 model-config-test.ts 顶注释。
+    if (action === 'instance-upstream/extraction/test') {
+      return handleModelConfigTest(c, deps);
+    }
+
     // ── 默认 Agent 模板读写：Panel 直接读写本地文件（不转发内核）──
     if (action === 'agent/set-default-template') {
       if (!(await isCallerSystemAdmin(deps, ctx))) {
@@ -207,6 +226,64 @@ export function registerMetaProxyRoutes(api: Hono, deps: PanelDeps): void {
     if (action === 'team-member/add' && envelope.code === 0) {
       void cloneDefaultAgentForNewMember(body, ctx, deps);
     }
+
+    if (action === 'instance-upstream/extraction/enable' && envelope.code === 0) {
+      // Core committed the active snapshot; mirror it into Knowledge Service.
+      // A KS failure MUST NOT be reported as a successful enable.
+      let sync: Awaited<ReturnType<typeof syncKnowledgeBindingAfterEnable>>;
+      try {
+        sync = await syncKnowledgeBindingAfterEnable(
+          deps,
+          ctx,
+          envelope.data as EnableDto | null | undefined,
+        );
+      } catch (err) {
+        sync = {
+          ok: false,
+          message: err instanceof Error ? err.message : String(err),
+          outcome: 'error',
+        };
+      }
+      if (!sync.ok) {
+        deps.logger.error('knowledge model binding sync failed after enable', {
+          instanceId: ctx.instanceId,
+          configId: sync.configId ?? null,
+          configVersion: sync.configVersion ?? null,
+          outcome: sync.outcome ?? 'error',
+          reason: sync.message,
+        });
+        const active = sync.configId
+          ? ` (core config ${sync.configId}@${sync.configVersion ?? '?'} is active; re-sync the knowledge binding before relying on wiki generation)`
+          : '';
+        return respondControlError(c, 502, `KNOWLEDGE_SYNC_FAILED: ${sync.message}${active}`);
+      }
+      deps.logger.info('knowledge model binding synced after enable', {
+        instanceId: ctx.instanceId,
+        configId: sync.configId ?? null,
+        configVersion: sync.configVersion ?? null,
+        outcome: 'bound',
+      });
+    }
+
+    if (action === 'instance-upstream/extraction/disable' && envelope.code === 0) {
+      // Core is authoritative and already paused; mirror the paused state into KS so
+      // direct/byo wiki generation stops without waiting for the next restart.
+      try {
+        const sync = await syncKnowledgeBindingAfterDisable(deps, ctx);
+        if (!sync.ok) {
+          deps.logger.error('knowledge binding sync after disable failed', {
+            instanceId: ctx.instanceId,
+            outcome: sync.outcome ?? 'error',
+          });
+        }
+      } catch (err) {
+        deps.logger.error('knowledge binding sync after disable crashed', {
+          instanceId: ctx.instanceId,
+          error: err instanceof Error ? err.name : 'unknown',
+        });
+      }
+    }
+
 
     if (action === 'user/list' && envelope.code === 0) {
       hideKnowledgeServiceUser(envelope.data);

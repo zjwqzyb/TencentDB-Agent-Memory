@@ -2,6 +2,9 @@
 
 > 📖 **本文档专门讲解部署形态、Hermes 集成与端到端验证。**
 > 想了解插件的核心能力、配置参数、CLI 工具，请回到 **[主 README](README.md)**。
+>
+> 🔧 **模型配置（Memhub「设置 → 模型配置」）上线**：见 **[模型配置上线手册](docs/deploy/model-config-rollout.md)**
+> （四服务同批升级约束、自动迁移、环境变量、上线自检脚本、回滚顺序）。
 
 `memory-tencentdb` 提供 **两种独立部署形态**，两种形态都能被外部 Agent（典型为 Hermes）通过 HTTP API 调用，并各自适配不同的部署规模与运维要求：
 

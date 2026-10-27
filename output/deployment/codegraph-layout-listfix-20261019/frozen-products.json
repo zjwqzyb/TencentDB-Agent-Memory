@@ -1,0 +1,11 @@
+{
+  "phase": "parent_approved_final_product_input",
+  "baseCommit": "23fe05b77f9c549b983568bf9cb32881c250190e",
+  "products": [
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+      "sha256": "ba611c791c608847c57ac2761f9057d077a90586d89cf24e92ba738b5def0bc6"
+    }
+  ],
+  "testsAndQa": "Layout test frozened0afa23\u2026;98checks passed; QA excluded"
+}

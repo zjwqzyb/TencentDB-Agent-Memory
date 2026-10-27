@@ -378,16 +378,30 @@ export function tokenize(text: string): string[] {
  * bm25() 越负越相关，取负转成"越大越相关"的正分，供图扩展的 decay/minScore 使用。
  * title_tok 权重 5.0、content_tok 1.0（对齐原 MiniSearch boost title×5）。
  */
+function normalizeWikiTitle(value: string): string {
+  return value.normalize("NFKC").toLocaleLowerCase("en-US").replace(/[\p{P}\p{Z}\s]+/gu, "");
+}
+
 function ftsSearch(db: DatabaseType.Database, query: string, limit: number): Array<{ id: string; score: number }> {
+  const titleKey = normalizeWikiTitle(query);
+  if (!titleKey) return [];
+  // Exact title lookup must not be truncated by the FTS candidate limit.
+  const titles = db.prepare("SELECT page_id, title, type FROM page_meta ORDER BY page_id").all() as Array<{ page_id: string; title: string; type: string }>;
+  const exact = titles.filter((row) => normalizeWikiTitle(row.title) === titleKey)
+    .sort((a, b) => Number(b.type === "source") - Number(a.type === "source") || a.page_id.localeCompare(b.page_id));
   const toks = tokenize(query);
-  if (toks.length === 0) return [];
   const expr = toks.map((t) => `"${t.replace(/"/g, '""')}"*`).join(" OR ");
-  const rows = db
-    .prepare(
-      "SELECT page_id, bm25(wiki_fts, 5.0, 1.0) AS score FROM wiki_fts WHERE wiki_fts MATCH ? ORDER BY score LIMIT ?",
-    )
-    .all(expr, limit) as Array<{ page_id: string; score: number }>;
-  return rows.map((r) => ({ id: r.page_id, score: -r.score }));
+  const rows = toks.length ? db.prepare(
+    "SELECT page_id, bm25(wiki_fts, 5.0, 1.0) AS score FROM wiki_fts WHERE wiki_fts MATCH ? ORDER BY score LIMIT ?",
+  ).all(expr, limit) as Array<{ page_id: string; score: number }> : [];
+  const ranked = rows.map((row) => ({ id: row.page_id, score: -row.score }));
+  if (!exact.length) return ranked;
+  const boost = Math.max(1, ...ranked.map((row) => row.score)) + 1;
+  const ids = new Set(exact.map((row) => row.page_id));
+  return [
+    ...exact.map((row, i) => ({ id: row.page_id, score: boost + (exact.length - i) / (exact.length + 1) })),
+    ...ranked.filter((row) => !ids.has(row.id)),
+  ].slice(0, limit);
 }
 
 /** 事务内重建三张索引表（wiki_fts + page_meta + graph_edge）。由 withWriteDb 调用。 */

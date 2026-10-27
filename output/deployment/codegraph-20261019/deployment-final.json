@@ -1,0 +1,65 @@
+{
+  "deployedAt": "2026-10-19T11:25:08+08:00",
+  "target": {
+    "host": "192.168.200.137",
+    "panelBaseUrl": "http://192.168.200.137:8125",
+    "knowledgeHealthUrl": "http://127.0.0.1:8424/health"
+  },
+  "release": {
+    "featureCommit": "c8ccf254746374c69b0e8af43ff82d63596a0a8c",
+    "walSnapshotFixCommit": "f77ef249d491eaa5331b36d7348402b2a957a218",
+    "imageTag": "local/tdai-memory-hub:codegraph-walfix-f77ef24-candidate",
+    "imageId": "sha256:d1c93f2626553683912ed56c34012af4acfc0890ba7b1419fc3dd28382abce0f",
+    "platform": "linux/amd64",
+    "containerId": "108f5a0f96ca160290c88fe3386a81fa741d466807217032b77d6eb5eba4a1aa"
+  },
+  "rollback": {
+    "containerName": "tdai-memory-hub-rollback-20261019-112508",
+    "containerId": "dee94fe8ddfa7130db246e71b023cd0c98b9743a1ec7f81c47fcb25a5b721049",
+    "imageId": "sha256:367ddd5a5077a873f63e74a04d8ba342308d49e0f1bbbfff94f72e68bb7b4e40",
+    "stateAfterSwitch": "exited",
+    "procedure": "bash /opt/tencent-agent-memory/releases/codegraph-walfix-final-20261019/ops/rollback-codegraph.sh",
+    "backupDirectory": "/opt/tencent-agent-memory/releases/codegraph-walfix-final-20261019/backup"
+  },
+  "health": {
+    "containerHealth": "healthy",
+    "panelHttpStatus": 200,
+    "panelBody": {
+      "status": "ok"
+    },
+    "knowledgeHttpStatus": 200,
+    "knowledgeBodyStatus": "ok",
+    "runtimeEnvironmentSnapshotCompared": true,
+    "runtimeEnvironmentSnapshotMode": "0600",
+    "coreRestarted": false
+  },
+  "productionData": {
+    "knowledgeVolumeReused": true,
+    "indexRebuilt": false,
+    "assetId": "cg-4oc687yt",
+    "indexCommit": "e9a82935b527",
+    "assetVersion": "4",
+    "files": 1025,
+    "nodes": 28394,
+    "edges": 70367
+  },
+  "operations": {
+    "releaseDirectory": "/opt/tencent-agent-memory/releases/codegraph-walfix-final-20261019",
+    "deployScript": "/opt/tencent-agent-memory/releases/codegraph-walfix-final-20261019/ops/deploy-codegraph.sh",
+    "rollbackScript": "/opt/tencent-agent-memory/releases/codegraph-walfix-final-20261019/ops/rollback-codegraph.sh",
+    "opsSyntaxCheck": "passed",
+    "imagesEnvChange": "HUB_IMAGE only; CORE_IMAGE and PROXY_IMAGE unchanged",
+    "startScriptChange": "Removed the four legacy Hub source bind mounts whose reviewed behavior is compiled into the candidate image; retained the Core ACL mount. Not invoked during this Hub-only deployment.",
+    "restartScriptChange": "The release deploy script owns the audited Hub-only transaction. The permanent ops/restart-hub.sh retains the former generic restart semantics, reads config/images.env and protected model/internal config, and omits only the four legacy Hub source bind mounts. It was not invoked.",
+    "rollbackScriptChange": "Rollback targets the immutable container name tdai-memory-hub-rollback-20261019-112508 and restores the prior images.env, start.sh, and restart-hub.sh backups so the old image and its legacy patch mounts remain matched.",
+    "deployFailureRecovery": "The release deploy script restores the prior Hub container and all three backed-up deployment files (images.env, start.sh, restart-hub.sh) after a failed candidate health check.",
+    "isolatedSmokeContainers": "removed after acceptance preparation; candidate images retained"
+  },
+  "acceptanceEvidence": {
+    "apiReview": "production-review.json",
+    "staticAssetsReview": "production-assets-review.json",
+    "linuxWalSmoke": "passed on isolated Linux candidate; cold read, repeat/cursor, calls/source, committed WAL expiry, and empty-WAL cleanup",
+    "uiReview": "passed read-only production browser review; see docs/qa/codegraph/production-release-2026-10-19.json"
+  },
+  "secretsIncluded": false
+}

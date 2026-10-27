@@ -1,0 +1,62 @@
+{
+  "plans": {
+    "lowerExact": {
+      "sql": "SELECT rowid,id,name FROM nodes WHERE lower(name)=? ORDER BY rowid LIMIT 100",
+      "plan": [
+        {
+          "id": 5,
+          "parent": 0,
+          "notused": 52,
+          "detail": "SEARCH nodes USING INDEX idx_nodes_lower_name (<expr>=?)"
+        }
+      ]
+    },
+    "lowerPrefix": {
+      "sql": "SELECT rowid,id,name FROM nodes WHERE lower(name)>=? AND lower(name)<? ORDER BY lower(name),rowid LIMIT 100",
+      "plan": [
+        {
+          "id": 5,
+          "parent": 0,
+          "notused": 145,
+          "detail": "SEARCH nodes USING INDEX idx_nodes_lower_name (<expr>>? AND <expr><?)"
+        }
+      ]
+    },
+    "pathKeyset": {
+      "sql": "SELECT rowid,id,name FROM nodes WHERE file_path>=? AND file_path<? ORDER BY file_path,rowid LIMIT 100",
+      "plan": [
+        {
+          "id": 5,
+          "parent": 0,
+          "notused": 146,
+          "detail": "SEARCH nodes USING INDEX idx_nodes_file_path (file_path>? AND file_path<?)"
+        }
+      ]
+    }
+  },
+  "exactNodes": [
+    {
+      "rowid": 8641,
+      "id": "class:74ca913b7495344bb43b78060b897df0",
+      "kind": "class",
+      "name": "SvcClaim",
+      "qualified_name": "com.jinhui.app.orm.claim.model::SvcClaim",
+      "file_path": "biz-serve/app/app-service/src/main/java/com/jinhui/app/orm/claim/model/SvcClaim.java",
+      "start_line": 26,
+      "end_line": 641
+    },
+    {
+      "rowid": 272090,
+      "id": "class:e8450bb1ce1346ab922aed48d135a25e",
+      "kind": "class",
+      "name": "SvcClaim",
+      "qualified_name": "com.jinhui.svc.orm.claim.model::SvcClaim",
+      "file_path": "biz-serve/svc/svc-service/src/main/java/com/jinhui/svc/orm/claim/model/SvcClaim.java",
+      "start_line": 27,
+      "end_line": 677
+    }
+  ],
+  "familyCount": {
+    "n": 625
+  }
+}

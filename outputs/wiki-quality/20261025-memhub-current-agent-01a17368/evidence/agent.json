@@ -1,0 +1,80 @@
+{
+  "session": {
+    "sid": "01a17368-3f46-7912-84f4-e3daafdd5265",
+    "generation": 1,
+    "state": "initialized",
+    "team_id": "team-d6wsrcwehz",
+    "agent_id": "agt-d6ymqoh19z",
+    "task_id": null,
+    "updated": 1792939969.8514152,
+    "task_selection_deferred": true
+  },
+  "user_id": "usr-364azgp7pb",
+  "team": {
+    "team_id": "team-d6wsrcwehz",
+    "name": "TencentDBMemory",
+    "description": "",
+    "owner_user_id": "usr-364azgp7pb",
+    "status": "active",
+    "created_at": "2026-10-18T14:08:42.784Z",
+    "updated_at": "2026-10-18T14:08:42.784Z",
+    "metadata_json": "{}"
+  },
+  "agent": {
+    "agent_id": "agt-d6ymqoh19z",
+    "team_id": "team-d6wsrcwehz",
+    "owner_user_id": "usr-364azgp7pb",
+    "name": "开发助手",
+    "description": "",
+    "prompt": "",
+    "visibility": "team",
+    "status": "active",
+    "created_at": "2026-10-18T14:09:48.019Z",
+    "updated_at": "2026-10-18T14:09:48.232Z",
+    "metadata_json": "{\"ui\":{\"role_prompt\":\"\",\"rules_prompt\":\"\",\"icon\":\"🤖\",\"accent\":\"blue\"}}"
+  },
+  "task": null,
+  "assets": {
+    "knowledge": {
+      "items": [
+        {
+          "knowledge_id": "cg-4oc687yt",
+          "asset_type": "code_graph",
+          "name": "https://github.com/zjwqzyb/TencentDB-Agent-Memory.git",
+          "description": null,
+          "visibility": "team",
+          "agent_id": "agt-d6ymqoh19z",
+          "asset_status": "draft"
+        }
+      ],
+      "total": 1
+    },
+    "skills": {
+      "items": [],
+      "total": 0
+    },
+    "memories": {
+      "items": [
+        {
+          "id": "chat_memory-team-d6wsrcwehz-agt-d6ymqoh19z",
+          "title": "Memory of 开发助手",
+          "summary": "0 条 L1 · 0 条 L2 · 0 条 L3",
+          "uploaded_by_user_id": "usr-364azgp7pb",
+          "updated_at_ms": 1792332588020,
+          "scope": "private",
+          "layer_counts": {
+            "L0_messages": 0,
+            "L1": 0,
+            "L2": 0,
+            "L3": 0
+          },
+          "agent_id": "agt-d6ymqoh19z"
+        }
+      ],
+      "total": 1
+    },
+    "status_note": "asset_status is metadata lifecycle, not Wiki ingestion status; use documents/pages for available content. Memory counts in agent-fixed are placeholders, not actual layer totals."
+  },
+  "own_memory_block_id": "chat_memory-team-d6wsrcwehz-agt-d6ymqoh19z",
+  "source": "live native Panel APIs"
+}

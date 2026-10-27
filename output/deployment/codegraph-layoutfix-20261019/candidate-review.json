@@ -1,0 +1,33 @@
+{
+  "commit": "23fe05b77f9c549b983568bf9cb32881c250190e",
+  "exactCommittedPaths": 7,
+  "baseImage": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+  "candidateImage": "sha256:7f5a8f4bfb34febbff627dc647041adcad742918c23012aff94a3067ae906199",
+  "inheritedFiles": {
+    "match": true,
+    "count": 436,
+    "inventorySha256": "b32c5d0d92f9d9979d660d7799e7831aae99872aa20838ab4612a7d9f269633e",
+    "scope": "Knowledge dist, Panel dist, both package manifests and Node binary"
+  },
+  "health": {
+    "container": "/tdai-codegraph-layoutfix-health-23fe05b",
+    "image": "sha256:7f5a8f4bfb34febbff627dc647041adcad742918c23012aff94a3067ae906199",
+    "network": "none",
+    "readonlyRoot": true,
+    "health": "healthy",
+    "mounts": []
+  },
+  "parentApprovedTests": {
+    "strictLayout": 94,
+    "modes": 30,
+    "dpr": 114,
+    "theme": 4
+  },
+  "webBuild": {
+    "node": "22.23.0",
+    "typecheck": "passed",
+    "vite": "passed"
+  },
+  "productionSwitched": false,
+  "scriptDirectory": "/opt/tencent-agent-memory/releases/codegraph-layoutfix-20261019/ops"
+}

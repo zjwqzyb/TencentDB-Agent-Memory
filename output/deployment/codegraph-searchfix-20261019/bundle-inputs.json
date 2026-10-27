@@ -1,0 +1,11 @@
+{
+  "inputs": {
+    "MemoryKnowledge/src/engines/code/java-import-declarations.ts": "e4dcff066981d50e0157c2803c32000c68b9c3f227c5e714042e6c098e2542a7",
+    "MemoryKnowledge/src/engines/code/structured-aggregation.ts": "2e8af5172f4a822486e0298363be7b8d53adaddf58500eb20a76706466b5b9e8",
+    "MemoryKnowledge/src/engines/code/structured-neighborhood.ts": "4dde9c089a7f3bce8f7fabb27680db4c543d90f8215a1578f48013ae1af1fc9f",
+    "MemoryKnowledge/src/engines/code/structured-java.ts": "ddc66de5c43fb0a8094b86632eb9a102912bf71e5ddd16761ded1bb2c9c9f013",
+    "MemoryKnowledge/src/engines/code/structured-search.ts": "ab9b8db9f31fd8be027ec0b514f1ef9efaccce08c617515694db01f390d05b87",
+    "MemoryKnowledge/src/engines/code/structured.ts": "8e49a8812945ac1e5b16efd6b51940432db18a674d5f961d0919e4d7a18ce57e"
+  },
+  "bundleSha256": "303beeb10a93eadf0e53774e2f29456f6ccd7c44bd18a04aa21fd00b90411dc7"
+}

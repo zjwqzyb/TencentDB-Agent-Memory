@@ -14,13 +14,17 @@
 import type { Context } from "hono";
 import type { ProxyConfig } from "../../types.js";
 import {
-  getInstanceUpstreamConfigs,
+  getInstanceUpstreamConfigState,
   resolveForAgent,
-  resolveExtraction,
   shouldOverride,
   type Resolution,
 } from "../../instance-upstream-cache.js";
 import type { InstanceUpstreamRow } from "../../instance-upstream-cache.js";
+import {
+  evaluateExtractionUpstream,
+  extractionDecisionError,
+  type ExtractionUpstreamDecision,
+} from "../../extraction-gate.js";
 import { matchSystemUserByUserId, hasSystemUsers } from "../../systemUser.js";
 import type { SystemUserMatch } from "../../systemUser.js";
 import { isLegacyProxyPath } from "../../routes/whitelist.js";
@@ -43,6 +47,8 @@ export interface InstanceUpstreamEarlyResult {
   legacyProxy: boolean;
   earlyConvResolution: Resolution;
   earlyExtractRow: InstanceUpstreamRow | null;
+  /** Managed extraction-model gate decision for this request. */
+  earlyExtractionDecision: ExtractionUpstreamDecision;
   earlySysMatch: SystemUserMatch | null;
   isCustomUpstream: boolean;
 }
@@ -53,15 +59,22 @@ export async function stageInstanceUpstreamEarly(
   const { c, config, spaceId, earlyUserId } = input;
 
   const agent = c.req.path.split("/").filter(Boolean)[0] ?? undefined;
-  const instanceConfigs = await getInstanceUpstreamConfigs(
-    config.coreSkill, spaceId, config.instanceUpstream,
+  // System-user (write side) traffic force-refreshes so a Panel enable/disable
+  // is visible immediately; conversation traffic keeps the normal TTL cache.
+  // Same-request call sites coalesce inside the cache (750ms window).
+  const earlySysMatch = hasSystemUsers() ? matchSystemUserByUserId(earlyUserId) : null;
+  const upstreamState = await getInstanceUpstreamConfigState(
+    config.coreSkill, spaceId, config.instanceUpstream, { forceRefresh: earlySysMatch !== null },
   );
+  const instanceConfigs = upstreamState.items;
   const legacyProxy = isLegacyProxyPath(c.req.path);
   const earlyConvResolution: Resolution = legacyProxy
     ? { kind: "official", row: null }
     : resolveForAgent(instanceConfigs, agent ?? "");
-  const earlyExtractRow = resolveExtraction(instanceConfigs);
-  const earlySysMatch = hasSystemUsers() ? matchSystemUserByUserId(earlyUserId) : null;
+  const earlyExtractionDecision = evaluateExtractionUpstream(upstreamState);
+  const earlyExtractRow = earlyExtractionDecision.kind === "managed"
+    ? earlyExtractionDecision.row
+    : null;
 
   // 外部对话请求: blocked / unmanaged → 早 400 (systemUser 走 extraction 永不 block)
   let blockedResp: Response | null = null;
@@ -116,9 +129,27 @@ export async function stageInstanceUpstreamEarly(
     }
   }
 
+  // Write side (systemUser) fail-closed gate: paused / incomplete / unavailable
+  // managed extraction model must never degrade into the global upstream.
+  if (
+    earlySysMatch !== null
+    && blockedResp === null
+    && (earlyExtractionDecision.kind === "paused"
+      || earlyExtractionDecision.kind === "incomplete"
+      || earlyExtractionDecision.kind === "unavailable")
+  ) {
+    const err = extractionDecisionError(earlyExtractionDecision);
+    blockedResp = c.json({
+      code: err.status,
+      error_code: err.code,
+      message: err.message,
+      detail: err.detail,
+    }, err.status as 409 | 503);
+  }
+
   // caller dispatch: systemUser 看 extraction, 外部客户看 conversation
   const isCustomUpstream = earlySysMatch !== null
-    ? shouldOverride(earlyExtractRow)
+    ? earlyExtractionDecision.kind === "managed"
     : shouldOverride(earlyConvResolution);
 
   return {
@@ -127,6 +158,7 @@ export async function stageInstanceUpstreamEarly(
     legacyProxy,
     earlyConvResolution,
     earlyExtractRow,
+    earlyExtractionDecision,
     earlySysMatch,
     isCustomUpstream,
   };

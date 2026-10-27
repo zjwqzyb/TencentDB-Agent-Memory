@@ -1,0 +1,464 @@
+{
+  "audit": "L3 and MCP Hooks scene independent semantic sidecar",
+  "auditor": {
+    "agent": "Codex subagent",
+    "session_id": "01a173c0-7ce3-77f0-882b-7d234ec41eba",
+    "parent_session_id": "01a17368-3f46-7912-84f4-e3daafdd5265",
+    "model": "Codex current model; exact runtime model identifier not exposed"
+  },
+  "read_at": "2026-10-26T00:02:41.820959+08:00",
+  "snapshot_root": "/Users/zj/daydayup/TencentDB-Agent-Memory/outputs/wiki-quality/20261025-memhub-current-agent-01a17368",
+  "head": "f88e5e7e99f5adc57f7312313f66eac0b287bf0e",
+  "scope": {
+    "pages": [
+      "evidence/l3.json#/items/0/body",
+      "evidence/l2/MCP-Hooks-架构-SOP与约束.md"
+    ],
+    "review_type": "targeted model semantic review; six requested risk areas",
+    "semantic_status": "FAIL",
+    "finding_count": 6,
+    "retrieval_status": "NOT_RUN",
+    "end_to_end_qa_status": "NOT_RUN",
+    "test_execution_status": "NOT_RUN"
+  },
+  "limitations": [
+    "Not an online Wiki/Skill audit; no team-assets MCP calls were made.",
+    "Frozen sources were a working-tree snapshot including pre-existing uncommitted changes; HEAD alone does not identify their bytes.",
+    "Four supporting files absent from the frozen source set were read from the current worktree. Their hashes are recorded; their historical contents at scene generation time are not established.",
+    "L3 line numbers in findings refer to decoded items[0].body; the raw JSON stores the whole body on line 8.",
+    "Negative command/path evidence is limited to the current repository and the searched agents/docs scope; it does not prove external clients lack these commands.",
+    "No live HTTPS, task mutations, reconnect, retrieval or QA were executed. Historical test execution totals were not reproduced."
+  ],
+  "frozen_manifest_hash_checks": [
+    {
+      "snapshot": "sources/agents/codex/mcp-hooks/README.md",
+      "sha256": "0c5c3a755a86acd70c8e1056bd5cad448373a6c3a2cdea3cd421e9a12affc6e7",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/agents/codex/mcp-hooks/TASK-COMMANDS.md",
+      "sha256": "229163fabf7b63c129e5aeeaafd4964a14043ea9265665ff7349a7818e69d82a",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/docs/agents/issue-tracker.md",
+      "sha256": "525fc4460ecf8fc7ae780cd6a0732c0c7754811f78266e6d323a0ad027ce609d",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/agents/codex/mcp-hooks/server/project_tools.py",
+      "sha256": "3d7c49d39d8813f8124dcdc0b0c7f245b60655b297a7dcb08b3353744703f981",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/agents/codex/mcp-hooks/server/project_runtime.py",
+      "sha256": "4ad1ca78fa8498782dfd8df8caaef387afe9f6e2c4ec4362cbfc7b5e7afe265e",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/agents/codex/mcp-hooks/server/server.py",
+      "sha256": "c255656bab7d71edb92deb3606e93a4069fb7551e575a8d230fd834d3df2eb35",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/agents/codex/mcp-hooks/tests/test_task_selection.py",
+      "sha256": "f7012f92142e900555a1eb45a8fe930fad30cc46396b225a51ec01a59710fc2b",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/agents/codex/mcp-hooks/tests/test_server.py",
+      "sha256": "0f68dac70cb83dbc437f7f35867cab288d2e48671fad6ba6ed8c6a24b7bcd04e",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/docs/qa/codegraph/java-release-2026-10-19.md",
+      "sha256": "1ca1355109c2868df684e4354392d12dd0d42550a168bce9bc430b8a149943a4",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/docs/qa/codegraph/search-release-2026-10-19.md",
+      "sha256": "e6b68c1196aa511b6d7660d62b3467faffc5b22d0c9c2e778ceb846b19b7cb3a",
+      "matches_manifest": true
+    },
+    {
+      "snapshot": "sources/docs/qa/codegraph/production-release-2026-10-19.md",
+      "sha256": "56547b87b15aace2e5855bd3b4974d38559b587019212938e03dfe33eb7f7e81",
+      "matches_manifest": true
+    }
+  ],
+  "current_worktree_supplements": [
+    {
+      "path": "agents/codex/mcp-hooks/server/project_api.py",
+      "source_mode": "current_worktree_not_frozen",
+      "sha256": "2f86a8b1e61a52b47b97f99d5b702cefb01723a4820780ff825783c9d4c21aef"
+    },
+    {
+      "path": "agents/codex/mcp-hooks/server/project_tasks.py",
+      "source_mode": "current_worktree_not_frozen",
+      "sha256": "532224bb8ddbf7d24df74f43dedf27e95d6be2b3e2b661bcebd98fb670716ee1"
+    },
+    {
+      "path": "agents/codex/mcp-hooks/local/task_commands.py",
+      "source_mode": "current_worktree_not_frozen",
+      "sha256": "c8eb58f73ac442217d8718aade9f99f3a49965642493a22dd0566701ba30065d"
+    },
+    {
+      "path": "agents/codex/mcp-hooks/tests/test_http.py",
+      "source_mode": "current_worktree_not_frozen",
+      "sha256": "982f8a48e226d9b8233e2a00f170e1f8e571be957e7125713cf84c4600ec3abb"
+    }
+  ],
+  "negative_checks": {
+    "paths_missing": [
+      "agents/codex/mcp-hooks/ARCHITECTURE.md",
+      "policies/hooks/local-permissions.yaml",
+      "tests/mcp-hooks/e2e/https-direct"
+    ],
+    "agents_docs_search_no_matches": [
+      "hooks init --env",
+      "mcp reconnect --instance",
+      "mcp list-tools",
+      "https-direct",
+      "local-permissions.yaml"
+    ],
+    "tests_tls_search": "Only http.server import and ThreadingHTTPServer matched https|HTTPS|ssl|TLS|certificate|证书|68|76|E2E|e2e; no TLS tests located."
+  },
+  "findings": [
+    {
+      "id": "S01",
+      "severity": "P1",
+      "title": "将仍受支持的更新命令标成废弃，并发明替代命名",
+      "confidence": "high",
+      "status": "FAIL",
+      "original_claims": [
+        {
+          "file": "evidence/l3.json#/items/0/body",
+          "line_start": 21,
+          "line_end": 21,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "不要将 `mem:update-task` 或其他已废弃指令用于新逻辑；应统一迁移到 `mem:claim` / `mem:complete` 等原子指令组合，因其具备幂等性与冲突感知能力。"
+        }
+      ],
+      "actual_evidence": [
+        {
+          "file": "sources/agents/codex/mcp-hooks/TASK-COMMANDS.md",
+          "line_start": 17,
+          "line_end": 22,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/TASK-COMMANDS.md",
+          "line_start": 9,
+          "line_end": 9,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/server/project_tools.py",
+          "line_start": 160,
+          "line_end": 176,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/local/task_commands.py",
+          "line_start": 24,
+          "line_end": 47,
+          "source_mode": "current_worktree"
+        }
+      ],
+      "verdict": "mem:update-task 仍是正式支持的工作流。正式领取和完成名称为 mem:claim-task、mem:complete-task，二者均通过 manage_project_task 的 update 操作实现；不是新增的 claim/complete 原子 MCP 工具。",
+      "impact": "会拒绝合法更新，或指导用户调用没有实现的名称。",
+      "recommended_correction": "恢复 update-task 的有效状态与 claim-task/complete-task 正式名称，明确底层统一 update 和 revision/request_id 约束。"
+    },
+    {
+      "id": "S02",
+      "severity": "P1",
+      "title": "revision 冲突自动追最新版本重试与正式契约相反",
+      "confidence": "high",
+      "status": "FAIL",
+      "original_claims": [
+        {
+          "file": "evidence/l3.json#/items/0/body",
+          "line_start": 19,
+          "line_end": 19,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "不要跳过 `revision` 校验；应改为服务端强制拦截 + 客户端自动重试最新 revision，因为绕过将导致最终状态不可预测。"
+        }
+      ],
+      "actual_evidence": [
+        {
+          "file": "sources/agents/codex/mcp-hooks/TASK-COMMANDS.md",
+          "line_start": 97,
+          "line_end": 103,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/server/project_tools.py",
+          "line_start": 163,
+          "line_end": 165,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/docs/agents/issue-tracker.md",
+          "line_start": 28,
+          "line_end": 28,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/server/project_tasks.py",
+          "line_start": 177,
+          "line_end": 186,
+          "source_mode": "current_worktree"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/server/project_api.py",
+          "line_start": 53,
+          "line_end": 58,
+          "source_mode": "current_worktree"
+        }
+      ],
+      "verdict": "冲突后须重新读取、比较并重新决定补丁，不允许仅替换 expected_revision 自动覆盖。新意图用新 request_id；原样重试复用原 ID；结果不明先对账。",
+      "impact": "自动套用最新版本会覆盖其他人的更改，破坏引入 revision 的目的。",
+      "recommended_correction": "将自动重试改为 reload/review/reform-patch，保留拒绝与结果不明的区别。"
+    },
+    {
+      "id": "S03",
+      "severity": "P1",
+      "title": "HTTPS-only 和 /api/v1/mcp/* 不是该适配器真实契约",
+      "confidence": "high",
+      "status": "FAIL",
+      "original_claims": [
+        {
+          "file": "evidence/l2/MCP-Hooks-架构-SOP与约束.md",
+          "line_start": 19,
+          "line_end": 19,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "所有 Hooks 对 Panel 的调用必须使用 HTTPS 协议，路径为 `/api/v1/mcp/*`，禁止任何 SSH 封装或代理中转。"
+        }
+      ],
+      "actual_evidence": [
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 39,
+          "line_end": 43,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/docs/agents/issue-tracker.md",
+          "line_start": 65,
+          "line_end": 65,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/server/project_runtime.py",
+          "line_start": 69,
+          "line_end": 81,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/server/project_runtime.py",
+          "line_start": 345,
+          "line_end": 357,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/server/project_api.py",
+          "line_start": 29,
+          "line_end": 38,
+          "source_mode": "current_worktree"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/server/project_api.py",
+          "line_start": 66,
+          "line_end": 74,
+          "source_mode": "current_worktree"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/server/project_tasks.py",
+          "line_start": 167,
+          "line_end": 184,
+          "source_mode": "current_worktree"
+        }
+      ],
+      "verdict": "正式文档允许已有内网 HTTP，公开网络使用部署好的 HTTPS。实际 URL 为根地址 + /api/v1/ + 原生业务路径；任务是 meta/issue/*，其他功能还有 meta/team/*、knowledge/*、skill/* 等。适配器正常链路不经 SSH 这一点有据，但不能据此推出虚构的统一 mcp 路由或所有环境 HTTPS-only。",
+      "impact": "可能造成错误 URL、404、误判有效内网配置不合规，并错误排查 TLS。",
+      "recommended_correction": "改用 HTTP(S) 根地址、部署范围条件与真实原生路由。"
+    },
+    {
+      "id": "S04",
+      "severity": "P2",
+      "title": "场景中的命令和三个资产路径在当前仓库没有依据",
+      "confidence": "high",
+      "status": "FAIL",
+      "original_claims": [
+        {
+          "file": "evidence/l2/MCP-Hooks-架构-SOP与约束.md",
+          "line_start": 28,
+          "line_end": 28,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "替代做法：运行 `hooks init --env team_assets` 并验证日志。"
+        },
+        {
+          "file": "evidence/l2/MCP-Hooks-架构-SOP与约束.md",
+          "line_start": 29,
+          "line_end": 29,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "替代做法：`mcp reconnect --instance team_assets` 后验证 `mcp list-tools` 输出。"
+        },
+        {
+          "file": "evidence/l2/MCP-Hooks-架构-SOP与约束.md",
+          "line_start": 39,
+          "line_end": 41,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "`/agents/codex/mcp-hooks/ARCHITECTURE.md`；`/policies/hooks/local-permissions.yaml`；`/tests/mcp-hooks/e2e/https-direct/`。"
+        }
+      ],
+      "actual_evidence": [
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 64,
+          "line_end": 74,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 97,
+          "line_end": 103,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 262,
+          "line_end": 274,
+          "source_mode": "frozen_snapshot"
+        }
+      ],
+      "verdict": "上述三个项目相对路径在当前工作树均不存在；在 agents/、docs/ 中搜索命令完整文本、https-direct 和 local-permissions.yaml 均无命中。正式安装入口是 python3 agents/codex/mcp-hooks/install.py，配置为 projects.json/私有 JSON 与 hooks.json；正式文档要求通过客户端重启或重载 MCP/Hook，未声明这组通用 shell 命令。当前核验不能排除外部客户端另行提供同名命令，因此归类为项目内无据。",
+      "impact": "使用者无法定位说明或测试，复制命令可能失败；本地权限策略/会话密钥生成流程也没有所引文件支撑。",
+      "recommended_correction": "引用 README、install.py、examples 与真实 tests 目录；客户端操作只写已核实的产品版本和入口。"
+    },
+    {
+      "id": "S05",
+      "severity": "P2",
+      "title": "历史测试数量被升级成固定 E2E 发布规范，且新增 TLS 覆盖无证据",
+      "confidence": "high",
+      "status": "FAIL",
+      "original_claims": [
+        {
+          "file": "evidence/l3.json#/items/0/body",
+          "line_start": 12,
+          "line_end": 12,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "上线前必须通过全部 68 项 E2E 测试，其中“冲突拒绝”与“去重”用例为硬性否决项，缺失即阻断发布。"
+        },
+        {
+          "file": "evidence/l2/MCP-Hooks-架构-SOP与约束.md",
+          "line_start": 32,
+          "line_end": 32,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "新链路已通过 76 项自动化测试（含并发冲突、去重账本、HTTPS 重试、证书过期模拟）及真实 HTTP 流量验证；"
+        }
+      ],
+      "actual_evidence": [
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 24,
+          "line_end": 37,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 262,
+          "line_end": 274,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/tests/test_http.py",
+          "line_start": 1,
+          "line_end": 4,
+          "source_mode": "current_worktree"
+        },
+        {
+          "file": "agents/codex/mcp-hooks/tests/test_http.py",
+          "line_start": 84,
+          "line_end": 95,
+          "source_mode": "current_worktree"
+        }
+      ],
+      "verdict": "正式开发验证是 unittest 离线/本机回环测试，并另列目标客户端上线验收。所读正式资料没有固定 68 项 E2E 的发布门槛；当前 HTTP 回环测试用 ThreadingHTTPServer 和 http://127.0.0.1。当前 tests 目录检索未找到 TLS/证书过期/HTTPS 重试覆盖，不能将历史的 68/76 通过数解释为这些能力均被验证。未重跑测试，也未判定历史执行次数真伪。",
+      "impact": "制造不存在的验收门槛，同时对真实 HTTPS 和客户端兼容性给出虚假信心。",
+      "recommended_correction": "将次数归入带日期/版本的历史验证事实，按真实测试类型和覆盖范围描述；单独列实际客户端与 TLS 的未验证项。"
+    },
+    {
+      "id": "S06",
+      "severity": "P1",
+      "title": "把 mem 工作流当作 MCP 工具，形成永远无法满足的重连门槛",
+      "confidence": "high",
+      "status": "FAIL",
+      "original_claims": [
+        {
+          "file": "evidence/l3.json#/items/0/body",
+          "line_start": 20,
+          "line_end": 20,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "应改为将重连作为 CI/CD 流水线最后一步，并验证工具列表包含全部 `mem:*` 条目。"
+        },
+        {
+          "file": "evidence/l3.json#/items/0/body",
+          "line_start": 25,
+          "line_end": 25,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "Agent 应拒绝执行任何未出现在当前 MCP 工具列表中的 `mem:*` 指令，并主动触发重连诊断流程；"
+        },
+        {
+          "file": "evidence/l3.json#/items/0/body",
+          "line_start": 3,
+          "line_end": 3,
+          "source_mode": "frozen_snapshot",
+          "excerpt": "所有协作型 Agent 的 CLI 功能演进，必须以 revision 为状态锚点、以 MCP 重连为可见前提、以 mem:* 命名规范为接口契约，三者缺一不可。"
+        }
+      ],
+      "actual_evidence": [
+        {
+          "file": "sources/agents/codex/mcp-hooks/TASK-COMMANDS.md",
+          "line_start": 9,
+          "line_end": 9,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/TASK-COMMANDS.md",
+          "line_start": 105,
+          "line_end": 105,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 138,
+          "line_end": 165,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 181,
+          "line_end": 185,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/README.md",
+          "line_start": 254,
+          "line_end": 258,
+          "source_mode": "frozen_snapshot"
+        },
+        {
+          "file": "sources/agents/codex/mcp-hooks/server/project_tools.py",
+          "line_start": 160,
+          "line_end": 176,
+          "source_mode": "frozen_snapshot"
+        }
+      ],
+      "verdict": "mem:* 是 Hook 注入的助手工作流文本，不是 tools/list 中的工具名。实际任务工具只有 manage_project_task 一个入口，完整清单共 14 个工具。schema 或已启动源码升级后重启/重连有据；无依据把“包含全部 mem:*”作为可用性检查，或把这次适配器升级流程扩展成所有协作 Agent/每项任务的一般规则。",
+      "impact": "即使连接和契约正确也会因找不到 mem:* 而拒绝所有合法任务，反复重连。",
+      "recommended_correction": "核对 manage_project_task 名称及 schema/版本，按实际升级或清单变更触发客户端重载，不要求工具清单包含 mem:*。"
+    }
+  ],
+  "summary": "所核对范围存在命令废弃/命名、并发冲突恢复、协议路径、资产命令引用、验证门槛与工具可见性六类失真。L3 及该场景适合作为待核验历史摘要，不能直接作为执行规则。"
+}

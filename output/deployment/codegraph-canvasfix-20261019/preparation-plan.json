@@ -1,0 +1,18 @@
+{
+  "status": "preparation_only_waiting_approved_canvas_paths",
+  "releaseDirectory": "/opt/tencent-agent-memory/releases/codegraph-canvasfix-20261019",
+  "runtimeBaseImage": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+  "changes": "Web compiled output only; no Knowledge/Panel/runtime dependency replacement",
+  "source": "Clean approved commit plus the same SHA-verified 14 production overlays",
+  "verification": [
+    "Approved browser DPR regression",
+    "Web TypeScript/Vite build using absolute Node22.23.0",
+    "All new Web runtime artifact SHA values match audited build",
+    "Inherited Knowledge/Panel runtime files unchanged vs ee5e",
+    "Isolated fresh candidate health with no production data or environment",
+    "After approved Hub switch, environment/mount/Core identity match new baseline",
+    "Real Java process and interface plus TS calls/source spot checks; no bulk pagination or reindex"
+  ],
+  "rollback": "Retain previous ee5e Hub container; restore matching images.env only; do not change ops start/restart or prior releases",
+  "templates": "PENDING tokens deliberately unresolved until parent approves precise canvas paths/commit"
+}

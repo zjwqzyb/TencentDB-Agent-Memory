@@ -1,0 +1,37 @@
+{
+  "status": "prepared for parent review; UI acceptance/commit/candidate image/deployment pending",
+  "files": [
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/candidate-context/Dockerfile",
+      "sha256": "4bce82c3b6939c57428ac102af7c34d139c5c8b6d11ec76bae582af4b50c457b"
+    },
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/audit-production.sh",
+      "sha256": "90bc3c62e388d1befef959e7dd0022218b62f664f2b79028f0cc6be5dcdc2ab8"
+    },
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/build-and-verify-candidate.sh",
+      "sha256": "3b1c1157d716e22d3694a8f146970a1b5dc4951a4264fb39903b16d7d479a844"
+    },
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/deploy-codegraph-searchfix.sh",
+      "sha256": "8d5adf1ca38f121b08442823c29482d48ca18eef456e938ba6a47d912f31566c"
+    },
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/rollback-codegraph-searchfix.sh",
+      "sha256": "3d242cc529380ccb8e1108ba1d24fa2690559a78baa2c97457f9573b58d7df34"
+    },
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/runtime-audit.mjs",
+      "sha256": "7f403c5e7fd2483037e061e3d831511d3a632bf985be1e2d49a9ab52b715c1b5"
+    },
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/ops/verify-candidate-health.sh",
+      "sha256": "976c357ed4fe8e2f6d1c63c1fce45228f2005d5a20b8f381cf704c2fd9fdd172"
+    },
+    {
+      "path": "/tmp/tencentdb-codegraph-searchfix-20261019/scripts/prepare-reviewed-candidate.py",
+      "sha256": "6387aad54c5a9e5a8f6e0434b558592f61ff3e441637c843834ae0e7eb83c336"
+    }
+  ]
+}

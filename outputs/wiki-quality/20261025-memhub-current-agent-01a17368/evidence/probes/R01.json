@@ -1,0 +1,157 @@
+{
+  "case_id": "R01",
+  "query": "mem:update-task 现在还能用吗，更新任务应使用什么命令？",
+  "elapsed_ms": 3247,
+  "data": {
+    "L0": {
+      "items": [
+        {
+          "id": "msg-16d17046ac5942abac217b602b1e2b1e",
+          "role": "user",
+          "title": "user",
+          "body": "任务模块修改了，补充了新的cli，之前的mem:update-task失效了，修改实现，修复mem:update-task,并根据新的cli补充新的指令\n",
+          "tags": [
+            "user"
+          ],
+          "refs": [],
+          "score": 0.9780523717795526,
+          "created_at": "2026-10-18T16:18:32.428Z"
+        },
+        {
+          "id": "msg-cddeaad982d147a496d83a5f1bfdc6b9",
+          "role": "assistant",
+          "title": "assistant",
+          "body": "已修复 MCP + Hooks 的 `mem:update-task`，改用新任务 API 和 revision 校验，避免覆盖并发修改；已同步本机与服务端适配器。\n\n新增指令：\n\n- 查询：`mem:list-tasks`、`mem:ready-tasks`、`mem:get-task`\n- 操作：`mem:comment-task`、`mem:create-subtask`、`mem:claim-task`、`mem:complete-task`、`mem:cancel-task`\n\n[完整使用说明](/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/TASK-COMMANDS.md)\n\n68 项测试通过，真实更新、评论、去重和冲突拒绝验证通过。已推送 `7888097` 至 `feat/server_team`。\n\n当前聊天需重连 `team_assets` MCP，刷新工具定义。",
+          "tags": [
+            "assistant"
+          ],
+          "refs": [],
+          "score": 0.9770453040796065,
+          "created_at": "2026-10-18T16:18:32.429Z"
+        },
+        {
+          "id": "msg-86f77c16c1b943f0b87329da5eddb8ac",
+          "role": "assistant",
+          "title": "assistant",
+          "body": "**已生效，当前会话已加载新版任务工具，且已走 HTTP 直连。**\n\n刚通过当前 MCP 实测：\n\n- `mem:get-task`：成功，当前绑定任务已完成，revision=4。\n- `mem:list-tasks`：成功，任务指令修复、HTTP 迁移两项任务均已完成。\n- `mem:ready-tasks`：成功，目前可领取任务为 0。\n\n创建、更新、评论等操作接口也已加载。本轮仅做查询验证，没有修改任务。",
+          "tags": [
+            "assistant"
+          ],
+          "refs": [],
+          "score": 0.9576229269417122,
+          "created_at": "2026-10-18T17:05:06.381Z"
+        }
+      ],
+      "total": 3
+    },
+    "L1": {
+      "items": [
+        {
+          "id": "m_1792340391135_b2bd48de",
+          "title": "work_fact",
+          "body": "MCP Hooks 模块已完成代码提交（feat/server_team 分支，提交哈希 65c10f4 → 7888097）、文档补齐（/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/README.md 及新增 TASK-COMMANDS.md）、CLI 任务指令全面升级：原 mem:update-task 失效并已修复，新增 9 个任务指令（mem:list-tasks、mem:ready-tasks、mem:get-task、mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 并引入 revision 校验机制；更新后需重连 team_assets MCP 并刷新工具定义方可生效；本次更新通过 68 项端到端测试（覆盖更新、评论、去重及冲突拒绝），且离线敏感信息检查通过，但尚未升级线上部署。",
+          "tags": [],
+          "refs": [],
+          "score": 0.9617440001819624,
+          "created_at": "2026-10-18T15:47:56.433Z"
+        },
+        {
+          "id": "m_1792340391135_7e8709fe",
+          "title": "work_artifact",
+          "body": "MCP Hooks 模块已完成代码提交（feat/server_team 分支，提交哈希 65c10f4 → 7888097）、文档补齐（/Users/zj/daydayup/TencentDB-Agent-Memory/agents/codex/mcp-hooks/README.md 及新增 TASK-COMMANDS.md）、CLI 任务指令全面升级：原 mem:update-task 失效并已修复，新增 9 个任务指令（mem:list-tasks、mem:ready-tasks、mem:get-task、mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 并引入 revision 校验机制；更新后需重连 team_assets MCP 并刷新工具定义方可生效；本次更新通过 68 项端到端测试（覆盖更新、评论、去重及冲突拒绝），且离线敏感信息检查通过，但尚未升级线上部署。",
+          "tags": [],
+          "refs": [],
+          "score": 0.9617440001819624,
+          "created_at": "2026-10-18T15:47:56.433Z"
+        },
+        {
+          "id": "m_1792340391135_03017141",
+          "title": "work_fact",
+          "body": "新增 9 个任务相关 CLI 指令：查询类（mem:list-tasks、mem:ready-tasks、mem:get-task）和操作类（mem:comment-task、mem:create-subtask、mem:claim-task、mem:complete-task、mem:cancel-task），全部基于新任务 API 实现。",
+          "tags": [],
+          "refs": [],
+          "score": 0.9280045852664291,
+          "created_at": "2026-10-18T16:20:24.809Z"
+        }
+      ],
+      "total": 3
+    },
+    "L2": {
+      "layer": "L2",
+      "items": [
+        {
+          "id": "CodeGraph-图形化升级-交付方法.md",
+          "title": "CodeGraph-图形化升级-交付方法.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-19T08:45:06.546Z"
+        },
+        {
+          "id": "MCP-Hooks-架构-SOP与约束.md",
+          "title": "MCP-Hooks-架构-SOP与约束.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-18T16:49:16.823Z"
+        },
+        {
+          "id": "任务绑定-UX-SOP与交互原则.md",
+          "title": "任务绑定-UX-SOP与交互原则.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-18T17:18:06.844Z"
+        },
+        {
+          "id": "后端交付-部署准入-SOP.md",
+          "title": "后端交付-部署准入-SOP.md",
+          "body": "",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-19T08:11:43.875Z"
+        }
+      ],
+      "total": 4,
+      "limit": 3,
+      "offset": 0
+    },
+    "L3": {
+      "layer": "L3",
+      "items": [
+        {
+          "id": "core",
+          "title": "core memory",
+          "body": "# Team Operating Doctrine\n\n> **Operating Thesis**: 所有协作型 Agent 的 CLI 功能演进，必须以 revision 为状态锚点、以 MCP 重连为可见前提、以 mem:* 命名规范为接口契约，三者缺一不可。\n\n## Core Principles\n- **状态一致性优先于执行速度**：任何任务写操作必须携带服务端校验的 `revision`，禁止绕过；并发冲突不是异常，而是设计必须防御的常态。\n- **工具可见性即功能生效**：MCP 工具定义缓存使指令变更不可见，重连 MCP 是新指令生效的强制前提，非运维可选项。\n- **接口契约高于实现自由**：所有任务指令统一前缀 `mem:` + 英文原形动词（如 `list`, `claim`, `complete`），命名即协议，不因上下文缩写或本地化变形。\n\n## Reusable SOPs\n- **CLI 升级三步闭环**：当升级基于 MCP Hooks 的任务 CLI 时，必须同步完成：① 提交代码并更新 `/agents/codex/mcp-hooks/TASK-COMMANDS.md`；② 重连 team_assets MCP 服务；③ 刷新工具定义；任一缺失即视为未生效。\n- **端到端测试准入**：上线前必须通过全部 68 项 E2E 测试，其中“冲突拒绝”与“去重”用例为硬性否决项，缺失即阻断发布。\n\n## Decision Logic\n- 当面临“快速上线”与“完整三步闭环”冲突时，优先执行三步闭环，因为缺失任一环节将导致指令不可见、状态不一致或协作静默失败——三者均无法被监控告警及时捕获。\n- 当需扩展指令集时，优先复用已有 `mem:` 动词组合，而非新增命名；仅当语义不可覆盖时，才申请新增动词，并同步更新命名规范文档。\n\n## Boundaries & Anti-patterns\n- 不要跳过 `revision` 校验；应改为服务端强制拦截 + 客户端自动重试最新 revision，因为绕过将导致最终状态不可预测。\n- 不要在未重连 MCP 的情况下假设新指令已就绪；应改为将重连作为 CI/CD 流水线最后一步，并验证工具列表包含全部 `mem:*` 条目。\n- 不要将 `mem:update-task` 或其他已废弃指令用于新逻辑；应统一迁移到 `mem:claim` / `mem:complete` 等原子指令组合，因其具备幂等性与冲突感知能力。\n\n## Agent Rules\n- Agent 应在每次任务写操作前自动获取并携带当前 `revision`，避免硬编码或缓存过期；避免因 revision 失效引发 409 冲突后静默失败。\n- Agent 应拒绝执行任何未出现在当前 MCP 工具列表中的 `mem:*` 指令，并主动触发重连诊断流程；避免因缓存陈旧导致指令调用 404 后降级为手工操作。\n\n> **最后更新**：2026-10-18 · **来源场景**：1 个 · **记忆总数**：0 条",
+          "tags": [],
+          "refs": [],
+          "created_at": "2026-10-25T14:54:12.953Z"
+        }
+      ],
+      "total": 1,
+      "limit": 3,
+      "offset": 0
+    },
+    "L2_content": {
+      "任务绑定-UX-SOP与交互原则.md": {
+        "layer": "L2",
+        "items": [
+          {
+            "id": "任务绑定-UX-SOP与交互原则.md",
+            "title": "任务绑定-UX-SOP与交互原则.md",
+            "body": "-----META-START-----\ncreated: 2026-10-18T17:18:06.844Z\nupdated: 2026-10-18T17:18:06.844Z\nsummary: 定义任务绑定流程中「暂不绑定任务」作为标准可选项的 UX SOP：固定位置、显性入口、支持用户主动跳过，以保障操作连续性并规避强制绑定风险。\nheat: 1\n-----META-END-----\n\n## 工作场景\n适用于所有需提供任务绑定环节的前端交互流程，特别是用户可能合理选择不关联任务的轻量级会话启动、快速操作或探索性使用场景。\n\n## 适用条件\n- 任务绑定为非强制步骤，存在合法的“跳过”业务语义；\n- 用户操作路径强调低门槛与连续性（如首次使用、临时会话、无需追踪上下文）；\n- 绑定失败或误绑定将导致数据污染、流程中断或用户困惑。\n\n## 核心 SOP\n- 「暂不绑定任务」必须作为**固定选项**出现在任务绑定列表末尾，与所有可选任务并列呈现，且视觉权重一致；\n- 该选项必须为**显性、可点击的独立条目**，不得隐藏于下拉菜单、设置开关或二次确认弹窗中；\n- 用户选择后，系统须立即进入“未绑定任务”状态，并保持后续操作链路完整（如继续输入、提交、保存）。\n\n## 判断逻辑\n引入该选项并非妥协，而是基于对用户意图的尊重与对流程鲁棒性的强化：当绑定非必要时，强制要求反而增加认知负荷与误操作概率；显性跳过入口能降低放弃率、提升任务流程完成率，并为后续行为分析提供清晰信号（主动跳过 vs 系统缺失）。\n\n## 禁忌与反模式\n- 不要将「暂不绑定」设为默认选项：会弱化绑定价值，且无法区分用户真实意图；\n- 不要将其置于列表顶部或与高频任务混排：易引发误点，违背“明确主动选择”的设计目标；\n- 不要在用户选择后中断流程或跳转至新页面：破坏操作连续性，违背设计初衷。\n\n## 关键事实依据\n- 该 SOP 已落地为产品功能，新版发布并通过全部 90 项回归测试；\n- 当前会话初始化逻辑已同步适配，支持用户选择后直接进入未绑定状态。\n\n## 相关任务与资产\n- 无待跟进任务；\n- 依赖前端组件库 v2.4+ 的标准化绑定列表控件。\n\n## 演化记录\n\n## 待确认问题",
+            "tags": [
+              "markdown"
+            ],
+            "refs": [],
+            "created_at": "2026-10-18T17:18:06.844Z"
+          }
+        ],
+        "total": 1,
+        "limit": 1,
+        "offset": 0
+      }
+    }
+  },
+  "isError": false
+}

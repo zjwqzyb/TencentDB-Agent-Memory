@@ -1,0 +1,40 @@
+{
+  "layer": "L2",
+  "items": [
+    {
+      "id": "CodeGraph-图形化升级-交付方法.md",
+      "title": "CodeGraph-图形化升级-交付方法.md",
+      "body": "",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-19T08:45:06.546Z"
+    },
+    {
+      "id": "MCP-Hooks-架构-SOP与约束.md",
+      "title": "MCP-Hooks-架构-SOP与约束.md",
+      "body": "",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T16:49:16.823Z"
+    },
+    {
+      "id": "任务绑定-UX-SOP与交互原则.md",
+      "title": "任务绑定-UX-SOP与交互原则.md",
+      "body": "",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-18T17:18:06.844Z"
+    },
+    {
+      "id": "后端交付-部署准入-SOP.md",
+      "title": "后端交付-部署准入-SOP.md",
+      "body": "",
+      "tags": [],
+      "refs": [],
+      "created_at": "2026-10-19T08:11:43.875Z"
+    }
+  ],
+  "total": 4,
+  "limit": 100,
+  "offset": 0
+}

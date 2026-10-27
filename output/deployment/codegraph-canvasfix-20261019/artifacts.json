@@ -1,0 +1,51 @@
+{
+  "commit": "c9f6645f1e8231c2fe37609c3ff6577ffb397630",
+  "baseImage": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+  "files": [
+    {
+      "path": "Dockerfile",
+      "sha256": "ac6712b45f8a5ee8bad4256a35d66bac16d474e5d8e22dae1cfa210468e208e9",
+      "bytes": 216
+    },
+    {
+      "path": "source-manifest.json",
+      "sha256": "f3472b9625a1db55d1e1e21b2403206803121bf671d8a3c7de69ec56bca3823c",
+      "bytes": 3566
+    },
+    {
+      "path": "web-dist/assets/KnowledgeGraph-CcEZ1alE.js",
+      "sha256": "7067885b6acd9f92cf94281c1f2a321361cc9e1781550c412fa6eeb801f8bbf0",
+      "bytes": 22745
+    },
+    {
+      "path": "web-dist/assets/KnowledgeGraph-DEqMBSbC.css",
+      "sha256": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+      "bytes": 2360
+    },
+    {
+      "path": "web-dist/assets/main-D4Z9h8vb.css",
+      "sha256": "6b7493934155e37c7ed30269bd995023667535e03c1c2434e82ab8868c32a3c2",
+      "bytes": 574464
+    },
+    {
+      "path": "web-dist/assets/main-vBIlMdwD.js",
+      "sha256": "b3ae4e3878a07000321f9c9bb6edf03c531f5603a2d2c917e3d486450524f6b2",
+      "bytes": 2200749
+    },
+    {
+      "path": "web-dist/downloads/tdai-memory-agents.zip",
+      "sha256": "03abac690ab736eb8d3d6b9a284ebd71e2a5963df13b9abf8a324ce91be72fde",
+      "bytes": 94137
+    },
+    {
+      "path": "web-dist/index.html",
+      "sha256": "b4a7b0e683f2f2e3dfcefa7d065c9a0beb04335c582eac6794dcae8c990638ed",
+      "bytes": 454
+    },
+    {
+      "path": "web-dist/logo.png",
+      "sha256": "c3b0ebc4a6749d626817a116b0299bf81136f573a4731f6217de530a0e46d0f7",
+      "bytes": 102558
+    }
+  ]
+}

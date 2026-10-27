@@ -55,7 +55,15 @@ def state(sid):
             "INSERT OR IGNORE INTO sessions VALUES (?,1,'asset_confirm',NULL,NULL,NULL,?)",
             (sid, time.time()),
         )
-        return dict(d.execute("SELECT * FROM sessions WHERE sid=?", (sid,)).fetchone())
+        result = dict(d.execute("SELECT * FROM sessions WHERE sid=?", (sid,)).fetchone())
+        if result["state"] == "initialized":
+            saved = d.execute(
+                "SELECT data FROM bindings WHERE sid=? AND generation=?",
+                (sid, result["generation"]),
+            ).fetchone()
+            if saved and json.loads(saved["data"]).get("task_selection_deferred") is True:
+                result["task_selection_deferred"] = True
+        return result
 
 
 def member(team):
@@ -133,6 +141,9 @@ def choices(sid, team=None):
         "session": s,
         "defaults": DEFAULT,
         "teams": {"items": [member(C["team_id"])], "total": 1},
+        "task_selection_options": [
+            {"label": "暂不绑定任务", "defer_task": True},
+        ],
     }
     team = team or s.get("team_id") or DEFAULT["team_id"]
     member(team)
@@ -150,8 +161,8 @@ def choices(sid, team=None):
 
 
 def require_task_selection(b):
-    """An empty binding is allowed only when this Agent has no linked tasks."""
-    if b.get("task_id"):
+    """Require a task unless none exist or the user explicitly deferred selection."""
+    if b.get("task_id") or b.get("task_selection_deferred") is True:
         return
     offset = 0
     while True:
@@ -194,6 +205,13 @@ def session(r):
     expected = r.get("expected_generation")
     if expected != s["generation"]:
         raise ValueError("Session generation changed; read status and retry")
+    defer_task = r.get("defer_task", False)
+    if not isinstance(defer_task, bool):
+        raise ValueError("defer_task must be a boolean")
+    if defer_task and op not in ("initialize_defaults", "select_agent_task"):
+        raise ValueError("defer_task is only valid when selecting an Agent")
+    if defer_task and r.get("task_id"):
+        raise ValueError("Cannot provide task_id with defer_task")
     if op == "reset":
         with db() as d:
             cur = d.execute(
@@ -216,9 +234,12 @@ def session(r):
         if not r.get("confirmed"):
             raise ValueError("Explicit confirmation of defaults required")
         if s["state"] == "initialized":
+            if defer_task and not s.get("task_selection_deferred"):
+                raise ValueError("Use select_agent_task to defer an existing empty binding")
             require_task_selection(s)
-            return {"session": s}
+            return context(sid)
         ns.update(DEFAULT)
+        ns["task_selection_deferred"] = defer_task
         ns["state"] = "initialized"
         trail = ["asset_confirm", "team_select", "agent_task_select", "initialized"]
         validate(ns)
@@ -242,10 +263,14 @@ def session(r):
                 raise ValueError(
                     "Cannot change the Agent when completing task selection"
                 )
-            if not r.get("task_id"):
+            if s.get("task_id") and defer_task:
+                raise ValueError("A task is already selected; reset before deferring")
+            if not r.get("task_id") and not defer_task:
                 raise ValueError(
                     "A task is required to complete an initialized binding"
                 )
+            if defer_task and s.get("task_selection_deferred"):
+                return context(sid)
             if s.get("task_id"):
                 if s["task_id"] == r["task_id"]:
                     return context(sid)
@@ -254,7 +279,10 @@ def session(r):
                 )
             # Existing queued writes and child agents keep the old immutable generation.
             ns["generation"] = expected + 1
-        ns.update(agent_id=r["agent_id"], task_id=r.get("task_id"), state="initialized")
+        ns.update(
+            agent_id=r["agent_id"], task_id=r.get("task_id"), state="initialized",
+            task_selection_deferred=defer_task,
+        )
         validate(ns)
         require_task_selection(ns)
         trail = ["initialized"]
@@ -288,7 +316,11 @@ def session(r):
                 (
                     sid,
                     ns["generation"],
-                    json.dumps({k: ns[k] for k in ["team_id", "agent_id", "task_id"]}),
+                    json.dumps({
+                        **{k: ns[k] for k in ["team_id", "agent_id", "task_id"]},
+                        **({"task_selection_deferred": True}
+                           if ns.get("task_selection_deferred") else {}),
+                    }),
                 ),
             )
     return context(sid) if ns["state"] == "initialized" else {"session": state(sid)}

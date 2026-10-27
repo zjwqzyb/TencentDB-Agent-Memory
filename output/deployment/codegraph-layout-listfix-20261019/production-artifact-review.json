@@ -1,0 +1,14 @@
+{
+  "matches": true,
+  "count": 8,
+  "sha256ByRuntimePath": {
+    "/app/codegraph-layout-listfix-source-manifest.json": "b2a796b7dcdc773ae05d2caf2c1702e28c5984918083d51edcc22c86bd7cc4a5",
+    "/app/panel/web/dist/assets/KnowledgeGraph-C0QJeuwk.js": "47b94ee512577bfaf9fe0f4aac3c83d10c67c9b1a7b9ef9c0e4fc3a196d4bb89",
+    "/app/panel/web/dist/assets/KnowledgeGraph-DEqMBSbC.css": "6505010502bc705ad0a66cfd67294797ae319b8d2e35f3aff3ea7a658c7395b3",
+    "/app/panel/web/dist/assets/main-BzSlednB.js": "2fd5c232fa62d0148b3d8781ce16d8a044a25f87fae4ba7886f57ba9f6be6646",
+    "/app/panel/web/dist/assets/main-Du-ZvOU_.css": "f863ac8a6f25f40dd95a1b944fb803bb44b705d4c537240ca4bca4e895fe63d4",
+    "/app/panel/web/dist/downloads/tdai-memory-agents.zip": "03abac690ab736eb8d3d6b9a284ebd71e2a5963df13b9abf8a324ce91be72fde",
+    "/app/panel/web/dist/index.html": "8e8d2ef0c398b3ccf48dbc2e7141ee3b7c8a08f3ddcb3cda3aa6645b05249079",
+    "/app/panel/web/dist/logo.png": "c3b0ebc4a6749d626817a116b0299bf81136f573a4731f6217de530a0e46d0f7"
+  }
+}

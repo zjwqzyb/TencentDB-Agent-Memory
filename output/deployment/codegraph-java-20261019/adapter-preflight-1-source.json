@@ -1,0 +1,54 @@
+{
+  "note": "Immutable preflight source snapshot; preliminary worktree adapter, not a committed release",
+  "files": [
+    {
+      "path": "MemoryKnowledge/src/engines/code/bridge.ts",
+      "sha256": "18837e8cbf0a84306d313a3179bdaad63ac74f59f0fc6542dce7e938a8ab543b"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/index.ts",
+      "sha256": "7df95317d87f74fa517277e1aa05dc1a4f610b15b0417b1806d9db14eeff0ed4"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/java-import-declarations.ts",
+      "sha256": "e4dcff066981d50e0157c2803c32000c68b9c3f227c5e714042e6c098e2542a7"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/normalize.ts",
+      "sha256": "1fa751811043b3a115a69ee69af5b80a541b31c2e6dc5d9b2f0b31d93a433c53"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-aggregation.ts",
+      "sha256": "2e8af5172f4a822486e0298363be7b8d53adaddf58500eb20a76706466b5b9e8"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-java.ts",
+      "sha256": "ddc66de5c43fb0a8094b86632eb9a102912bf71e5ddd16761ded1bb2c9c9f013"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-mode-context.ts",
+      "sha256": "81de481835222b08c7fb6819ad37bf6009e2032f101e04d1bea26712ee90ba1a"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-neighborhood.ts",
+      "sha256": "4dde9c089a7f3bce8f7fabb27680db4c543d90f8215a1578f48013ae1af1fc9f"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured.ts",
+      "sha256": "0097e11ebaf488f8a3cfd0070ca11b2854dfceb7e9679c10087c2bba7bf69f03"
+    }
+  ],
+  "adapterBundleSha256": "192b9e5eb64d09c59392aedf8d0758821f45e23d88ede959820467b95263a009",
+  "verificationScriptSha256": "03457f2ddcb97c53b819dc355f69f78d712129202076084f99e6e31ed6bf9c81",
+  "runtimeImage": "sha256:d1c93f2626553683912ed56c34012af4acfc0890ba7b1419fc3dd28382abce0f",
+  "isolation": {
+    "network": "none",
+    "containerRoot": "readonly",
+    "capabilities": "ALL dropped",
+    "healthcheck": "disabled",
+    "entrypoint": "node; direct queryStructured import",
+    "dataMount": "isolated coherent backup:ro",
+    "productionEnvironment": "not supplied",
+    "servicesStarted": false
+  }
+}

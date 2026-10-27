@@ -1,0 +1,33 @@
+{
+  "commit": "c9f6645f1e8231c2fe37609c3ff6577ffb397630",
+  "pathsCommitted": 2,
+  "sourceManifest": "source-manifest.json",
+  "baseImage": "sha256:ee5e1623ad37d96f56ef3bd93b3db658b1f6a0a656ece6e2543bf28ef4c8a250",
+  "candidateImage": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+  "inheritedFiles": {
+    "match": true,
+    "count": 436,
+    "inventorySha256": "b32c5d0d92f9d9979d660d7799e7831aae99872aa20838ab4612a7d9f269633e",
+    "scope": "Knowledge dist, Panel dist, both package manifests and Node binary"
+  },
+  "health": {
+    "container": "/tdai-codegraph-canvasfix-health-c9f6645",
+    "image": "sha256:746a87484d7722510f0f99e9229f5da89e4405e76c0037fc4a98fbec695a8806",
+    "network": "none",
+    "readonlyRoot": true,
+    "health": "healthy",
+    "mounts": []
+  },
+  "browserRegression": {
+    "source": "../codegraph-java-20261019/parent-dpr-browser.json",
+    "checks": 114,
+    "passedByParent": true
+  },
+  "webBuild": {
+    "node": "22.23.0",
+    "typecheck": "passed",
+    "vite": "passed"
+  },
+  "productionSwitched": false,
+  "scriptDirectory": "/opt/tencent-agent-memory/releases/codegraph-canvasfix-20261019/ops"
+}

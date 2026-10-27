@@ -63,7 +63,7 @@ ISSUE = {
 TOOLS = [
     tool(
         "project_session",
-        "Initialize/reselect a Codex session: asset_confirm → team_select → agent_task_select → initialized. status/choices are read-only. A new chat requires user confirmation; explicit use-default instruction allows initialize_defaults. Reset never deletes server memory. Select only an owned Agent in the configured team. A task is required when linked tasks exist; defaults never skip task selection.",
+        "Initialize/reselect a Codex session: asset_confirm → team_select → agent_task_select → initialized. status/choices are read-only. When presenting task choices, append the explicit 暂不绑定任务 option from task_selection_options to the same selectable list as real tasks; do not present it only in prose. A new chat requires user confirmation; explicit use-default instruction allows initialize_defaults. Reset never deletes server memory. Select only an owned Agent in the configured team. When the user explicitly chooses planning without a task, pass defer_task=true and omit task_id, even if linked tasks exist. Defaults alone never imply deferral. Deferred sessions stay initialized and can bind a task later with select_agent_task.",
         {
             "operation": enum(
                 "status",
@@ -79,6 +79,10 @@ TOOLS = [
             "team_id": S,
             "agent_id": S,
             "task_id": S,
+            "defer_task": {
+                "type": "boolean",
+                "description": "Only for an explicit user choice to initialize without a task; mutually exclusive with task_id. Supported by initialize_defaults and select_agent_task.",
+            },
         },
         ["operation"],
         True,

@@ -1,0 +1,6 @@
+{
+  "originalCandidate": "sha256:5ee5a490e828d8d51887bb1137200e53579f49b40d36c808a11555ab49f06cb5",
+  "issue": "23 AppleDouble ._ metadata files from macOS archive; functional artifact hashes correct, production switch not run",
+  "replacementArchiveSha256": "69cc93197c3de01fea5aa547995152965148d601ac3c845ed7df00ea8a71ea76",
+  "archiveMethod": "Python tarfile, explicit entries, no Mac metadata, no source/compiled artifact bytes changed"
+}

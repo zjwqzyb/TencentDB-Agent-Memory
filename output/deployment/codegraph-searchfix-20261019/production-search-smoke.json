@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "query": "SvcClaim",
+  "scopePath": "",
+  "nodes": 100,
+  "firstTwo": [
+    {
+      "id": "cg-gvcy949i@159ad760d68321fcc17ca05ac3dbd0b2:class:74ca913b7495344bb43b78060b897df0",
+      "name": "SvcClaim",
+      "qualifiedName": "com.jinhui.app.orm.claim.model::SvcClaim",
+      "filePath": "biz-serve/app/app-service/src/main/java/com/jinhui/app/orm/claim/model/SvcClaim.java",
+      "startLine": 26
+    },
+    {
+      "id": "cg-gvcy949i@159ad760d68321fcc17ca05ac3dbd0b2:class:e8450bb1ce1346ab922aed48d135a25e",
+      "name": "SvcClaim",
+      "qualifiedName": "com.jinhui.svc.orm.claim.model::SvcClaim",
+      "filePath": "biz-serve/svc/svc-service/src/main/java/com/jinhui/svc/orm/claim/model/SvcClaim.java",
+      "startLine": 27
+    }
+  ],
+  "indexVersion": "159ad760d68321fcc17ca05ac3dbd0b2",
+  "originalIndexVersionUnchanged": true,
+  "rowsRead": 103,
+  "truncated": true,
+  "truncationReasons": [
+    "node_budget"
+  ],
+  "nextCursorPresent": true,
+  "millisecondsIncludingNetwork": 2108.913708012551
+}

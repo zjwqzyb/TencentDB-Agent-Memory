@@ -1,0 +1,183 @@
+{
+  "ok": true,
+  "assetId": "cg-rmlck25u",
+  "language": "java",
+  "node": "v22.23.3",
+  "sdk": "1.6.2",
+  "durationMs": 20367,
+  "copiedSources": 4517,
+  "sourceFailures": 0,
+  "checks": [
+    "namespace-calls-accurate-empty",
+    "namespace-hierarchy-accurate-empty",
+    "process-four-real-calls",
+    "process-same-index-source",
+    "process-budgeted-pagination-retains-four-calls",
+    "class-extends",
+    "interface-extends",
+    "wrong-log-info-omitted",
+    "heuristic-dispatch-omitted",
+    "impact-directed-real-evidence",
+    "dependencies-import-and-source-evidence",
+    "clusters-import-and-source-evidence"
+  ],
+  "observations": [
+    {
+      "name": "namespace-calls-accurate-empty",
+      "state": "empty",
+      "nodes": 1,
+      "edges": 0,
+      "warnings": [
+        "select_a_callable"
+      ],
+      "truncated": false
+    },
+    {
+      "name": "namespace-hierarchy-accurate-empty",
+      "state": "empty",
+      "nodes": 1,
+      "edges": 0,
+      "warnings": [
+        "select_a_type"
+      ],
+      "truncated": false
+    },
+    {
+      "name": "process-four-real-calls",
+      "state": "ready",
+      "nodes": 5,
+      "edges": 4,
+      "warnings": [
+        "java_static_analysis_incomplete"
+      ],
+      "truncated": false,
+      "relations": [
+        "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator::AbstractCodeGenerator::before",
+        "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::check",
+        "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::doProcess",
+        "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator::process>calls>com.jinhui.component.code.core.generator::AbstractCodeGenerator::after"
+      ]
+    },
+    {
+      "name": "process-same-index-source",
+      "state": "ready",
+      "nodes": 1,
+      "edges": 0,
+      "warnings": [],
+      "truncated": false
+    },
+    {
+      "name": "class-extends",
+      "state": "ready",
+      "nodes": 2,
+      "edges": 1,
+      "warnings": [],
+      "truncated": false,
+      "relations": [
+        "com.jinhui.component.code.core.generator.impl::DefaultCodeGenerator>extends>com.jinhui.component.code.core.generator::AbstractCodeGenerator"
+      ]
+    },
+    {
+      "name": "interface-extends",
+      "state": "ready",
+      "nodes": 2,
+      "edges": 1,
+      "warnings": [],
+      "truncated": false,
+      "relations": [
+        "com.jinhui.component.data.protocol.trans.http.operator::HttpGetOperator>extends>com.jinhui.component.data.protocol.trans.http.operator::HttpBaseOperator"
+      ]
+    },
+    {
+      "name": "wrong-log-info-omitted",
+      "state": "ready",
+      "nodes": 2,
+      "edges": 1,
+      "warnings": [
+        "java_static_analysis_incomplete",
+        "java_ambiguous_relations_omitted"
+      ],
+      "truncated": false
+    },
+    {
+      "name": "heuristic-dispatch-omitted",
+      "state": "ready",
+      "nodes": 1,
+      "edges": 0,
+      "warnings": [
+        "java_static_analysis_incomplete",
+        "java_heuristic_relations_omitted"
+      ],
+      "truncated": false
+    },
+    {
+      "name": "impact-directed-real-evidence",
+      "state": "ready",
+      "nodes": 2,
+      "edges": 1,
+      "warnings": [
+        "static_analysis_potential_impact",
+        "unresolved_or_dynamic_relations_not_complete",
+        "java_static_analysis_incomplete",
+        "java_heuristic_relations_omitted"
+      ],
+      "truncated": false
+    },
+    {
+      "name": "dependencies-import-and-source-evidence",
+      "state": "ready",
+      "nodes": 15,
+      "edges": 14,
+      "warnings": [
+        "sdk_import_extraction_incomplete",
+        "partial_dependency_counts",
+        "cycles_only_in_observed_graph"
+      ],
+      "truncated": true,
+      "pages": 102,
+      "evidencePages": 50,
+      "evidenceItems": 1,
+      "sourceState": "ready",
+      "firstEvidence": {
+        "id": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:edge:98781",
+        "sourceId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:namespace:258a78cac91a02f6bc447e245dca9455",
+        "targetId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:interface:46337270bdcdf187a1b058a29d4aba78",
+        "sourceFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/generator/impl/DefaultCodeGenerator.java",
+        "targetFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/incr/Incremental.java",
+        "line": 3,
+        "column": 0,
+        "kind": "imports",
+        "resolution": "internal"
+      },
+      "completenessClaim": "bounded sample; full index completion is not asserted"
+    },
+    {
+      "name": "clusters-import-and-source-evidence",
+      "state": "ready",
+      "nodes": 3,
+      "edges": 3,
+      "warnings": [
+        "sdk_import_extraction_incomplete",
+        "partial_dependency_counts",
+        "cycles_only_in_observed_graph"
+      ],
+      "truncated": true,
+      "pages": 102,
+      "evidencePages": 102,
+      "evidenceItems": 13,
+      "sourceState": "ready",
+      "firstEvidence": {
+        "id": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:edge:98781",
+        "sourceId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:namespace:258a78cac91a02f6bc447e245dca9455",
+        "targetId": "cg-rmlck25u@0fc8cb1024d7f8fc876e8287b49f2fb3:interface:46337270bdcdf187a1b058a29d4aba78",
+        "sourceFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/generator/impl/DefaultCodeGenerator.java",
+        "targetFile": "jinhui-component/jinhui-component-code/jinhui-component-code-core/src/main/java/com/jinhui/component/code/core/incr/Incremental.java",
+        "line": 3,
+        "column": 0,
+        "kind": "imports",
+        "resolution": "internal"
+      },
+      "completenessClaim": "bounded sample; full index completion is not asserted"
+    }
+  ]
+}

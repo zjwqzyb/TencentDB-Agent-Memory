@@ -1,0 +1,68 @@
+{
+  "java": {
+    "assetId": "cg-rmlck25u",
+    "sourceMode": "readonly Docker bind",
+    "sqliteVersion": "3.49.2",
+    "nodes": 103502,
+    "edges": 194125,
+    "languages": [
+      {
+        "language": "java",
+        "n": 102834
+      },
+      {
+        "language": "properties",
+        "n": 396
+      },
+      {
+        "language": "xml",
+        "n": 232
+      },
+      {
+        "language": "yaml",
+        "n": 40
+      }
+    ],
+    "files": 4707,
+    "copied": 4517,
+    "skipped": 190,
+    "failures": [],
+    "sourceDatabaseIdentity": {
+      "size": "326000640",
+      "mtimeNs": "1792377551161194736"
+    }
+  },
+  "typescript": {
+    "assetId": "cg-4oc687yt",
+    "sourceMode": "readonly Docker bind",
+    "sqliteVersion": "3.49.2",
+    "nodes": 28394,
+    "edges": 70367,
+    "languages": [
+      {
+        "language": "javascript",
+        "n": 179
+      },
+      {
+        "language": "python",
+        "n": 910
+      },
+      {
+        "language": "tsx",
+        "n": 1204
+      },
+      {
+        "language": "typescript",
+        "n": 26101
+      }
+    ],
+    "files": 1025,
+    "copied": 986,
+    "skipped": 39,
+    "failures": [],
+    "sourceDatabaseIdentity": {
+      "size": "86646784",
+      "mtimeNs": "1792337107191842372"
+    }
+  }
+}

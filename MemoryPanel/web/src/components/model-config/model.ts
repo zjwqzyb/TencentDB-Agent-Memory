@@ -1,11 +1,18 @@
 import type {
   CreateExtractionDraft,
   ExtractionConfig,
+  TestConfigBody,
   UpdateExtractionDraft,
   UpstreamProvider,
 } from '@/lib/api/instance-upstream';
 
-export type { ExtractionConfig, UpstreamProvider } from '@/lib/api/instance-upstream';
+export type {
+  ExtractionConfig,
+  ModelTestCapability,
+  ModelTestEvent,
+  TestConfigBody,
+  UpstreamProvider,
+} from '@/lib/api/instance-upstream';
 
 export interface ModelConfigForm {
   provider: UpstreamProvider;
@@ -124,23 +131,33 @@ export function isFormDirty(
   return JSON.stringify(comparableForm(form)) !== JSON.stringify(comparableForm(formFromConfig(config)));
 }
 
+/**
+ * Base URL 校验的唯一实现：保存校验与测试按钮共用，避免两处规则漂移。
+ * 返回 i18n key；合法时返回 null。
+ */
+export function baseUrlErrorKey(value: string): string | null {
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return 'modelConfig.error.baseUrlProtocol';
+    }
+    if (url.username || url.password || url.search || url.hash) {
+      return 'modelConfig.error.baseUrlCredentials';
+    }
+  } catch {
+    return 'modelConfig.error.baseUrlInvalid';
+  }
+  return null;
+}
+
 export function validateModelForm(
   form: ModelConfigForm,
   config: ExtractionConfig | undefined,
 ): string[] {
   const errors: string[] = [];
   if (!form.modelId.trim()) errors.push('modelConfig.error.modelRequired');
-  try {
-    const url = new URL(form.baseUrl.trim());
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      errors.push('modelConfig.error.baseUrlProtocol');
-    }
-    if (url.username || url.password || url.search || url.hash) {
-      errors.push('modelConfig.error.baseUrlCredentials');
-    }
-  } catch {
-    errors.push('modelConfig.error.baseUrlInvalid');
-  }
+  const urlError = baseUrlErrorKey(form.baseUrl);
+  if (urlError) errors.push(urlError);
   const saved = savedModelConfig(config);
   const needsKey = !saved?.api_key_configured || form.replaceKey;
   if (needsKey && !form.apiKey.trim()) errors.push('modelConfig.error.keyRequired');
@@ -148,6 +165,31 @@ export function validateModelForm(
     errors.push('modelConfig.error.confirmKeyReuse');
   }
   return errors;
+}
+
+export type EnableBlockedReason = 'no-draft' | 'test-required' | 'test-stale' | 'form-dirty' | null;
+
+/**
+ * 启用门禁：只有"已保存草稿 + 通过且与当前草稿完全匹配、未过期"的测试证据、
+ * 且表单没有未保存改动时才允许启用（启用写入的是服务端草稿，不是表单）。
+ */
+export function enableBlockedReason(
+  config: ExtractionConfig | undefined,
+  options: { dirty?: boolean } = {},
+): EnableBlockedReason {
+  if (!config?.draft) return 'no-draft';
+  const test = config.test;
+  if (!test) return 'test-required';
+  if (!test.passed || !test.matches_current) return 'test-stale';
+  if (options.dirty) return 'form-dirty';
+  return null;
+}
+
+export function canEnableConfig(
+  config: ExtractionConfig | undefined,
+  options: { dirty?: boolean } = {},
+): boolean {
+  return Boolean(config?.draft) && enableBlockedReason(config, options) === null;
 }
 
 export function buildCreateDraftBody(form: ModelConfigForm): CreateDraftBody {
@@ -175,5 +217,53 @@ export function buildUpdateDraftBody(
   if (requiresKeyReuseConfirmation(form, config) && form.confirmReuseKey) {
     body.confirm_reuse_api_key = true;
   }
+  return body;
+}
+
+function hasTestKey(form: ModelConfigForm, config: ExtractionConfig | undefined): boolean {
+  const saved = savedModelConfig(config);
+  return Boolean(form.apiKey.trim()) || saved?.api_key_configured === true;
+}
+
+/**
+ * 「测试连接」的表单前置校验：只关心测试能否发起，不要求保存侧的
+ * `confirmReuseKey`（测试不落库、不改变密钥归属）。
+ */
+export function testFormErrors(
+  form: ModelConfigForm,
+  config: ExtractionConfig | undefined,
+): string[] {
+  const errors: string[] = [];
+  if (!form.modelId.trim()) errors.push('modelConfig.error.modelRequired');
+  const urlError = baseUrlErrorKey(form.baseUrl);
+  if (urlError) errors.push(urlError);
+  if (!hasTestKey(form, config)) errors.push('modelConfig.error.keyRequired');
+  return errors;
+}
+
+/** 用当前未保存表单发起测试的必要条件；模型 ID、Base URL 与可用密钥缺一不可。 */
+export function canRunTest(
+  form: ModelConfigForm,
+  config: ExtractionConfig | undefined,
+): boolean {
+  return testFormErrors(form, config).length === 0;
+}
+
+/**
+ * 构造测试请求体。表单留空 Key 时省略 `api_key`，服务端复用已保存密钥（草稿优先）；
+ * `base_version` 始终携带，便于服务端把结果绑定到用户看到的配置版本。
+ */
+export function buildTestBody(
+  form: ModelConfigForm,
+  config: ExtractionConfig | undefined,
+): TestConfigBody {
+  const body: TestConfigBody = {
+    provider: form.provider,
+    base_url: normalizeBaseUrlInput(form.baseUrl),
+    model_id: form.modelId.trim(),
+    base_version: config?.version,
+  };
+  const apiKey = form.apiKey.trim();
+  if (apiKey) body.api_key = apiKey;
   return body;
 }

@@ -52,6 +52,15 @@ export interface ExtractorRunner {
 export interface ExtractorOptions {
   core: SkillCore;
   runner?: ExtractorRunner;
+  /**
+   * Resolve the runner for ONE extract job.
+   *
+   * Background jobs must freeze the managed model snapshot at job start:
+   * `extract()` calls this exactly once and passes the resolved runner to the
+   * query-gen + review LLM calls of that job. Unlike `runner`, this is safe for
+   * long-lived extractor instances — a config switch affects the next job only.
+   */
+  runnerProvider?: () => Promise<ExtractorRunner | undefined>;
   systemPrompt?: string;
   /**
    * 冷启动 / 批量导入使用的严格版 systemPrompt (SKILL_REVIEW_PROMPT_STRICT)。
@@ -115,6 +124,7 @@ export interface ExtractResult {
 export class SkillExtractor {
   private readonly core: SkillCore;
   private readonly runner?: ExtractorRunner;
+  private readonly runnerProvider?: () => Promise<ExtractorRunner | undefined>;
   private readonly systemPrompt: string;
   /** 冷启动/批量导入用的严格 prompt; undefined 时 mode==='strict' 也退回 systemPrompt。 */
   private readonly strictSystemPrompt?: string;
@@ -128,6 +138,7 @@ export class SkillExtractor {
   constructor(opts: ExtractorOptions) {
     this.core = opts.core;
     this.runner = opts.runner;
+    this.runnerProvider = opts.runnerProvider;
     this.systemPrompt = opts.systemPrompt ?? "You are a Skill Review Agent. Use tools to look at existing skills, decide what to add/improve, and call skill_create / skill_update / skill_patch / skill_files_write to persist.";
     this.strictSystemPrompt = opts.strictSystemPrompt;
     this.maxIterations = opts.maxIterations ?? 16;
@@ -145,10 +156,38 @@ export class SkillExtractor {
     this.logger = opts.logger;
   }
 
+  /**
+   * Resolve the runner for the current job exactly once.
+   *
+   * A managed-model resolution failure throws here (fail closed) — it must not
+   * degrade into "no runner" which would silently return zero candidates.
+   */
+  private async resolveJobRunner(): Promise<ExtractorRunner | undefined> {
+    if (this.runnerProvider) return this.runnerProvider();
+    return this.runner;
+  }
+
   async extract(input: ExtractInput): Promise<ExtractResult> {
     const { messages } = input;
     if (!Array.isArray(messages) || messages.length === 0) {
       throw new Error("ExtractV2: messages must be a non-empty array of ExtractMessage");
+    }
+    // Job start: freeze the managed model snapshot once for this extraction.
+    // Paused/invalid/unreadable managed configuration throws here (fail closed).
+    const runner = await this.resolveJobRunner();
+    if (!runner) {
+      // No runner injected (test environment / disabled) → 返回空候选
+      this.logger?.info(`${TAG} no runner provided; returning empty candidates`);
+      obsLogger.info("skill.extractor.extract", {
+        task_id: input.task_id,
+        dur_ms: 0,
+        msg_count: messages.length,
+        candidates: 0,
+        skipped: "no_runner",
+        requested_mode: input.mode ?? 'default',
+        effective_mode: input.mode === 'strict' && this.strictSystemPrompt ? 'strict' : 'default',
+      });
+      return { candidates: [] };
     }
     // [obs] 一次抽取一条汇总事件；LLM 内部 iteration 走 langfuse trace（trace.report
     // → OTel Span → Langfuse SpanProcessor 过滤上报），这里只做「入口→出口」
@@ -195,7 +234,7 @@ export class SkillExtractor {
         } else {
           // Case relevant: total 超 limit, 花一次 LLM query-gen + BM25 找最相关的。
           try {
-            const relevant = await this.buildRelevantSkillsBlock(input, truncated);
+            const relevant = await this.buildRelevantSkillsBlock(input, truncated, runner);
             if (relevant) {
               prefixBlock = relevant.block;
               prefixMode = "relevant";
@@ -242,21 +281,6 @@ export class SkillExtractor {
     const effectiveMode: 'strict' | 'default' =
       input.mode === 'strict' && this.strictSystemPrompt ? 'strict' : 'default';
 
-    if (!this.runner) {
-      // No runner injected (test environment / disabled) → 返回空候选
-      this.logger?.info(`${TAG} no runner provided; returning empty candidates`);
-      obsLogger.info("skill.extractor.extract", {
-        task_id: input.task_id,
-        dur_ms: Date.now() - t0,
-        msg_count: messages.length,
-        candidates: 0,
-        skipped: "no_runner",
-        requested_mode: input.mode ?? 'default',
-        effective_mode: effectiveMode,
-      });
-      return { candidates: [] };
-    }
-
     const tools = createSkillTools({
       core: this.core,
       user_id: input.user_id,
@@ -269,7 +293,7 @@ export class SkillExtractor {
 
     let text: string;
     try {
-      text = await this.runner.run({
+      text = await runner.run({
         prompt,
         systemPrompt: effectiveSystemPrompt,
         tools,
@@ -370,10 +394,9 @@ export class SkillExtractor {
   private async buildRelevantSkillsBlock(
     input: ExtractInput,
     transcript: string,
+    runner: ExtractorRunner,
   ): Promise<{ block: string; query: string } | null> {
-    if (!this.runner) return null;
-
-    const query = await this.generateSearchQueryFromTranscript(input, transcript);
+    const query = await this.generateSearchQueryFromTranscript(input, transcript, runner);
     if (!query) return null;
 
     let hits: Awaited<ReturnType<typeof this.core.search>>;
@@ -409,9 +432,9 @@ export class SkillExtractor {
   private async generateSearchQueryFromTranscript(
     input: ExtractInput,
     transcript: string,
+    runner: ExtractorRunner,
   ): Promise<string> {
-    if (!this.runner) return "";
-    const raw = await this.runner.run({
+    const raw = await runner.run({
       systemPrompt: QUERY_GEN_SYSTEM_PROMPT,
       prompt: [
         "Below is a past conversation. Extract 2-5 short keywords (Chinese or English) that",

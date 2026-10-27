@@ -1,0 +1,33 @@
+--- image/panel/dist/panel/http/routes/knowledge/wiki-routes.js
+
++++ production/panel-wiki-routes.js
+
+@@ -192,6 +192,27 @@
+
+             return gate.error;
+         const kc = deps.knowledgeClientFactory(ctx.instanceId);
+         return runKs(c, () => kc.wikiPageRead(wikiId, refs));
++    });
++    // W13 page/write — authenticated member with asset write permission.
++    // Team and actor are derived from the access gate, never the request body.
++    api.post('/knowledge/wiki/page/write', mw, async (c) => {
++        const ctx = buildCtx(c);
++        const body = await readJson(c);
++        const wikiId = str(body, 'wiki_id');
++        if (!wikiId) return respondControlError(c, 400, 'MISSING_WIKI_ID');
++        const pages = body.pages;
++        if (!Array.isArray(pages) || pages.length === 0)
++            return respondControlError(c, 400, 'MISSING_PAGES');
++        if (!pages.every(p => p && typeof p.ref === 'string' && p.ref.trim() && typeof p.content === 'string'))
++            return respondControlError(c, 400, 'INVALID_PAGES');
++        const sizeErr = checkFileSizes(pages);
++        if (sizeErr) return respondControlError(c, 413, sizeErr);
++        const gate = await requireKnowledgeRead(deps, c, ctx, wikiId, { action: 'write' });
++        if ('error' in gate) return gate.error;
++        const teamId = gate.asset?.team_id;
++        if (!teamId) return respondControlError(c, 400, 'MISSING_TEAM_ID');
++        const kc = deps.knowledgeClientFactory(ctx.instanceId);
++        return runKs(c, () => kc.wikiPageWrite(teamId, wikiId, pages, gate.userId));
+     });
+     // W14 page/rm — id-only + write 权限；KS 需要 team_id，来自 meta_asset.team_id
+     api.post('/knowledge/wiki/page/rm', mw, async (c) => {

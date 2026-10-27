@@ -1,0 +1,18 @@
+{
+  "status": "preparation_only_waiting_css_hash_and_exact_scope",
+  "baseCommit": "23fe05b77f9c549b983568bf9cb32881c250190e",
+  "baseImage": "sha256:7f5a8f4bfb34febbff627dc647041adcad742918c23012aff94a3067ae906199",
+  "changes": "Web dist only; awaiting approved single CSS and long-analysis regression scope",
+  "preservedSourceOverlays": 14,
+  "releaseDirectory": "/opt/tencent-agent-memory/releases/codegraph-layout-listfix-20261019",
+  "localTemplates": "/tmp/tencentdb-codegraph-layout-listfix-20261019/ops",
+  "rollback": "Retain7f5a with independent rollback-layout-listfix; retain all prior746a and older rollback records",
+  "checks": [
+    "Approved long-analysis list regression",
+    "Clean committed source+14overlays Web build",
+    "436 inherited bytes and new Web SHA",
+    "Isolated health with no production data/environment",
+    "Parent approval before Hub switch",
+    "Final production health/Core/env/semantically normalized full mount comparison/Web SHA"
+  ]
+}

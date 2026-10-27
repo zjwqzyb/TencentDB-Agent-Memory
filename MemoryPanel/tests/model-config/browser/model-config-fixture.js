@@ -30,6 +30,10 @@ async (page) => {
     conflictOnce: false,
     createDelayMs: 0,
     role: 'system_admin',
+    // 连接测试 fixture：pass（三条全通过）/ fail（json 与 tools 失败）/ hang（永不返回，用于取消）
+    testScenario: 'pass',
+    test: null,
+    activeSnapshot: null,
     requests: [],
   };
 
@@ -55,6 +59,9 @@ async (page) => {
     version: state.version,
     updated_at: state.config_id ? stamp : null,
     draft: state.draft,
+    paused: Boolean(state.config_id && state.enabled === false && state.activeSnapshot),
+    active_snapshot: state.activeSnapshot,
+    test: state.test,
   });
   await context.route('**/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -63,6 +70,47 @@ async (page) => {
     state.requests.push({ path, body, at: Date.now() });
     let data;
     let status = 200;
+    if (path.endsWith('/meta/instance-upstream/extraction/test')) {
+      const testId = 'mct_fixture_0001';
+      const fingerprint = 'sha256:0123456789abcdef';
+      if (state.testScenario === 'hang') {
+        // 故意不 fulfill：让请求保持挂起，供 UI 取消验收使用。
+        const failure = route.request().failure();
+        if (failure && typeof failure.catch === 'function') failure.catch(() => undefined);
+        return;
+      }
+      const results = state.testScenario === 'fail'
+        ? [
+            { capability: 'basic', status: 'passed', duration_ms: 120 },
+            { capability: 'json', status: 'failed', duration_ms: 140, error: { code: 'JSON_INVALID', message: 'Model output was not parseable JSON.' } },
+            { capability: 'tools', status: 'failed', duration_ms: 160, error: { code: 'TOOL_CALL_UNSUPPORTED', message: 'Model did not emit the requested tool call.' } },
+          ]
+        : [
+            { capability: 'basic', status: 'passed', duration_ms: 118 },
+            { capability: 'json', status: 'passed', duration_ms: 133 },
+            { capability: 'tools', status: 'passed', duration_ms: 271 },
+          ];
+      const doneStatus = state.testScenario === 'fail' ? 'failed' : 'completed';
+      const lines = [
+        { type: 'started', test_id: testId, fingerprint, source: state.draft ? 'panel' : 'deployment', instance_id: 'instance-browser', capabilities: ['basic', 'json', 'tools'] },
+        ...results.map((result) => ({ type: 'result', test_id: testId, ...result })),
+        { type: 'done', test_id: testId, status: doneStatus, duration_ms: 522 },
+      ];
+      state.test = {
+        test_id: testId,
+        fingerprint,
+        passed: state.testScenario !== 'fail',
+        tested_at: stamp,
+        expires_at: '2026-10-26T00:15:00Z',
+        matches_current: true,
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/x-ndjson',
+        body: lines.map((line) => JSON.stringify(line)).join('\n') + '\n',
+      });
+      return;
+    }
     if (path.endsWith('/auth/verify')) data = { valid: true, user: { ...user, user_type: state.role } };
     else if (path.endsWith('/auth/session')) data = { authenticated: false };
     else if (path.endsWith('/auth/methods')) data = { methods: [] };
@@ -96,6 +144,42 @@ async (page) => {
         description: body.description || '',
         updated_at: stamp,
       };
+      data = config();
+    } else if (path.endsWith('/meta/instance-upstream/extraction/enable')) {
+      if (!state.test || state.test.passed !== true || state.test.matches_current !== true) {
+        status = 409;
+        data = { code: 409, message: 'test_required', request_id: 'fixture', data: null };
+      } else if (body.test_id !== state.test.test_id) {
+        status = 409;
+        data = { code: 409, message: 'test_stale', request_id: 'fixture', data: null };
+      } else {
+        state.version += 1;
+        state.configured = true;
+        state.managed = true;
+        state.enabled = true;
+        state.provider = state.draft.provider;
+        state.baseUrl = state.draft.base_url;
+        state.apiKeyConfigured = true;
+        state.modelId = state.draft.model_id;
+        state.description = state.draft.description;
+        state.activeSnapshot = {
+          snapshot_id: 'snap_fixture_1',
+          version: state.version,
+          provider: state.draft.provider,
+          base_url: state.draft.base_url,
+          api_key_configured: true,
+          api_key_masked: '••••••••',
+          model_id: state.draft.model_id,
+          description: state.draft.description,
+          activated_at: stamp,
+        };
+        data = config();
+      }
+    } else if (path.endsWith('/meta/instance-upstream/extraction/resync-knowledge')) {
+      data = { status: state.enabled ? 'ready' : 'paused', config_id: 'ext-browser', config_version: state.version, outcome: 'bound' };
+    } else if (path.endsWith('/meta/instance-upstream/extraction/disable')) {
+      state.version += 1;
+      state.enabled = false;
       data = config();
     } else if (path.endsWith('/meta/instance-upstream/extraction/update')) {
       if (state.conflictOnce) {

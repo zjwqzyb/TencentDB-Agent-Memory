@@ -32,6 +32,7 @@ import { initDataDirectories } from "../utils/pipeline-factory.js";
 import { SessionFilter } from "../utils/session-filter.js";
 import { WorkerPermitPool } from "../services/worker-permit-pool.js";
 import { createExtractorAdapter, SkillExtractor as SkillExtractorClass } from "../core/skill/skill-extractor.js";
+import { SkillCoreError } from "../core/skill/skill-core.js";
 import type { SkillCore as SkillCoreType } from "../core/skill/skill-core.js";
 import type {
   HealthResponse,
@@ -410,6 +411,20 @@ export class TdaiGateway {
       hostAdapter: adapter,
       config: this.config.memory,
       sessionFilter: new SessionFilter(this.config.memory.capture.excludeAgents),
+      // Managed model snapshot (Panel-configured extraction model). Each
+      // background job resolves it once through MetadataService; absent row
+      // means "never configured" and keeps the deployment default.
+      modelSnapshotSourceFactory: async (instanceId: string) => {
+        const svc = await gatewayRef.ensureMetadataService(instanceId);
+        const supportedAgents = gatewayRef.config.upstream.supportedAgents;
+        return {
+          resolveActiveSnapshot: () => svc.resolveInstanceUpstreamExtractionSnapshot(supportedAgents),
+          hasManagedConfiguration: async () => {
+            const { items } = await svc.listInstanceUpstreamGroupsInternal(supportedAgents);
+            return items.some((row) => row.group_type === "extraction");
+          },
+        };
+      },
       skillAssetHooks: {
         // v1 首创前置 await：抛异常 = create 失败（避免「skill 已落库但 asset
         // 缺失」的静默不一致）。standalone 模式下唯一的登记入口除了 handler 层的
@@ -2194,33 +2209,46 @@ export class TdaiGateway {
     const { resolveStandaloneLlmForRuntime, LlmProviderResolveError } = await import("../adapters/standalone/llm-provider-resolver.js");
 
     const llmCfg = this.config.llm;
-    if (!llmCfg?.baseUrl) {
-      throw new SkillCoreError("LLM_UNAVAILABLE", "LLM baseUrl not configured for skill extraction");
-    }
-    if ((llmCfg.provider ?? "openai") === "openai" && !llmCfg.apiKey) {
-      throw new SkillCoreError("LLM_UNAVAILABLE", "LLM apiKey not configured (provider=openai)");
-    }
 
-    let effective: import("../adapters/standalone/llm-runner.js").StandaloneLLMConfig;
-    try {
-      effective = resolveStandaloneLlmForRuntime(llmCfg, instanceId);
-    } catch (err) {
-      const msg = err instanceof LlmProviderResolveError ? err.message : String(err);
-      throw new SkillCoreError("LLM_UNAVAILABLE", `LLM provider resolve failed: ${msg}`);
-    }
-    this.logger.debug?.(
-      `[skill-extractor] resolved LLM: provider=${llmCfg.provider ?? "openai"}, model=${effective.model}, baseUrl=${effective.baseUrl}`,
+    // Deployment default (used only when this instance never had a managed
+    // model configuration). A managed snapshot takes precedence and is frozen
+    // per extract job inside TdaiCore.
+    const buildDeploymentDefaultRunner = (): import("../core/skill/skill-extractor.js").ExtractorRunner => {
+      if (!llmCfg?.baseUrl) {
+        throw new SkillCoreError("LLM_UNAVAILABLE", "LLM baseUrl not configured for skill extraction");
+      }
+      if ((llmCfg.provider ?? "openai") === "openai" && !llmCfg.apiKey) {
+        throw new SkillCoreError("LLM_UNAVAILABLE", "LLM apiKey not configured (provider=openai)");
+      }
+
+      let effective: import("../adapters/standalone/llm-runner.js").StandaloneLLMConfig;
+      try {
+        effective = resolveStandaloneLlmForRuntime(llmCfg, instanceId);
+      } catch (err) {
+        const msg = err instanceof LlmProviderResolveError ? err.message : String(err);
+        throw new SkillCoreError("LLM_UNAVAILABLE", `LLM provider resolve failed: ${msg}`);
+      }
+      this.logger.debug?.(
+        `[skill-extractor] resolved deployment-default LLM: provider=${llmCfg.provider ?? "openai"}, model=${effective.model}, baseUrl=${effective.baseUrl}`,
+      );
+      return new StandaloneLLMRunner({
+        config: {
+          baseUrl: effective.baseUrl,
+          apiKey: effective.apiKey,
+          model: effective.model ?? "default",
+          timeoutMs: effective.timeoutMs ?? 120_000,
+          stream: effective.stream ?? false,
+        },
+      });
+    };
+
+    const llmRunner = await this.core.buildSkillRunnerForInstance(
+      instanceId,
+      buildDeploymentDefaultRunner,
     );
-
-    const llmRunner = new StandaloneLLMRunner({
-      config: {
-        baseUrl: effective.baseUrl,
-        apiKey: effective.apiKey,
-        model: effective.model ?? "default",
-        timeoutMs: effective.timeoutMs ?? 120_000,
-        stream: effective.stream ?? false,
-      },
-    });
+    if (!llmRunner) {
+      throw new SkillCoreError("LLM_UNAVAILABLE", "no LLM runner available for skill extraction");
+    }
     const cfg = this.core.getResolvedSkillConfig();
     return new SkillExtractorClass({
       core: skillCore,

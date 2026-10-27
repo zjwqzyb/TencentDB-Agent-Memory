@@ -15,7 +15,15 @@ import type { Logger } from "../../core/types.js";
 import { MetadataService, MetadataError } from "../service/metadata-service.js";
 import { extractInstanceId, normalizeInstanceIdForRoute } from "./instance.js";
 import { resolvePagination } from "./pagination.js";
-import { internalListUsersByInstanceSchema, initAdminSchema, instanceUpstreamInternalListSchema, supportedAgentsSchema } from "./v3-meta-schemas.js";
+import {
+  internalListUsersByInstanceSchema,
+  initAdminSchema,
+  instanceUpstreamExtractionResolveSchema,
+  instanceUpstreamExtractionSnapshotSchema,
+  instanceUpstreamExtractionTestResultSchema,
+  instanceUpstreamInternalListSchema,
+  supportedAgentsSchema,
+} from "./v3-meta-schemas.js";
 import {
   createMetaApiTraceContext,
   logMetaApiEntry,
@@ -104,6 +112,28 @@ const routeTable: Record<string, InternalHandler> = {
     instanceUpstreamInternalListSchema,
     async (_d, svc, _instanceId, runtime) =>
       svc.listInstanceUpstreamGroupsInternal(runtime.getSupportedAgents()),
+  ),
+  // 仅供 Panel 控制面在服务端探测“未保存的提取配置”时解析明文 Key。
+  // 绝不通过 /v3/meta/* 公开面暴露，明文 Key 也不进入日志：dispatch 层按
+  // `api_key` 字段名脱敏，因此响应结构必须保留该字段名。
+  [`${V3_INTERNAL_PREFIX}/instance-upstream/extraction/resolve`]: bind(
+    instanceUpstreamExtractionResolveSchema,
+    async (_d, svc, _instanceId, runtime) =>
+      svc.resolveInstanceUpstreamExtraction(runtime.getSupportedAgents()),
+  ),
+  // Panel probe 已结束且未取消时写入证据；不递增配置 version，也不改 draft/active/enabled。
+  [`${V3_INTERNAL_PREFIX}/instance-upstream/extraction/test-result`]: bind(
+    instanceUpstreamExtractionTestResultSchema,
+    async (d, svc, _instanceId, runtime) =>
+      svc.recordInstanceUpstreamExtractionTest(d, runtime.getSupportedAgents()),
+  ),
+  // 服务间读取不可变 active snapshot；ready 分支返回明文 Key，与上面的
+  // resolve 一样仅允许内部 Bearer 访问。dispatch 日志按 `api_key` 字段名脱敏，
+  // 且该路由绝不加入公开 V3_SCHEMAS。
+  [`${V3_INTERNAL_PREFIX}/instance-upstream/extraction/snapshot`]: bind(
+    instanceUpstreamExtractionSnapshotSchema,
+    async (_d, svc, _instanceId, runtime) =>
+      svc.resolveInstanceUpstreamExtractionSnapshot(runtime.getSupportedAgents()),
   ),
   // §6.A 的内部镜像:与 /v3/meta/upstream/supported-agents 同一份数据源
   // (Core 启动时从 gateway yaml 的 upstream.supportedAgents 读),供无 user-key 的

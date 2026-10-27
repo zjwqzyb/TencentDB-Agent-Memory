@@ -1,0 +1,55 @@
+{
+  "status": "await final parent acceptance/commit authorization",
+  "paths": [
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.ts",
+      "sha256": "ab9b8db9f31fd8be027ec0b514f1ef9efaccce08c617515694db01f390d05b87",
+      "freeze": "backend approved"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-search.test.ts",
+      "sha256": "146c6182979b6527d956a4091ddff0df2f68b0811e29d7c41d040947c341435b",
+      "freeze": "backend approved"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured.ts",
+      "sha256": "8e49a8812945ac1e5b16efd6b51940432db18a674d5f961d0919e4d7a18ce57e",
+      "freeze": "backend approved"
+    },
+    {
+      "path": "MemoryKnowledge/src/engines/code/structured-snapshot.test.ts",
+      "sha256": "4438f1173db55031f60799947480a1b3fb1555fb4d870140d99fca83fb690927",
+      "freeze": "backend approved"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/CodeGraphWorkspace.tsx",
+      "sha256": "5e7755757bd6eb88a7f70cc9b37364437c349b90f2ba2e720dc0e0ddfaa3bb3b",
+      "freeze": "UI product frozen; browser acceptance pending"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/useCodeGraphWorkspace.ts",
+      "sha256": "948cfccd55238425d90866305921ac6035974b4fe41fdac4c90fadb4200479b2",
+      "freeze": "UI product frozen; browser acceptance pending"
+    },
+    {
+      "path": "MemoryPanel/web/src/pages/CodePage/graph/code-graph.css",
+      "sha256": "71b25fb4c06f12be0e178182280b424c4477c1ec2cf98cb3869a2e9eba893d07",
+      "freeze": "UI product frozen; browser acceptance pending"
+    },
+    {
+      "path": "MemoryPanel/web/src/i18n/code-graph.ts",
+      "sha256": "5b70a4a1ecde73332c26f5e279319b5884b446c84f9a48fba6ec416ed12b9c97",
+      "freeze": "UI product frozen; browser acceptance pending"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-fixture.js",
+      "sha256": null,
+      "freeze": "test still owned by UI; await final freeze"
+    },
+    {
+      "path": "MemoryPanel/tests/knowledge/browser/code-graph-search.js",
+      "sha256": null,
+      "freeze": "test still owned by UI; await final freeze"
+    }
+  ]
+}
