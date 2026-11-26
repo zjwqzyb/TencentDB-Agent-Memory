@@ -21,6 +21,9 @@ import { loadConfig } from "./config.js";
 import { createDb } from "./db/client.js";
 import { createKnowledgeModule } from "./module.js";
 import { createWikiRoutes } from "./routes/wiki.js";
+import { CodeGuideStore } from "./store/code-guides.js";
+import { codeReviewRoutes } from "./routes/code-review.js";
+import { codeGuideRoutes } from "./routes/code-guides.js";
 import { createCodeGraphRoutes } from "./routes/code-graph.js";
 import { createToolsRoutes } from "./routes/tools.js";
 import { createHealthRoutes } from "./routes/health.js";
@@ -48,7 +51,7 @@ export function createApp() {
   const knowledgeTelemetry = createKnowledgeTelemetry(config.clickhouse);
 
   // Initialize DB + knowledge module
-  const { db } = createDb({ path: config.dbPath });
+  const { db, raw } = createDb({ path: config.dbPath });
   // SSH 密钥存储（每用户一对 RSA）。目录默认落在数据卷内（config.sshKeyDir）。
   const sshKeyStore = new SshKeyStore({ rootDir: config.sshKeyDir });
   const knowledgeModule = createKnowledgeModule({
@@ -87,6 +90,9 @@ export function createApp() {
     instancePool: knowledgeModule.instancePool,
     publicBaseUrl: config.publicBaseUrl,
   }));
+
+  api.route("/code-graph/reviews", codeReviewRoutes(knowledgeModule.cgService));
+  api.route("/code-graph/guides", codeGuideRoutes(knowledgeModule.cgService, new CodeGuideStore(raw)));
 
   // tools/list + tools/call — Agent self-discovery HTTP endpoints
   api.route("/tools", createToolsRoutes({

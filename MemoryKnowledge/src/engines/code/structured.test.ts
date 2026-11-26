@@ -24,6 +24,47 @@ function fixture() {
   return { ctx, db, addNode, addEdge, addFile, search };
 }
 describe('bounded structured graph', () => {
+  it('reports unresolved call sites on the caller without traversing or asserting guessed targets', () => {
+    const f = fixture();
+    f.addNode('root', 'router.ts', 'function', 'search');
+    f.addNode('run', 'search.ts', 'function', 'run');
+    f.addNode('other-import', 'panel.ts', 'function', 'import');
+    f.addFile('router.ts', 'async function search() { await import("./metrics"); run(); }');
+    f.addEdge(1, 'root', 'run');
+    f.addEdge(2, 'root', 'other-import');
+    f.db.exec(`ALTER TABLE edges ADD COLUMN metadata TEXT;
+      CREATE TABLE unresolved_refs(id INTEGER PRIMARY KEY,from_node_id TEXT,reference_name TEXT,reference_kind TEXT,file_path TEXT,line INTEGER,col INTEGER);
+      CREATE INDEX idx_unresolved_from_node ON unresolved_refs(from_node_id);
+      INSERT INTO unresolved_refs VALUES(1,'root','deps.getEmbedding','calls','router.ts',1,10),
+        (2,'run','nested.call','calls','search.ts',1,2);`);
+    f.db.prepare('UPDATE edges SET metadata=? WHERE id=2').run(JSON.stringify({ refName: 'import', resolvedBy: 'exact-match', confidence: 0.4 }));
+    f.db.close();
+
+    const catalog = f.search();
+    const id = (name: string) => catalog.nodes.find(node => node.name === name)!.id;
+    const query = { nodeId: id('search'), indexVersion: catalog.indexVersion!, direction: 'out' as const, edgeLimit: 1 };
+    const sites: string[] = [];
+    const targets: string[] = [];
+    let cursor: string | undefined;
+    let pages = 0;
+    do {
+      const page = queryStructured(f.ctx, 'graph', { ...query, cursor });
+      expect(++pages).toBeLessThan(10);
+      expect(page.unresolved!.length).toBeLessThanOrEqual(1);
+      for (const site of page.unresolved!) {
+        expect(site.sourceId).toBe(query.nodeId);
+        expect(site.filePath).toBe('router.ts');
+        sites.push(site.name);
+      }
+      targets.push(...page.edges.map(edge => edge.target));
+      cursor = page.nextCursor ?? undefined;
+    } while (cursor);
+    expect(targets).toEqual([id('run')]);
+    expect(sites.sort()).toEqual(['deps.getEmbedding', 'import("./metrics")']);
+    const incoming = queryStructured(f.ctx, 'graph', { nodeId: id('import'), direction: 'in' });
+    expect(incoming.edges).toEqual([]);
+    expect(incoming.unresolved).toEqual([]);
+  });
   it('preserves duplicate symbols, overloads, self loops, opposite and parallel relation identity', () => {
     const f = fixture(); f.addNode('a'); f.addNode('b'); f.addNode('overload', 'a.ts');
     f.addEdge(1, 'a', 'a'); f.addEdge(2, 'a', 'b'); f.addEdge(3, 'b', 'a'); f.addEdge(4, 'a', 'b', 'imports'); f.addEdge(5, 'a', 'b'); f.db.close();

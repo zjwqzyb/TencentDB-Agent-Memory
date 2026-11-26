@@ -6,15 +6,13 @@ import { isAbsolute, relative, resolve, sep } from 'node:path';
 import type { StructuredModeContext, NodeRow, EdgeRow, UnresolvedRow } from './structured-mode-context.js';
 import { queryAggregation, queryClusters } from './structured-aggregation.js';
 import { queryNeighborhood } from './structured-neighborhood.js';
-import { javaEdgeValidator } from './structured-java.js';
+import { edgeValidator } from './structured-edge-validation.js';
 import { querySearch, type SearchState } from './structured-search.js';
 import type { CodeGraphAction, CodeGraphCapabilities, CodeGraphEdge, CodeGraphNode, CodeGraphRequest, CodeGraphResponse } from '../../contracts/code-graph.js';
 
 export const GRAPH_LIMITS = { nodes: 100, edges: 300, maxNodes: 500, maxEdges: 1500, depth: 5, rows: 2000, sourceBytes: 2 * 1024 * 1024, sourceLines: 300 } as const;
 export interface StructuredContext { assetId: string; projectRoot: string; databasePath: string; sdkVersion: string; version: number; commit: string | null; indexedAt: string | null; branch: string; indexVersion?: string }
-interface QueueItem { id: string; depth: number; side: number; after: number }
-interface Walk { queue: QueueItem[]; seenNodes: string[]; seenEdges: number[] }
-interface Cursor { asset: string; version: string; fingerprint: string; expires: number; searchState?: SearchState; walk?: Walk; modeState?: unknown }
+interface Cursor { asset: string; version: string; fingerprint: string; expires: number; searchState?: SearchState; modeState?: unknown }
 const cursors = new Map<string, Cursor>();
 const MAX_CURSORS = 128;
 const CURSOR_TTL = 10 * 60 * 1000;
@@ -32,7 +30,7 @@ export function emptyResponse(context: Pick<StructuredContext, 'assetId' | 'sdkV
     capabilities: capabilities(context.sdkVersion), nodes: [], edges: [], focusId: null, truncated: false, truncationReasons: [], nextCursor: null, warnings: warning ? [warning] : [] };
 }
 export function validateStructuredRequest(action: CodeGraphAction, raw: Record<string, unknown>): CodeGraphRequest {
-  const allowed = new Set(['mode', 'nodeId', 'indexVersion', 'direction', 'depth', 'scopePath', 'query', 'nodeKinds', 'edgeKinds', 'limit', 'edgeLimit', 'cursor', 'groupBy', 'moduleDepth', 'evidenceFor', 'sourceLine']);
+  const allowed = new Set(['mode', 'nodeId', 'indexVersion', 'commit', 'direction', 'depth', 'scopePath', 'query', 'nodeKinds', 'edgeKinds', 'limit', 'edgeLimit', 'cursor', 'groupBy', 'moduleDepth', 'evidenceFor', 'sourceLine']);
   for (const key of Object.keys(raw)) if (!allowed.has(key)) throw new Error(`unexpected field: ${key}`);
   for (const key of ['nodeId', 'indexVersion', 'scopePath', 'query', 'cursor', 'evidenceFor'] as const) {
     if (raw[key] !== undefined && (typeof raw[key] !== 'string' || (raw[key] as string).length > 1024)) throw new Error(`invalid ${key}`);
@@ -44,6 +42,7 @@ export function validateStructuredRequest(action: CodeGraphAction, raw: Record<s
   }
   if (raw.groupBy !== undefined && (typeof raw.groupBy !== 'string' || !['directory', 'file', 'symbol'].includes(raw.groupBy))) throw new Error('invalid groupBy');
   if (raw.sourceLine !== undefined && (action !== 'graph-source' || typeof raw.sourceLine !== 'number' || !Number.isSafeInteger(raw.sourceLine) || raw.sourceLine < 1 || raw.sourceLine > GRAPH_LIMITS.sourceBytes + 1)) throw new Error('invalid sourceLine');
+  if (raw.commit !== undefined && (typeof raw.commit !== 'string' || !/^[0-9a-f]{7,40}$/i.test(raw.commit))) throw new Error('invalid commit');
   if (raw.mode === 'impact' && raw.direction !== undefined && raw.direction !== 'in') throw new Error('impact direction must be in');
   if (action === 'graph' && raw.limit === 1) throw new Error('graph limit must be at least 2');
   for (const key of ['nodeKinds', 'edgeKinds'] as const) {
@@ -135,14 +134,23 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
     return db.transaction((): CodeGraphResponse => {
       let rowsRead = 0;
       let javaSourceExpired = false;
-      const acceptEdge = javaEdgeValidator({
+      const unresolvedKeys = new Set<string>();
+      const addUnresolved = (edge: EdgeRow, source: NodeRow, expression: string) => {
+        const diagnostic = { sourceId: wireId(idNamespace, source.id), name: expression, kind: edge.kind, filePath: source.file_path, line: edge.line ?? source.start_line, ...(edge.col !== null ? { column: edge.col } : {}) };
+        const key = `${diagnostic.sourceId}\0${diagnostic.name}\0${diagnostic.line}\0${diagnostic.column ?? ''}`;
+        if (unresolvedKeys.has(key)) return;
+        unresolvedKeys.add(key);
+        result.unresolved ??= [];
+        result.unresolved.push(diagnostic);
+      };
+      const acceptEdge = edgeValidator({
         db, projectRoot: ctx.projectRoot, sourceBytes: GRAPH_LIMITS.sourceBytes,
         takeRow() { if (rowsRead >= GRAPH_LIMITS.rows) return false; rowsRead++; return true; },
         warn(warning) { if (!result.warnings.includes(warning)) result.warnings.push(warning); },
         expire() { javaSourceExpired = true; },
+        addUnresolved,
       });
       const getNode = (id: string): NodeRow | undefined => { rowsRead++; return db.prepare('SELECT * FROM nodes WHERE id = ?').get(id) as NodeRow | undefined; };
-      const limit = request.limit ?? GRAPH_LIMITS.nodes;
       const next = (data: Partial<Cursor>) => issueCursor({ asset: ctx.assetId, version: indexVersion, fingerprint, expires: Date.now() + CURSOR_TTL, ...data });
       const finish = (): CodeGraphResponse => {
         result.work = { rowsRead, maxRows: GRAPH_LIMITS.rows };
@@ -236,61 +244,12 @@ export function queryStructured(ctx: StructuredContext, action: CodeGraphAction,
         return finish();
       }
       if (!result.capabilities.languages.includes(root.language)) return { ...finish(), state: 'unsupported', warnings: ['unverified_language:' + root.language] };
-      if (mode === 'impact' || mode === 'hierarchy') {
-        queryNeighborhood(modeContext(root), mode);
-        return finish();
-      }
       // Java classes and fields can own calls from static/field initializers.
-      if (root.language === 'java' && ['namespace', 'file', 'import'].includes(root.kind)) {
+      if (mode === 'calls' && root.language === 'java' && ['namespace', 'file', 'import'].includes(root.kind)) {
         result.state = 'empty'; result.warnings.push('select_a_callable'); return finish();
       }
-      if (root.language === 'java') result.warnings.push('java_static_analysis_incomplete');
-      if (request.edgeKinds?.length && !request.edgeKinds.includes('calls')) { result.state = 'empty'; return finish(); }
-      const direction = request.direction ?? 'both';
-      const sides = direction === 'both' ? ['source', 'target'] : [direction === 'out' ? 'source' : 'target'];
-      const depth = request.depth ?? 1;
-      const edgeLimit = request.edgeLimit ?? GRAPH_LIMITS.edges;
-      const walk: Walk = structuredClone(continuation?.walk ?? { queue: [{ id: rootId, depth: 0, side: 0, after: 0 }], seenNodes: [rootId], seenEdges: [] });
-      const visited = new Set(walk.seenNodes), emitted = new Set(walk.seenEdges);
-      const pageNodes = new Map((continuation ? [] : result.nodes).map(n => [n.id, n]));
-      const cache = new Map<string, NodeRow | undefined>([[rootId, root]]);
-      const lookup = (id: string) => { if (!cache.has(id)) cache.set(id, getNode(id)); return cache.get(id); };
-      let hardLimit = false;
-      let validationBudget: string | null = null;
-      while (walk.queue.length && result.edges.length < edgeLimit && rowsRead < GRAPH_LIMITS.rows - 3) {
-        const item = walk.queue[0];
-        if (item.depth >= depth || item.side >= sides.length) { walk.queue.shift(); continue; }
-        const side = sides[item.side];
-        // Composite (source|target, kind, rowid) order supports bounded keyset access.
-        const edge = db.prepare(`SELECT * FROM edges INDEXED BY idx_edges_${side}_kind WHERE ${side} = ? AND kind = 'calls' AND id > ? ORDER BY id LIMIT 1`).get(item.id, item.after) as EdgeRow | undefined;
-        rowsRead++;
-        if (!edge) { item.side++; item.after = 0; continue; }
-        if (emitted.has(edge.id)) { item.after = edge.id; continue; }
-        const source = lookup(edge.source), target = lookup(edge.target);
-        if (!source || !target) { item.after = edge.id; result.warnings.push('dangling_edge_omitted'); continue; }
-        if (!acceptEdge(edge, source, target)) {
-          validationBudget = acceptEdge.deferred();
-          if (validationBudget) break;
-          item.after = edge.id; continue;
-        }
-        const neighbor = side === 'source' ? target : source;
-        if ((request.scopePath && !neighbor.file_path.startsWith(request.scopePath.replace(/\/$/, '') + '/') && neighbor.file_path !== request.scopePath) || (request.nodeKinds?.length && !request.nodeKinds.includes(neighbor.kind))) { item.after = edge.id; continue; }
-        const additions = [source, target].filter((n, i, all) => all.findIndex(x => x.id === n.id) === i && !pageNodes.has(wireId(idNamespace, n.id)));
-        if (pageNodes.size + additions.length > limit) break;
-        if ((!visited.has(neighbor.id) && visited.size >= GRAPH_LIMITS.maxNodes) || emitted.size >= GRAPH_LIMITS.maxEdges) { hardLimit = true; break; }
-        for (const row of additions) pageNodes.set(wireId(idNamespace, row.id), node(ctx, row));
-        result.edges.push({ id: `${idNamespace}:edge:${edge.id}`, source: wireId(idNamespace, source.id), target: wireId(idNamespace, target.id), kind: edge.kind,
-          evidence: [{ filePath: source.file_path, line: edge.line ?? source.start_line, ...(edge.col !== null ? { column: edge.col } : {}) }] });
-        emitted.add(edge.id); item.after = edge.id;
-        if (!visited.has(neighbor.id)) { visited.add(neighbor.id); walk.queue.push({ id: neighbor.id, depth: item.depth + 1, side: 0, after: 0 }); }
-      }
-      result.nodes = [...pageNodes.values()];
-      while (walk.queue.length && (walk.queue[0].depth >= depth || walk.queue[0].side >= sides.length)) walk.queue.shift();
-      if (walk.queue.length) {
-        result.truncated = true;
-        result.truncationReasons = [validationBudget ?? (hardLimit ? 'traversal_budget' : rowsRead >= GRAPH_LIMITS.rows - 3 ? 'scan_budget' : result.edges.length >= edgeLimit ? 'edge_budget' : 'node_budget')];
-        if (!hardLimit) result.nextCursor = next({ walk: { ...walk, seenNodes: [...visited], seenEdges: [...emitted] } });
-      }
+      if (mode === 'calls' && root.language === 'java') result.warnings.push('java_static_analysis_incomplete');
+      queryNeighborhood(modeContext(root), mode as 'calls' | 'impact' | 'hierarchy');
       return finish();
     })();
   } finally { db.close(); }

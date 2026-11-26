@@ -202,6 +202,7 @@ async (page) => {
     else if (path.endsWith('/team-member/list')) data = { items: [{ user_id: user.user_id, team_id: team.team_id, role: 'member', status: 'active' }], total: 1 };
     else if (path.endsWith('/agent/list')) data = { items: [agent], total: 1 };
     else if (path.endsWith('/user/get')) data = user;
+    else if (path.endsWith('/code-graph/guides/list') || path.endsWith('/code-graph/reviews/list')) data = { items: [] };
     else if (path.endsWith('/user/batch-get')) data = { items: [user], total: 1 };
     else if (path.endsWith('/code-graph/team-assets')) data = { items: ['cg-browser-a', 'cg-browser-b'].map(asset), total: 2 };
     else if (path.endsWith('/knowledge/agent-fixed')) data = { items: ['cg-browser-a', 'cg-browser-b'].map(id => ({ ...asset(id), agent_id: agent.agent_id })), total: 2 };

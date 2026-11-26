@@ -1,23 +1,81 @@
 import { useTranslation } from 'react-i18next';
 import { Alert, Button } from 'tea-component';
-import type { CodeGraphNode } from '@/lib/api/code-graph-contract';
+import type { CodeGraphNode, CodeGraphResponse } from '@/lib/api/code-graph-contract';
 import { coverageNoticeKeys } from './graph-model';
 import { isAggregateMode } from './useCodeGraphWorkspace';
 import type { useCodeGraphWorkspace } from './useCodeGraphWorkspace';
 
 type State = ReturnType<typeof useCodeGraphWorkspace>;
+type UnresolvedItem = NonNullable<CodeGraphResponse['unresolved']>[number];
+type UnresolvedCallGroup = {
+  sourceId: string;
+  callerName: string;
+  filePath: string;
+  expressions: { name: string; sites: UnresolvedItem[] }[];
+};
+
+function compareUnresolvedSites(a: UnresolvedItem, b: UnresolvedItem): number {
+  return a.line - b.line || (a.column ?? 0) - (b.column ?? 0);
+}
+
+function formatUnresolvedSiteLocation(site: UnresolvedItem): string {
+  return site.column === undefined ? `${site.line}` : `${site.line}:${site.column}`;
+}
+
+function groupUnresolvedCalls(
+  items: UnresolvedItem[],
+  lookup: Map<string, CodeGraphNode>,
+): UnresolvedCallGroup[] {
+  const groups = new Map<string, UnresolvedCallGroup>();
+  for (const item of items) {
+    const groupKey = `${item.sourceId}\0${item.filePath}`;
+    const group = groups.get(groupKey) ?? {
+      sourceId: item.sourceId,
+      callerName: lookup.get(item.sourceId)?.name ?? item.sourceId,
+      filePath: item.filePath,
+      expressions: [],
+    };
+    groups.set(groupKey, group);
+
+    let expression = group.expressions.find((row) => row.name === item.name);
+    if (!expression) {
+      expression = { name: item.name, sites: [] };
+      group.expressions.push(expression);
+    }
+    expression.sites.push(item);
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      expressions: group.expressions
+        .map((expression) => ({
+          ...expression,
+          sites: [...expression.sites].sort(compareUnresolvedSites),
+        }))
+        .sort(
+          (a, b) => compareUnresolvedSites(a.sites[0], b.sites[0]) || a.name.localeCompare(b.name),
+        ),
+    }))
+    .sort(
+      (a, b) => a.callerName.localeCompare(b.callerName) || a.filePath.localeCompare(b.filePath),
+    );
+}
+
 export function CodeGraphAnalysis({
   state,
   nodes,
   onSelect,
   onPath,
   onCycle,
+  onInspectUnresolved,
 }: {
   state: State;
   nodes: CodeGraphNode[];
   onSelect: (node: CodeGraphNode) => void;
   onPath: (node: CodeGraphNode) => void;
   onCycle: (id: string) => void;
+  onInspectUnresolved: (sourceId: string, line: number) => void;
 }) {
   const { t } = useTranslation();
   const graph = state.graph;
@@ -26,6 +84,14 @@ export function CodeGraphAnalysis({
     .sort((a, b) => (a.depth ?? 0) - (b.depth ?? 0) || a.filePath.localeCompare(b.filePath));
   const files = [...new Set(affected.map((node) => node.filePath))].sort();
   const lookup = new Map(graph?.nodes.map((node) => [node.id, node]));
+  const unresolvedTitle =
+    state.mode === 'calls' ? 'code.graph.unresolvedCalls' : 'code.graph.unresolved';
+  const unresolvedHint =
+    state.mode === 'calls' ? 'code.graph.unresolvedCallsHint' : 'code.graph.unresolvedHint';
+  const unresolvedCallGroups =
+    state.mode === 'calls' && graph?.unresolved?.length
+      ? groupUnresolvedCalls(graph.unresolved, lookup)
+      : [];
   return (
     <div className="_codegraph-analysis">
       {graph && coverageNoticeKeys(graph).map((key) => <Alert key={key}>{t(key)}</Alert>)}
@@ -154,16 +220,71 @@ export function CodeGraphAnalysis({
         <p className="_codegraph-note">{t('code.graph.analysisCoverage')}</p>
       )}
       {!!graph?.unresolved?.length && (
-        <details open data-testid="code-graph-unresolved">
-          <summary>{t('code.graph.unresolved', { count: graph.unresolved.length })}</summary>
-          <p>{t('code.graph.unresolvedHint')}</p>
-          <ul>
-            {graph.unresolved.map((item, index) => (
-              <li key={`${item.sourceId}:${item.name}:${index}`}>
-                <strong>{item.name}</strong> · {item.kind} · {item.filePath}:{item.line}
-              </li>
-            ))}
-          </ul>
+        <details open={state.mode !== 'calls'} data-testid="code-graph-unresolved">
+          <summary>{t(unresolvedTitle, { count: graph.unresolved.length })}</summary>
+          <p>{t(unresolvedHint)}</p>
+          {state.mode === 'calls' ? (
+            <ul className="_codegraph-unresolved-groups">
+              {unresolvedCallGroups.map((group) => (
+                <li
+                  key={`${group.sourceId}:${group.filePath}`}
+                  className="_codegraph-unresolved-group"
+                  data-source-id={group.sourceId}
+                >
+                  <div className="_codegraph-unresolved-heading">
+                    <strong className="_codegraph-unresolved-caller">{group.callerName}</strong>
+                    <small className="_codegraph-unresolved-file">{group.filePath}</small>
+                  </div>
+                  <ul className="_codegraph-unresolved-expressions">
+                    {group.expressions.map((expression) => (
+                      <li
+                        key={`${group.sourceId}:${group.filePath}:${expression.name}`}
+                        className="_codegraph-unresolved-expression"
+                      >
+                        <code>{expression.name}</code>
+                        <span className="_codegraph-unresolved-sites">
+                          {expression.sites.map((site, index) => {
+                            const location = formatUnresolvedSiteLocation(site);
+                            const showColumn = expression.sites.some(
+                              (other) => other !== site && other.line === site.line,
+                            );
+                            const accessibleLabel = `${t(
+                              'code.graph.inspectUnresolvedSource',
+                            )}: ${group.callerName} ${group.filePath}:${location} ${expression.name}`;
+                            return (
+                              <button
+                                key={`${site.sourceId}:${site.name}:${site.line}:${site.column ?? ''}:${index}`}
+                                type="button"
+                                title={accessibleLabel}
+                                aria-label={accessibleLabel}
+                                onClick={() => onInspectUnresolved(site.sourceId, site.line)}
+                              >
+                                {showColumn ? location : site.line}
+                              </button>
+                            );
+                          })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul>
+              {graph.unresolved.map((item, index) => (
+                <li key={`${item.sourceId}:${item.name}:${index}`}>
+                  <strong>{item.name}</strong> · {item.kind} · {item.filePath}:{item.line}
+                  <Button
+                    onClick={() => onInspectUnresolved(item.sourceId, item.line)}
+                    aria-label={`${t('code.graph.inspectUnresolvedSource')}: ${lookup.get(item.sourceId)?.name ?? item.sourceId} ${item.filePath}:${item.line}`}
+                  >
+                    {t('code.graph.inspectUnresolvedSource')}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
         </details>
       )}
     </div>

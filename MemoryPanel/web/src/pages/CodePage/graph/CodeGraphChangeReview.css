@@ -1,0 +1,438 @@
+._codegraph-change-review {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  color: var(--tea-color-text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+._codegraph-change-review h3,
+._codegraph-change-review h4 {
+  margin: 0 0 8px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review h3 {
+  font-size: 16px;
+}
+
+._codegraph-change-review h4 {
+  font-size: 14px;
+}
+
+._codegraph-change-review p {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-toolbar,
+._codegraph-change-review-actions,
+._codegraph-change-review-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+._codegraph-change-review-toolbar {
+  justify-content: space-between;
+}
+
+._codegraph-change-review-select,
+._codegraph-change-review-input {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-primary);
+  font: inherit;
+}
+
+._codegraph-change-review-select {
+  width: min(360px, 100%);
+}
+
+._codegraph-change-review-input {
+  flex: 1 1 220px;
+}
+
+._codegraph-change-review-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+._codegraph-change-review-section {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--tea-color-border-secondary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+}
+
+._codegraph-change-review-section + ._codegraph-change-review-section {
+  margin-top: 0;
+}
+
+._codegraph-change-review-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+}
+
+._codegraph-change-review-note,
+._codegraph-change-review-evidence {
+  color: var(--tea-color-text-secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-evidence {
+  font-family: var(--font-mono);
+}
+
+._codegraph-change-review-locations {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+._codegraph-change-review-locations span {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-evidence-stack {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: var(--tea-color-text-primary);
+}
+
+._codegraph-change-review-side-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+._codegraph-change-review-side-selector button {
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-link-default);
+  cursor: pointer;
+}
+
+._codegraph-change-review-side-selector button[aria-pressed='true'] {
+  border-color: var(--tea-color-border-brand-default);
+  background: var(--tea-color-bg-secondary-default);
+}
+
+._codegraph-change-review-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--tea-color-border-secondary-default);
+  background: var(--tea-color-bg-secondary-default);
+  color: var(--tea-color-text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+._codegraph-change-review-change[data-kind='added'] {
+  border-color: var(--tea-color-border-success-default, var(--tea-color-border-brand-default));
+}
+
+._codegraph-change-review-change[data-kind='modified'] {
+  border-color: var(--tea-color-border-warning-default, var(--tea-color-border-brand-default));
+}
+
+._codegraph-change-review-change[data-kind='deleted'] {
+  border-color: var(--tea-color-border-error-default, var(--tea-color-border-primary-default));
+}
+
+._codegraph-change-review-change[data-kind='uncertain'] {
+  border-color: var(--tea-color-border-primary-default);
+}
+
+._codegraph-change-review-table-wrap {
+  overflow: auto;
+  max-height: 420px;
+  min-width: 0;
+}
+
+._codegraph-change-review-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+._codegraph-change-review-table caption {
+  text-align: left;
+  font-weight: 600;
+  padding: 8px 4px;
+}
+
+._codegraph-change-review-table th,
+._codegraph-change-review-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-table th {
+  color: var(--tea-color-text-secondary);
+}
+
+._codegraph-change-review-table button {
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-link-default);
+  text-align: left;
+  cursor: pointer;
+}
+
+._codegraph-change-review-table button[aria-pressed='true'] {
+  background: var(--tea-color-bg-secondary-default);
+}
+
+._codegraph-change-review-sides {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+._codegraph-change-review-side {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+._codegraph-change-review-side-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+._codegraph-change-review-side-header strong {
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-side-meta,
+._codegraph-change-review-location {
+  color: var(--tea-color-text-secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-location,
+._codegraph-change-review-code {
+  font-family: var(--font-mono);
+}
+
+._codegraph-change-review-code {
+  overflow: auto;
+  max-height: 360px;
+  padding: 12px 8px;
+  border-radius: 4px;
+  background: var(--tea-color-bg-secondary-default);
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre;
+  tab-size: 4;
+}
+
+._codegraph-change-review-impact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 300px;
+  overflow: auto;
+}
+
+._codegraph-change-review-impact-direction {
+  color: var(--tea-color-text-secondary);
+  font-size: 12px;
+}
+
+._codegraph-change-review-impact-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+._codegraph-change-review-relation,
+._codegraph-change-review-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 1px 7px;
+  border: 1px solid var(--tea-color-border-secondary-default);
+  border-radius: 999px;
+  background: var(--tea-color-bg-secondary-default);
+  color: var(--tea-color-text-primary);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+._codegraph-change-review-relation[data-relation='direct'] {
+  border-color: var(--tea-color-border-brand-default);
+}
+
+._codegraph-change-review-relation[data-relation='indirect'] {
+  border-color: var(--tea-color-border-warning-default, var(--tea-color-border-brand-default));
+}
+
+._codegraph-change-review-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+._codegraph-change-review-status-badge[data-state='unsupported'],
+._codegraph-change-review-status-badge[data-state='empty'] {
+  color: var(--tea-color-text-secondary);
+}
+
+._codegraph-change-review-warning-list {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px dashed
+    var(--tea-color-border-warning-default, var(--tea-color-border-primary-default));
+  border-radius: 4px;
+  color: var(--tea-color-text-secondary);
+  font-size: 12px;
+}
+
+._codegraph-change-review-warning-list ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+._codegraph-change-review-evidence-list {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+._codegraph-change-review-evidence-list button,
+._codegraph-change-review-evidence-missing {
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--tea-color-border-primary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-link-default);
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-evidence-list button[aria-pressed='true'] {
+  border-color: var(--tea-color-border-brand-default);
+  background: var(--tea-color-bg-secondary-default);
+}
+
+._codegraph-change-review-evidence-missing {
+  display: inline-flex;
+  align-items: center;
+  color: var(--tea-color-text-secondary);
+  cursor: default;
+}
+
+._codegraph-change-review-evidence-source {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--tea-color-border-secondary-default);
+}
+
+._codegraph-change-review-impact-list li {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+}
+
+._codegraph-change-review-impact-path {
+  color: var(--tea-color-text-secondary);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-change-review-missing {
+  padding: 12px;
+  border: 1px dashed var(--tea-color-border-secondary-default);
+  border-radius: 4px;
+  color: var(--tea-color-text-secondary);
+  background: var(--tea-color-bg-secondary-default);
+}
+
+._codegraph-change-review-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+._codegraph-change-review button:focus-visible,
+._codegraph-change-review select:focus-visible,
+._codegraph-change-review input:focus-visible,
+._codegraph-change-review summary:focus-visible {
+  outline: 2px solid var(--tea-color-border-brand-default);
+  outline-offset: 2px;
+}
+
+._codegraph-change-review button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 900px) {
+  ._codegraph-change-review-sides {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  ._codegraph-change-review-table {
+    min-width: 620px;
+  }
+}
+
+@media (max-width: 600px) {
+  ._codegraph-change-review-select,
+  ._codegraph-change-review-table button {
+    min-height: 44px;
+  }
+
+  ._codegraph-change-review-table {
+    min-width: 560px;
+  }
+}

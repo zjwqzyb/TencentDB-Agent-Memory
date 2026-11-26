@@ -7,6 +7,8 @@ export interface CodeGraphRequest {
   mode?: CodeGraphMode;
   nodeId?: string;
   indexVersion?: string;
+  /** Optional Git commit (unique prefix or full SHA) selecting a retained historical snapshot. */
+  commit?: string;
   direction?: 'in' | 'out' | 'both';
   depth?: number;
   scopePath?: string;

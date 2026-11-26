@@ -1,0 +1,21 @@
+{
+  "memhub-l1-search": {
+    "commit": "f1438191e3f0f92736f71f7aca6f09903af5ff4d",
+    "source": "docs/qa/codegraph/pilot-runtime.json",
+    "scope": "固定提交的 executeMemorySearch 和 recallL1Candidates，使用受控存储；每个条件各运行一次。",
+    "events": [
+      "命中样例：存储查询 1 次，返回 1 条，策略 fts。",
+      "零命中样例：存储查询 1 次，返回 0 条，策略 fts。",
+      "无可用能力样例：存储查询 0 次，返回 0 条，策略 none。"
+    ]
+  },
+  "memhub-build-queue": {
+    "commit": "f1438191e3f0f92736f71f7aca6f09903af5ff4d",
+    "source": "docs/qa/codegraph/pilot-sequence.json",
+    "scope": "固定提交的 BuildQueue 和 SerialQueue，使用两个资产键和本地可控制的回调，各执行一次释放顺序。",
+    "events": [
+      "先释放 A：A1 started → B1 started → A1 finished → A2 started → B1 finished → B2 started",
+      "先释放 B：A1 started → B1 started → B1 finished → B2 started → A1 finished → A2 started"
+    ]
+  }
+}

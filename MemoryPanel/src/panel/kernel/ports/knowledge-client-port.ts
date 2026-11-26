@@ -300,6 +300,8 @@ export interface KnowledgeClientPort {
   codeGraphDelete(codeGraphIds: string[]): Promise<BatchDeleteResult>;
   codeGraphUpdateMeta(codeGraphId: string, patch: { repo_name?: string; summary?: string | null }): Promise<CodeGraphDetail>;
   codeGraphStructured(codeGraphId: string, action: CodeGraphAction, request: CodeGraphRequest): Promise<CodeGraphResponse>;
+  codeReview(asset: string, action: string, params: Record<string, unknown>): Promise<unknown>;
+  codeGuide(asset: string, action: string, params: Record<string, unknown>): Promise<unknown>;
   codeGraphQuery(codeGraphId: string, tool: string, params: Record<string, unknown>): Promise<CodeGraphToolResult>;
 
   /**

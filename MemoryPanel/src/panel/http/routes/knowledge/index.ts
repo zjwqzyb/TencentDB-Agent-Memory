@@ -11,6 +11,7 @@
  */
 import type { Hono } from 'hono';
 import type { PanelDeps } from '../../../panel-deps.js';
+import { registerCodeGuideRoutes } from './code-guide-routes.js';
 import { registerKnowledgeWikiRoutes } from './wiki-routes.js';
 import { registerKnowledgeCodeGraphRoutes } from './code-graph-routes.js';
 import { registerKnowledgeCallbackRoutes } from './callback-routes.js';
@@ -21,6 +22,7 @@ import { registerKnowledgeSourceRoutes } from './source-routes.js';
 export function registerKnowledgeRoutes(api: Hono, deps: PanelDeps): void {
   registerKnowledgeWikiRoutes(api, deps);
   registerKnowledgeCodeGraphRoutes(api, deps);
+  registerCodeGuideRoutes(api, deps);
   registerKnowledgeCallbackRoutes(api, deps);
   registerKnowledgeAllocateRoutes(api, deps);
   registerKnowledgeListRoutes(api, deps);

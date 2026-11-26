@@ -30,6 +30,7 @@ import {
 import type { CodeGraphInstancePool } from "../module.js";
 import { structuredSdkInfo } from "../engines/code/bridge.js";
 import { emptyResponse, queryStructured, validateStructuredRequest } from "../engines/code/structured.js";
+import { findCodeGraphHistory } from "../store/code-graph-history.js";
 import type { CodeGraphAction } from "../contracts/code-graph.js";
 import { SSH_PROVIDER_ID } from "../code-source/providers/ssh.js";
 
@@ -393,6 +394,29 @@ export function createCodeGraphRoutes(deps: CodeGraphRouteDeps): Hono {
       try { request = validateStructuredRequest(action, input); }
       catch (error) { return c.json(wrapError(400, error instanceof Error ? error.message : 'invalid graph request'), 400); }
       const base = { assetId: cgId, sdkVersion: 'unknown', commit: row.commit_hash, indexedAt: row.last_sync_at, branch: row.branch };
+      if (request.commit) {
+        const history = findCodeGraphHistory(cgService.historyDirFor(serviceId, row.team_id, cgId), request.commit);
+        if (history.kind === 'not_found') return c.json(wrapOk(emptyResponse(base, 'not_found', 'historical_snapshot_not_found')));
+        if (history.kind === 'ambiguous') return c.json(wrapOk(emptyResponse(base, 'not_found', 'historical_commit_ambiguous')));
+        if (history.kind === 'expired') return c.json(wrapOk(emptyResponse(base, 'version_expired', `historical_${history.reason}`)));
+        const historicalBase = { ...base, commit: history.snapshot.commit, indexedAt: history.snapshot.indexedAt, branch: history.snapshot.branch };
+        try {
+          const sdk = await structuredSdkInfo(history.snapshot.root);
+          if (sdk.version !== history.snapshot.sdkVersion) {
+            return c.json(wrapOk(emptyResponse(historicalBase, 'unsupported', 'historical_sdk_version_changed')));
+          }
+          const current = cgService.getById(serviceId, cgId);
+          if (!current) return c.json(wrapError(404, 'code graph not found'), 404);
+          const result = queryStructured({ ...historicalBase, projectRoot: history.snapshot.root, databasePath: sdk.databasePath, sdkVersion: sdk.version, version: history.snapshot.version }, action, request);
+          const after = cgService.getById(serviceId, cgId);
+          if (!after) return c.json(wrapError(404, 'code graph not found'), 404);
+          return c.json(wrapOk(result));
+        } catch (error) {
+          const missing = error instanceof Error && ('code' in error && error.code === 'ENOENT' || error.message.includes('does not exist'));
+          const unsupported = error instanceof Error && /platform package|Cannot find package|Cannot find module|not installed/.test(error.message);
+          return c.json(wrapOk(emptyResponse(historicalBase, missing ? 'unindexed' : unsupported ? 'unsupported' : 'failed', missing ? 'historical_index_missing' : unsupported ? 'structured_adapter_unavailable' : 'historical_index_query_failed')));
+        }
+      }
       if (row.status !== 'ready') return c.json(wrapOk(emptyResponse(base, row.status === 'failed' ? 'failed' : row.status === 'processing' || row.status === 'pending' ? 'building' : 'unindexed')));
       const projectRoot = cgService.dirFor(serviceId, row.team_id, cgId);
       try {

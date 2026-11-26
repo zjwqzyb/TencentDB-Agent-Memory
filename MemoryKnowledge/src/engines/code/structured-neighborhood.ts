@@ -1,11 +1,12 @@
 import type { CodeGraphNode } from '../../contracts/code-graph.js';
 import type { NodeRow, StructuredModeContext } from './structured-mode-context.js';
 
-type Mode = 'impact' | 'hierarchy';
+type Mode = 'impact' | 'hierarchy' | 'calls';
 interface Visit { distance: number; parent?: string; edge?: number }
 interface Item { id: string; distance: number; side: number; kind: number; after: number; unresolvedAfter: number; unresolvedDone: boolean }
 interface State { queue: Item[]; visits: Record<string, Visit>; edges: number[] }
 const KINDS: Record<Mode, string[]> = {
+  calls: ['calls'],
   impact: ['calls', 'imports', 'extends', 'implements', 'references'],
   hierarchy: ['extends', 'implements'],
 };
@@ -35,6 +36,8 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
   const depth = request.depth ?? (mode === 'impact' ? 2 : 1);
   const direction = mode === 'impact' ? 'in' : request.direction ?? 'both';
   const sides: ('source' | 'target')[] = direction === 'both' ? ['source', 'target'] : [direction === 'in' ? 'target' : 'source'];
+  // A call whose target is unknown can only be attributed to its caller.
+  const unfilteredTargets = !request.scopePath && !request.nodeKinds?.length;
   const nodeLimit = request.limit ?? limits.nodes;
   const edgeLimit = request.edgeLimit ?? limits.edges;
   const state: State = structuredClone(env.state ?? { queue: [item(root.id, 0)], visits: { [root.id]: { distance: 0 } }, edges: [] }) as State;
@@ -50,7 +53,9 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
   while (state.queue.length && env.remaining() >= 4) {
     const current = state.queue[0];
     // Unresolved clauses are real indexed records, not synthetic graph nodes/edges.
-    if (!current.unresolvedDone && env.hasUnresolved) {
+    const outgoingCalls = current.distance < depth && sides[current.side] === 'source' && unfilteredTargets;
+    const scanUnresolved = env.hasUnresolved && (mode !== 'calls' || outgoingCalls);
+    if (!current.unresolvedDone && scanUnresolved) {
       if (result.unresolved.length >= edgeLimit) { stopReason = 'unresolved_budget'; break; }
       const refs = env.unresolvedFrom(current.id, current.unresolvedAfter, 1);
       if (!refs.length) current.unresolvedDone = true;
@@ -62,7 +67,8 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
         current.unresolvedAfter = ref.id;
         if (source) {
           add(source);
-          result.unresolved.push({ sourceId: env.id(current.id), name: ref.reference_name, kind: ref.reference_kind, filePath: ref.file_path || source.file_path, line: ref.line, ...(ref.col !== null ? { column: ref.col } : {}) });
+          const diagnostic = { sourceId: env.id(current.id), name: ref.reference_name, kind: ref.reference_kind, filePath: ref.file_path || source.file_path, line: ref.line, ...(ref.col !== null ? { column: ref.col } : {}) };
+          result.unresolved.push(diagnostic);
         }
         continue;
       }
@@ -76,16 +82,19 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
     if (emitted.has(edge.id)) { current.after = edge.id; continue; }
     const source = lookup(edge.source), target = lookup(edge.target);
     if (!source || !target) { current.after = edge.id; result.warnings.push('dangling_edge_omitted'); continue; }
-    if (!env.acceptEdge(edge, source, target)) {
-      const deferred = env.edgeValidationDeferred();
-      if (deferred) { stopReason = deferred; break; }
-      current.after = edge.id; continue;
-    }
     const neighbor = side === 'source' ? target : source;
     if (mode === 'hierarchy' && !['class', 'interface'].includes(neighbor.kind)) { current.after = edge.id; result.warnings.push('non_type_relation_omitted'); continue; }
     if (!result.capabilities.languages.includes(neighbor.language)) { current.after = edge.id; result.warnings.push(`unverified_language:${neighbor.language}`); continue; }
     const scope = request.scopePath?.replace(/\/$/, '');
     if ((scope && neighbor.file_path !== scope && !neighbor.file_path.startsWith(scope + '/')) || (request.nodeKinds?.length && !request.nodeKinds.includes(neighbor.kind))) { current.after = edge.id; continue; }
+    if (result.unresolved.length >= edgeLimit) { stopReason = 'unresolved_budget'; break; }
+    const beforeValidation = result.unresolved.length;
+    if (!env.acceptEdge(edge, source, target)) {
+      const deferred = env.edgeValidationDeferred();
+      if (deferred || !outgoingCalls || mode !== 'calls') result.unresolved.length = beforeValidation;
+      if (deferred) { stopReason = deferred; break; }
+      current.after = edge.id; continue;
+    }
     const additions = [source, target].filter((row, i, all) => all.findIndex(n => n.id === row.id) === i && !page.has(env.id(row.id)));
     if (page.size + additions.length > nodeLimit) { stopReason = 'node_budget'; break; }
     if ((!state.visits[neighbor.id] && Object.keys(state.visits).length >= limits.maxNodes) || emitted.size >= limits.maxEdges) { hardLimit = true; stopReason = 'traversal_budget'; break; }
@@ -96,8 +105,7 @@ export function queryNeighborhood(env: StructuredModeContext, mode: Mode): void 
     for (const row of additions) add(row);
     result.edges.push(env.toEdge(edge, source)); emitted.add(edge.id); current.after = edge.id;
   }
-  // Depth-bound nodes still need their unresolved clauses checked; trim only finished work.
-  while (state.queue.length && (state.queue[0].unresolvedDone || !env.hasUnresolved) && (state.queue[0].distance >= depth || state.queue[0].side >= sides.length)) state.queue.shift();
+  while (state.queue.length && (mode === 'calls' || state.queue[0].unresolvedDone || !env.hasUnresolved) && (state.queue[0].distance >= depth || state.queue[0].side >= sides.length)) state.queue.shift();
   result.nodes = [...page.values()];
   if (mode === 'impact') {
     result.impactPaths = [];

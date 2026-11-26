@@ -363,6 +363,14 @@ export class HttpKnowledgeClient implements KnowledgeClientPort {
     return this.post(`/v3/code-graph/${action}`, { ...request, code_graph_id: codeGraphId });
   }
 
+  async codeReview(asset: string, action: string, params: Record<string, unknown>): Promise<unknown> {
+    return this.post('/v3/code-graph/reviews/' + action, { ...params, code_graph_id: asset });
+  }
+
+  async codeGuide(asset: string, action: string, params: Record<string, unknown>): Promise<unknown> {
+    return this.post('/v3/code-graph/guides/' + action, { ...params, code_graph_id: asset });
+  }
+
   async codeGraphQuery(codeGraphId: string, tool: string, params: Record<string, unknown>): Promise<CodeGraphToolResult> {
     return this.post(`/v3/code-graph/${tool}`, { code_graph_id: codeGraphId, ...params });
   }

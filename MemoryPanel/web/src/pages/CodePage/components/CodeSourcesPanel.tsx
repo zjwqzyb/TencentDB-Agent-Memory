@@ -4,6 +4,8 @@
  * Markdown 渲染统一走共享 AssetMarkdown。
  */
 import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Alert, Button, Card, Copy, Form, Input, Justify, MetricsBoard, Modal, SearchBox, Segment, Select, StatusTip, Table, Text } from 'tea-component';
 import { ChevronRightIcon, CodeIcon, DeleteIcon, RefreshIcon, UsergroupIcon, ViewListIcon, ViewModuleIcon } from 'tea-icons-react';
 import { knowledgeApi } from '@/lib/api/knowledge-api';
@@ -22,6 +24,7 @@ const { scrollable } = Table.addons;
 export default function CodeSourcesPanel() {
   const { t } = useTranslation();
   const code = useCodeSources();
+  const [searchParams] = useSearchParams();
 
   const {
     // context
@@ -81,6 +84,15 @@ export default function CodeSourcesPanel() {
     stats,
     filteredSources,
   } = code;
+
+  const guideAssetId = searchParams.get('code-guide-asset');
+
+  useEffect(() => {
+    if (!guideAssetId || loading || subView === 'detail') return;
+    if (displaySources.some((source) => source.code_graph_id === guideAssetId)) {
+      openDetail(guideAssetId);
+    }
+  }, [guideAssetId, loading, displaySources, subView, openDetail]);
 
   if (subView === 'detail') {
     return <CodeDetailView store={code} />;

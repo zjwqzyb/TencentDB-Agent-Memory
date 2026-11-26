@@ -1,12 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Button, Copy, Drawer, StatusTip } from 'tea-component';
-import type { CodeGraphDetail } from '@/lib/api/knowledge-api';
-import type { CodeGraphMode, CodeGraphNode } from '@/lib/api/code-graph-contract';
-import { canReadNodeSource, isAggregateMode, useCodeGraphWorkspace } from './useCodeGraphWorkspace';
+import { knowledgeApi } from '@/lib/api/knowledge-api';
+import type { CodeGraphDetail, CodeGraphGuide } from '@/lib/api/knowledge-api';
+import type {
+  CodeGraphEdge,
+  CodeGraphMode,
+  CodeGraphNode,
+  CodeGraphResponse,
+} from '@/lib/api/code-graph-contract';
+import {
+  canReadNodeSource,
+  graphError,
+  isAggregateMode,
+  useCodeGraphWorkspace,
+} from './useCodeGraphWorkspace';
 import { CodeGraphModeControls } from './CodeGraphModeControls';
 import { CodeGraphAnalysis } from './CodeGraphAnalysis';
 import { CodeGraphCanvas } from './CodeGraphCanvas';
+import { CodeGraphGuidePanel } from './CodeGraphGuidePanel';
+import { CodeGraphRepositoryOverview } from './CodeGraphRepositoryOverview';
 import {
   coverageNoticeKeys,
   findRelationPath,
@@ -19,16 +33,22 @@ import './code-graph.css';
 
 export function CodeGraphWorkspace({
   asset,
-  mode: initialMode = 'calls',
+  mode: initialMode = 'clusters',
+  pilotHome = false,
   onTextQuery,
 }: {
   asset: CodeGraphDetail;
   mode?: CodeGraphMode;
+  pilotHome?: boolean;
   onTextQuery?: () => void;
 }) {
   const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const state = useCodeGraphWorkspace(asset.code_graph_id, initialMode);
   const mode = state.mode;
+  const [isPilotHome, setIsPilotHome] = useState(() => pilotHome && initialMode === 'clusters');
   const [query, setQuery] = useState(''),
     [scope, setScope] = useState(''),
     [kind, setKind] = useState('');
@@ -42,6 +62,16 @@ export function CodeGraphWorkspace({
   const [distance, setDistance] = useState('all');
   const [cycleId, setCycleId] = useState<string | null>(null);
   const [drawerElement, setDrawerElement] = useState<HTMLDivElement | null>(null);
+  const [guides, setGuides] = useState<CodeGraphGuide[]>([]);
+  const [guideLoading, setGuideLoading] = useState(true);
+  const [guideError, setGuideError] = useState('');
+  const [activeGuide, setActiveGuide] = useState<CodeGraphGuide | null>(null);
+  const [activeGuideStep, setActiveGuideStep] = useState(0);
+  const [activeGuideAnchor, setActiveGuideAnchor] = useState(0);
+  const [crossAssetSource, setCrossAssetSource] = useState<CodeGraphResponse | null>(null);
+  const [crossAssetSourceLoading, setCrossAssetSourceLoading] = useState(false);
+  const [crossAssetSourceError, setCrossAssetSourceError] = useState('');
+  const crossAssetSourceController = useRef<AbortController | null>(null);
   const drawerTrigger = useRef<HTMLElement | null>(null);
   const searchInput = useRef<HTMLInputElement | null>(null);
   function openDrawer(panel: 'search' | 'source') {
@@ -86,12 +116,31 @@ export function CodeGraphWorkspace({
   }, [state.options]);
   const meta = state.graph ?? state.catalog;
   useEffect(() => {
+    const controller = new AbortController();
+    setGuideLoading(true);
+    setGuideError('');
+    knowledgeApi.code
+      .guides(asset.code_graph_id, controller.signal)
+      .then((items) => setGuides(items.filter((guide) => guide.status === 'published')))
+      .catch(() => {
+        if (!controller.signal.aborted) setGuideError('network');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setGuideLoading(false);
+      });
+    return () => controller.abort();
+  }, [asset.code_graph_id]);
+  useEffect(() => {
     const media = matchMedia('(max-width: 1100px)');
     const update = () => setNarrow(media.matches);
     update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+  useEffect(() => () => crossAssetSourceController.current?.abort(), []);
+  useEffect(() => {
+    if (mode !== 'clusters') setIsPilotHome(false);
+  }, [mode]);
   const lookup = new Map(state.graph?.nodes.map((node) => [node.id, node]) ?? []);
   const path = useMemo(() => {
     if (!state.graph?.focusId || !state.selected) return [];
@@ -203,6 +252,147 @@ export function CodeGraphWorkspace({
     if (narrow) openDrawer('search');
     else searchInput.current?.focus();
   };
+  function returnToGuide() {
+    if (state.canBack) state.back();
+    else state.changeMode('clusters');
+    requestAnimationFrame(() => {
+      document.getElementById(`code-guide-step-${activeGuideStep}`)?.focus({ preventScroll: true });
+    });
+    if (narrow) openDrawer('search');
+  }
+  const syncGuideUrl = (
+    guide: CodeGraphGuide | null,
+    stepIndex: number,
+    anchorIndex: number,
+    replace = false,
+  ) => {
+    const params = new URLSearchParams(location.search);
+    if (!guide) {
+      params.delete('code-guide');
+      params.delete('code-guide-step');
+      params.delete('code-guide-anchor');
+    } else {
+      params.set('code-guide', guide.id);
+      params.set('code-guide-step', String(stepIndex));
+      params.set('code-guide-anchor', String(anchorIndex));
+      params.set('code-guide-asset', asset.code_graph_id);
+      params.set('code-guide-index', guide.indexVersion);
+      params.set('code-guide-commit', guide.commit);
+    }
+    navigate({ pathname: location.pathname, search: params.toString() }, { replace });
+  };
+  const guideMatchesCurrentIndex = (guide: CodeGraphGuide) =>
+    (!meta?.indexVersion || guide.indexVersion === meta.indexVersion) &&
+    (!meta?.commit || guide.commit === meta.commit);
+  async function openCrossAssetSource(
+    anchor: NonNullable<CodeGraphGuide['steps'][number]['anchors'][number]>,
+    guide: CodeGraphGuide,
+  ) {
+    const sourceAssetId = anchor.assetId;
+    if (!sourceAssetId) return;
+    crossAssetSourceController.current?.abort();
+    const controller = new AbortController();
+    crossAssetSourceController.current = controller;
+    setCrossAssetSource(null);
+    setCrossAssetSourceError('');
+    setCrossAssetSourceLoading(true);
+    try {
+      const result = await knowledgeApi.code.graphSource(
+        sourceAssetId,
+        {
+          nodeId: anchor.nodeId,
+          indexVersion: anchor.indexVersion ?? guide.indexVersion,
+          commit: anchor.commit ?? guide.commit,
+          sourceLine: anchor.line,
+        },
+        controller.signal,
+      );
+      if (controller.signal.aborted || crossAssetSourceController.current !== controller) return;
+      if (result.state === 'ready') setCrossAssetSource(result);
+      else setCrossAssetSourceError(result.state);
+    } catch (error) {
+      if (!controller.signal.aborted && crossAssetSourceController.current === controller)
+        setCrossAssetSourceError(graphError(error));
+    } finally {
+      if (!controller.signal.aborted && crossAssetSourceController.current === controller)
+        setCrossAssetSourceLoading(false);
+    }
+  }
+  async function openGuideAnchor(
+    guide: CodeGraphGuide,
+    stepIndex: number,
+    anchorIndex: number,
+  ) {
+    const anchor = guide.steps[stepIndex]?.anchors[anchorIndex];
+    if (!anchor || !guideMatchesCurrentIndex(guide)) return;
+    setActiveGuide(guide);
+    setActiveGuideStep(stepIndex);
+    setActiveGuideAnchor(anchorIndex);
+    if (anchor.assetId && anchor.assetId !== asset.code_graph_id) {
+      await openCrossAssetSource(anchor, guide);
+      if (narrow) openDrawer('source');
+      requestAnimationFrame(() => {
+        document.getElementById(`code-guide-step-${stepIndex}`)?.focus({ preventScroll: true });
+      });
+      return;
+    }
+    setCrossAssetSource(null);
+    setCrossAssetSourceError('');
+    setCrossAssetSourceLoading(false);
+    const node = await state.inspectNode(anchor.nodeId, anchor.line);
+    if (node) void state.openSymbol(node, anchor.line);
+    if (narrow) openDrawer('source');
+    requestAnimationFrame(() => {
+      document.getElementById(`code-guide-step-${stepIndex}`)?.focus({ preventScroll: true });
+    });
+  }
+  function selectGuideStep(guide: CodeGraphGuide, stepIndex: number) {
+    syncGuideUrl(guide, stepIndex, 0);
+  }
+  function selectGuide(guide: CodeGraphGuide) {
+    syncGuideUrl(guide, 0, 0);
+  }
+  const guideUrl = `${searchParams.get('code-guide') ?? ''}:${searchParams.get('code-guide-step') ?? '0'}:${searchParams.get('code-guide-anchor') ?? '0'}`;
+  const currentGuideUrl = activeGuide
+    ? `${activeGuide.id}:${activeGuideStep}:${activeGuideAnchor}`
+    : '';
+  useEffect(() => {
+    if (guideLoading) return;
+    const guideId = searchParams.get('code-guide');
+    if (!guideId) return;
+    if (!guides.length) {
+      setGuideError('not_found');
+      return;
+    }
+    const urlAssetId = searchParams.get('code-guide-asset');
+    if (urlAssetId && urlAssetId !== asset.code_graph_id) {
+      setGuideError('asset_mismatch');
+      return;
+    }
+    if (guideUrl === currentGuideUrl) return;
+    const guide = guides.find((item) => item.id === guideId);
+    if (!guide) {
+      setGuideError('not_found');
+      return;
+    }
+    setGuideError('');
+    const urlIndexVersion = searchParams.get('code-guide-index');
+    if (urlIndexVersion && urlIndexVersion !== guide.indexVersion) {
+      setGuideError('version_mismatch');
+      return;
+    }
+    const urlCommit = searchParams.get('code-guide-commit');
+    if (urlCommit && urlCommit !== guide.commit) {
+      setGuideError('version_mismatch');
+      return;
+    }
+    const stepIndex = Math.max(0, Math.min(guide.steps.length - 1, Number(searchParams.get('code-guide-step')) || 0));
+    const anchorIndex = Math.max(
+      0,
+      Math.min((guide.steps[stepIndex]?.anchors.length ?? 1) - 1, Number(searchParams.get('code-guide-anchor')) || 0),
+    );
+    void openGuideAnchor(guide, stepIndex, anchorIndex);
+  }, [searchParams, guides, guideLoading, guideUrl, currentGuideUrl]);
 
   const searchPanel = (
     <section className="_codegraph-search" aria-label={t('code.graph.search')}>
@@ -250,6 +440,21 @@ export function CodeGraphWorkspace({
           </button>
         </div>
       </form>
+      <CodeGraphGuidePanel
+        guides={guides}
+        activeGuide={activeGuide}
+        activeStepIndex={activeGuideStep}
+        activeAnchorIndex={activeGuideAnchor}
+        loading={guideLoading}
+        error={guideError}
+        indexVersion={meta?.indexVersion ?? null}
+        commit={meta?.commit ?? null}
+        assetId={asset.code_graph_id}
+        onSelectGuide={selectGuide}
+        onSelectStep={(index) => activeGuide && selectGuideStep(activeGuide, index)}
+        onSelectAnchor={(guide, stepIndex, anchorIndex) => syncGuideUrl(guide, stepIndex, anchorIndex)}
+        onReturn={returnToGuide}
+      />
       {state.searching && (
         <div className="_codegraph-search-status" role="status" aria-live="polite">
           <StatusTip status="loading" />
@@ -280,7 +485,11 @@ export function CodeGraphWorkspace({
                   setScope(node.filePath);
                   setQuery('');
                   void state.browse('', node.filePath);
-                } else focus(node);
+                } else if (isPilotHome && mode === 'clusters') {
+                  void state.openSymbol(node, node.startLine);
+                } else {
+                  focus(node);
+                }
               }}
             >
               <strong>{node.name}</strong>
@@ -330,6 +539,26 @@ export function CodeGraphWorkspace({
       aria-label={t('code.graph.details')}
     >
       <h3>{t('code.graph.details')}</h3>
+      {crossAssetSourceLoading && <StatusTip status="loading" />}
+      {crossAssetSourceError && <Alert type="error">{message(crossAssetSourceError)}</Alert>}
+      {crossAssetSource?.source && (
+        <>
+          <p className="_codegraph-note">{t('code.graph.guideCrossAssetSource')}</p>
+          <pre className="_codegraph-code" tabIndex={0} aria-label={t('code.graph.source')}>
+            <code>
+              {crossAssetSource.source.content.split('\n').map((line, index) => (
+                <span key={index}>
+                  <span className="_codegraph-line" aria-hidden="true">
+                    {crossAssetSource.source!.startLine + index}
+                  </span>
+                  {line}
+                  {'\n'}
+                </span>
+              ))}
+            </code>
+          </pre>
+        </>
+      )}
       {!state.selected ? (
         <p>{t('code.graph.selectHint')}</p>
       ) : state.selected.aggregate ? (
@@ -395,6 +624,9 @@ export function CodeGraphWorkspace({
               <a href={sourceUrl} target="_blank" rel="noreferrer">
                 {t('code.graph.openSource')}
               </a>
+            )}
+            {activeGuide && mode !== 'clusters' && (
+              <Button onClick={returnToGuide}>{t('code.graph.guideReturn')}</Button>
             )}
           </div>
           <p className="_codegraph-note">
@@ -676,6 +908,21 @@ export function CodeGraphWorkspace({
         </div>
       )}
       {unavailable && <Alert>{t('code.graph.noWebGL')}</Alert>}
+      {mode === 'clusters' && state.graph && (
+        <CodeGraphRepositoryOverview
+          asset={asset}
+          graph={state.graph}
+          selected={state.selected}
+          loading={state.loading}
+          onSelectModule={(node: CodeGraphNode) => {
+            state.setSelected(node);
+            clearHighlights();
+            if (narrow) openDrawer('source');
+          }}
+          onInspectEdge={(edge: CodeGraphEdge) => selectEdge(edge.id)}
+          onChooseSymbol={chooseSymbol}
+        />
+      )}
       <div className="_codegraph-layout">
         {!narrow && searchPanel}
         <section className="_codegraph-main" aria-label={t('code.graph.relations')}>
@@ -726,9 +973,13 @@ export function CodeGraphWorkspace({
           {nodes.length > 0 && !listView && !unavailable && (
             <CodeGraphCanvas
               data={data}
+              focusId={state.graph?.focusId}
               selectedId={state.selected?.id}
               highlightedEdges={highlightedEdges}
+              cameraKey={`${asset.code_graph_id}:${mode}:${meta?.indexVersion ?? 'unindexed'}`}
+              focused={mode === 'calls'}
               onSelect={select}
+              onSelectEdge={(edge) => selectEdge(edge.id)}
               onUnavailable={() => {
                 setUnavailable(true);
                 setListView(true);
@@ -832,6 +1083,10 @@ export function CodeGraphWorkspace({
             onCycle={(id) => {
               clearHighlights();
               setCycleId(id);
+              if (narrow) openDrawer('source');
+            }}
+            onInspectUnresolved={(sourceId, line) => {
+              void state.inspectNode(sourceId, line);
               if (narrow) openDrawer('source');
             }}
           />

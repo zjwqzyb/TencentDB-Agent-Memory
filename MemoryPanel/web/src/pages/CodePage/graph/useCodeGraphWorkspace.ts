@@ -47,9 +47,16 @@ export function defaultGraphOptions(mode: CodeGraphMode): CodeGraphRequest {
 }
 
 type GraphSnapshot = { data: CodeGraphResponse; request: CodeGraphRequest };
-type FocusSnapshot = { node: CodeGraphNode | null; options: CodeGraphRequest };
+type FocusSnapshot = {
+  node: CodeGraphNode | null;
+  options: CodeGraphRequest;
+  graph: CodeGraphResponse | null;
+  expansions: GraphSnapshot[];
+  selected: CodeGraphNode | null;
+  sourceLine?: number;
+};
 
-export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMode = 'calls') {
+export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMode = 'clusters') {
   const [mode, setMode] = useState(initialMode);
   const [options, setOptions] = useState<CodeGraphRequest>(() => defaultGraphOptions(initialMode));
   const optionsRef = useRef(options);
@@ -274,7 +281,14 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
         if (remember && graph && previousFocus?.id !== node?.id)
           setHistory((old) => [
             ...old.slice(-19),
-            { node: previousFocus, options: optionsRef.current },
+            {
+              node: previousFocus,
+              options: optionsRef.current,
+              graph,
+              expansions,
+              selected,
+              sourceLine,
+            },
           ]);
         setSelected(node);
         if (queryOptions.mode !== 'clusters') setGraph(null);
@@ -399,7 +413,10 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
       graph?.nodes.find((node) => node.id === graph.focusId) ?? selected ?? realSymbol.current;
     // Capture the prior scope before updating options, so Back restores aggregation accurately.
     if (remember && graph)
-      setHistory((old) => [...old.slice(-19), { node: focus, options: previous }]);
+      setHistory((old) => [
+        ...old.slice(-19),
+        { node: focus, options: previous, graph, expansions, selected, sourceLine },
+      ]);
     optionsRef.current = next;
     setOptions(next);
     if (isAggregateMode(mode) || focus)
@@ -486,8 +503,8 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
     }
   }
 
-  async function inspectNode(nodeId: string, line?: number) {
-    if (!version) return;
+  async function inspectNode(nodeId: string, line?: number): Promise<CodeGraphNode | null> {
+    if (!version) return null;
     nodeController.current?.abort();
     const controller = new AbortController();
     nodeController.current = controller;
@@ -498,22 +515,58 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
         { nodeId, indexVersion: version },
         controller.signal,
       );
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) return null;
       if (
         result.state === 'version_expired' ||
         (result.indexVersion && result.indexVersion !== version)
       ) {
         expire();
-        return;
+        return null;
       }
       const node = result.nodes.find((item) => item.id === nodeId);
       if (node && canReadNodeSource(node)) {
         setSelected(node);
         setSourceLine(line);
-      } else setSourceError(result.state === 'ready' ? 'source_unavailable' : result.state);
+        return node;
+      }
+      setSourceError(result.state === 'ready' ? 'source_unavailable' : result.state);
+      return null;
     } catch (e) {
       if (!controller.signal.aborted) setSourceError(graphError(e));
+      return null;
     }
+  }
+
+  function openSymbol(node: CodeGraphNode, line?: number) {
+    const next = defaultGraphOptions('calls');
+    const previousFocus = graph?.nodes.find((item) => item.id === graph.focusId) ?? selected;
+    const previousOptions = optionsRef.current;
+    abortAll();
+    setMode('calls');
+    optionsRef.current = next;
+    setOptions(next);
+    setGraph(null);
+    setSource(null);
+    setEvidence(null);
+    setEvidenceError('');
+    setCatalogError('');
+    setSourceError('');
+    setError('');
+    setHistory((old) => [
+      ...old.slice(-19),
+      {
+        node: previousFocus,
+        options: previousOptions,
+        graph,
+        expansions,
+        selected,
+        sourceLine,
+      },
+    ]);
+    setExpansions([]);
+    setSelected(node);
+    setSourceLine(line);
+    return runGraph(node, next, false, false, false);
   }
 
   function reset() {
@@ -554,6 +607,17 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
     setHistory((old) => old.slice(0, -1));
     optionsRef.current = previous.options;
     setOptions(previous.options);
+    if (previous.options.mode && previous.options.mode !== mode) setMode(previous.options.mode);
+    if (previous.graph) {
+      abortAll();
+      setGraph(previous.graph);
+      setExpansions(previous.expansions);
+      setSource(null);
+      setSourceError('');
+      setSelected(previous.selected);
+      setSourceLine(previous.sourceLine);
+      return;
+    }
     void runGraph(
       mode === 'dependencies' ? null : previous.node,
       previous.options,
@@ -587,6 +651,7 @@ export function useCodeGraphWorkspace(assetId: string, initialMode: CodeGraphMod
     evidenceError,
     loadEvidence,
     inspectNode,
+    openSymbol,
     selected,
     setSelected,
     loading,

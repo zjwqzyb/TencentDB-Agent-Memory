@@ -16,7 +16,7 @@ import type { CodeGraphAction, CodeGraphRequest, CodeGraphResponse } from '../..
 
 const cases: Array<{ action: CodeGraphAction; params: CodeGraphRequest }> = [
   { action: 'graph', params: { mode: 'calls', nodeId: 'node-a', indexVersion: 'v1', direction: 'both', depth: 1, scopePath: 'src', nodeKinds: ['function'], edgeKinds: ['calls'], limit: 7, edgeLimit: 9, cursor: 'opaque-cursor' } },
-  { action: 'graph-search', params: { query: 'sameName', indexVersion: 'v1', scopePath: 'src', nodeKinds: ['function'], limit: 7, cursor: 'opaque-cursor' } },
+  { action: 'graph-search', params: { query: 'sameName', indexVersion: 'v1', commit: '0123456789abcdef0123456789abcdef01234567', scopePath: 'src', nodeKinds: ['function'], limit: 7, cursor: 'opaque-cursor' } },
   { action: 'graph-tree', params: { scopePath: 'src', indexVersion: 'v1', limit: 7, cursor: 'opaque-cursor' } },
   { action: 'graph-node', params: { nodeId: 'node-a', indexVersion: 'v1' } },
   { action: 'graph-source', params: { nodeId: 'node-a', indexVersion: 'v1', sourceLine: 1000 } },

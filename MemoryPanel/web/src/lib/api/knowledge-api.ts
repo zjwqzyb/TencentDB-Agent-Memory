@@ -127,6 +127,62 @@ export interface CodeGraphDetail {
   updated_at: string;
 }
 
+export type CodeGraphGuideStepKind =
+  | 'source'
+  | 'branch'
+  | 'async'
+  | 'parallel'
+  | 'unknown'
+  | 'reading';
+
+export interface CodeGraphGuideAnchor {
+  nodeId: string;
+  filePath: string;
+  line: number;
+  label: string;
+  contentHash?: string;
+  assetId?: string;
+  indexVersion?: string;
+  commit?: string;
+}
+
+export interface CodeGraphGuideStep {
+  id: string;
+  title: string;
+  description: string;
+  kind: CodeGraphGuideStepKind;
+  anchors: CodeGraphGuideAnchor[];
+}
+
+export interface CodeGraphGuideRelation {
+  from: string;
+  to: string;
+  kind: 'sequence' | 'branch' | 'async' | 'parallel' | 'unknown';
+  label: string;
+  fromAnchor: number;
+  toAnchor: number;
+}
+
+export interface CodeGraphGuideObservation {
+  commit: string;
+  source: string;
+  scope: string;
+  events: string[];
+}
+
+export interface CodeGraphGuide {
+  id: string;
+  revision: number;
+  status: 'candidate' | 'published' | 'withdrawn';
+  topic: string;
+  title: string;
+  commit: string;
+  indexVersion: string;
+  steps: CodeGraphGuideStep[];
+  relations?: CodeGraphGuideRelation[];
+  observation?: CodeGraphGuideObservation;
+}
+
 // ---- 兼容旧类型（平滑过渡） ----
 
 /** @deprecated 用 WikiDetail 替代 */
@@ -637,6 +693,17 @@ export const knowledgeApi = {
 
     graphSource: (codeGraphId: string, request: CodeGraphRequest = {}, signal?: AbortSignal): Promise<CodeGraphResponse> =>
       panelPost('/code-graph/graph-source', { ...request, code_graph_id: codeGraphId }, signal),
+
+    /** Published walkthroughs for the current index. */
+    guides: async (
+      codeGraphId: string,
+      signal?: AbortSignal,
+    ): Promise<CodeGraphGuide[]> =>
+      panelPost<{ items: CodeGraphGuide[] }>(
+        '/code-graph/guides/list',
+        { code_graph_id: codeGraphId },
+        signal,
+      ).then((data) => data.items ?? []),
 
     search: (opts: { codeGraphId: string; query: string; kind?: string; limit?: number }): Promise<{ text: string; isError: boolean }> =>
       panelPost('/code-graph/search', { code_graph_id: opts.codeGraphId, query: opts.query, ...(opts.kind && opts.kind !== 'any' ? { kind: opts.kind } : {}), limit: opts.limit ?? 10 }),

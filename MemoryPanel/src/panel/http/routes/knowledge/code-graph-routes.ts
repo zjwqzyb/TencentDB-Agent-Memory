@@ -222,8 +222,9 @@ export function registerKnowledgeCodeGraphRoutes(api: Hono, deps: PanelDeps): vo
       const gate = await requireKnowledgeRead(deps, c, ctx, cgId);
       if ('error' in gate) return gate.error;
       const { code_graph_id: _id, ...params } = body;
-      const allowed = new Set(['mode', 'nodeId', 'indexVersion', 'direction', 'depth', 'scopePath', 'query', 'nodeKinds', 'edgeKinds', 'limit', 'edgeLimit', 'cursor', 'groupBy', 'moduleDepth', 'evidenceFor', 'sourceLine']);
+      const allowed = new Set(['mode', 'nodeId', 'indexVersion', 'commit', 'direction', 'depth', 'scopePath', 'query', 'nodeKinds', 'edgeKinds', 'limit', 'edgeLimit', 'cursor', 'groupBy', 'moduleDepth', 'evidenceFor', 'sourceLine']);
       if (Object.keys(params).some(key => !allowed.has(key))) return respondControlError(c, 400, 'INVALID_GRAPH_REQUEST');
+      if (params.commit !== undefined && (typeof params.commit !== 'string' || !/^[0-9a-f]{7,40}$/i.test(params.commit))) return respondControlError(c, 400, 'INVALID_GRAPH_REQUEST');
       if (params.sourceLine !== undefined && (action !== 'graph-source' || typeof params.sourceLine !== 'number' || !Number.isSafeInteger(params.sourceLine) || params.sourceLine < 1 || params.sourceLine > 2 * 1024 * 1024 + 1)) return respondControlError(c, 400, 'INVALID_GRAPH_REQUEST');
       const kc = deps.knowledgeClientFactory(ctx.instanceId);
       return runKs(c, () => kc.codeGraphStructured(cgId, action, params as CodeGraphRequest));

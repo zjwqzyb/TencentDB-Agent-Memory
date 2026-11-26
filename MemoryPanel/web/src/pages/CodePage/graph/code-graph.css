@@ -200,6 +200,166 @@
 ._codegraph-results span {
   color: var(--tea-color-text-secondary);
 }
+
+._codegraph-guide-panel {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-guide-list {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0;
+}
+._codegraph-guide-list button,
+._codegraph-guide-steps button,
+._codegraph-guide-step-detail li,
+._codegraph-guide-relations button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+._codegraph-guide-list button,
+._codegraph-guide-relations button {
+  flex-direction: column;
+}
+._codegraph-guide-list span,
+._codegraph-guide-step-detail span,
+._codegraph-guide-relations small {
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-active-guide {
+  margin-top: 12px;
+}
+._codegraph-guide-steps {
+  margin: 0;
+  padding-left: 20px;
+}
+._codegraph-guide-steps li {
+  margin: 8px 0;
+}
+._codegraph-guide-steps li.is-current > button {
+  background: var(--tea-color-bg-secondary-default);
+}
+._codegraph-guide-step-detail {
+  margin-top: 6px;
+  padding: 6px;
+  border-left: 2px solid var(--tea-color-border-brand-default);
+}
+._codegraph-guide-step-detail ul {
+  margin: 0;
+  padding-left: 16px;
+}
+._codegraph-guide-step-detail p {
+  margin: 0 0 8px;
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-guide-relations {
+  margin-top: 12px;
+}
+._codegraph-guide-relations ul {
+  margin: 0;
+  padding-left: 20px;
+}
+._codegraph-guide-relations li {
+  margin: 6px 0;
+}
+._codegraph-guide-relation-endpoints {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: stretch;
+}
+._codegraph-guide-relation-endpoints > span {
+  align-self: center;
+  color: var(--tea-color-text-secondary);
+}
+._codegraph-guide-observation {
+  margin-top: 12px;
+}
+._codegraph-guide-observation summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+._codegraph-guide-observation ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+._codegraph-guide-observation li {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+
+._codegraph-repository-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px;
+  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-overview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+._codegraph-overview-header > div {
+  min-width: 0;
+}
+._codegraph-overview-header p {
+  margin: 0;
+}
+._codegraph-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+._codegraph-module-card {
+  min-width: 0;
+  border: 1px solid var(--tea-color-border-secondary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+}
+._codegraph-module-card.is-selected {
+  border-color: var(--tea-color-border-brand-default);
+}
+._codegraph-module-card button {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 8px;
+}
+._codegraph-module-card span,
+._codegraph-module-card small {
+  color: var(--tea-color-text-secondary);
+  overflow-wrap: anywhere;
+}
+._codegraph-overview-edges ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+._codegraph-overview-edges li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--tea-color-border-secondary-default);
+}
+._codegraph-overview-edges button {
+  overflow-wrap: anywhere;
+}
+._codegraph-edge-count {
+  color: var(--tea-color-text-secondary);
+}
 ._codegraph-main {
   display: flex;
   flex-direction: column;
@@ -229,12 +389,149 @@
   width: 100%;
   height: 100%;
 }
+._codegraph-canvas-scroll {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+._codegraph-canvas-scroll:focus-visible {
+  outline: 2px solid var(--tea-color-border-brand-default);
+  outline-offset: -2px;
+}
+._codegraph-focus-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+._codegraph-focus-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+._codegraph-focus-edge {
+  pointer-events: stroke;
+  cursor: pointer;
+  stroke-linecap: round;
+  outline: none;
+}
+._codegraph-focus-edge:focus-visible {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 3px var(--tea-color-border-brand-default));
+}
+._codegraph-focus-cards {
+  position: absolute;
+  inset: 0;
+}
+._codegraph-focus-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 3px;
+  align-content: center;
+  justify-content: stretch;
+  padding: 7px 9px;
+  border: 1px solid var(--tea-color-border-secondary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+  transform: translate(-50%, -50%);
+}
+._codegraph-focus-card:hover {
+  border-color: var(--tea-color-border-brand-default);
+}
+._codegraph-focus-card:focus-visible {
+  outline: 2px solid var(--tea-color-border-brand-default);
+  outline-offset: 2px;
+}
+._codegraph-focus-card-name {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--tea-color-text-primary);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+._codegraph-focus-card-meta {
+  min-width: 0;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--tea-color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+._codegraph-focus-card-focus,
+._codegraph-focus-card-focus.is-selected {
+  border-left: 3px solid var(--tea-color-text-link-default, #006eff);
+  background: var(--tea-color-bg-brand-lighten-default, #eaf3ff);
+  border-color: var(--tea-color-text-link-default, #006eff);
+}
+._codegraph-focus-card-focus:not(.is-selected) {
+  border-color: var(--tea-color-text-link-default, #006eff);
+}
+._codegraph-focus-card-focus.is-selected {
+  box-shadow:
+    0 0 0 1px var(--tea-color-text-link-default, #006eff),
+    0 3px 8px rgb(0 0 0 / 8%);
+}
+._codegraph-focus-card-caller {
+  border-left: 3px solid var(--tea-color-text-success-default, #00ab6c);
+}
+._codegraph-focus-card-callee {
+  border-left: 3px solid var(--tea-color-text-warning-default, #ff9d00);
+}
+._codegraph-focus-card-both {
+  border-left: 3px solid var(--tea-color-text-primary, #222);
+}
+._codegraph-focus-card-related {
+  border-left: 3px solid var(--tea-color-border-secondary-default, #d5dbe3);
+}
+._codegraph-focus-card.is-selected {
+  border-color: var(--tea-color-border-brand-default);
+  background: var(--tea-color-bg-secondary-default);
+}
+._codegraph-focus-legend {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  max-width: calc(100% - 96px);
+  padding: 4px 8px;
+  border: 1px solid var(--tea-color-border-secondary-default);
+  border-radius: 4px;
+  background: var(--tea-color-bg-primary-default);
+  color: var(--tea-color-text-secondary);
+  font-size: 10px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+._codegraph-focus-legend-kind {
+  padding: 0 4px;
+  border-radius: 2px;
+  background: var(--tea-color-bg-secondary-default);
+}
 ._codegraph-camera {
   position: absolute;
   right: 8px;
   bottom: 8px;
   display: flex;
   gap: 4px;
+  z-index: 2;
 }
 ._codegraph-empty {
   display: grid;
@@ -378,6 +675,82 @@
 ._codegraph-source li {
   margin: 6px 0;
   overflow-wrap: anywhere;
+}
+._codegraph-unresolved-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+._codegraph-unresolved-group {
+  margin: 10px 0;
+}
+._codegraph-unresolved-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+._codegraph-unresolved-caller {
+  min-width: 0;
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+._codegraph-unresolved-file {
+  color: var(--tea-color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+._codegraph-unresolved-expressions {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+._codegraph-unresolved-expression {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px 10px;
+  margin: 4px 0;
+}
+._codegraph-unresolved-expression > code {
+  flex: 1 1 160px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+._codegraph-unresolved-sites {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+._codegraph-unresolved-sites button {
+  min-width: 30px;
+  min-height: 26px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+@media (max-width: 600px) {
+  ._codegraph-unresolved-expression {
+    flex-direction: column;
+    gap: 4px;
+  }
+  ._codegraph-unresolved-expression > code {
+    flex: none;
+  }
+  ._codegraph-unresolved-sites {
+    max-width: 100%;
+  }
+  ._codegraph-unresolved-sites button {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 ._codegraph-breadcrumbs {

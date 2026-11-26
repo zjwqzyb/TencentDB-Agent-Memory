@@ -8,13 +8,18 @@ output = Path(sys.argv[2] if len(sys.argv) > 2 else '/tmp/code-graph-live-fixtur
 source = Path(__file__).with_name('code-graph-fixture.js').read_text()
 source = source.replace('  const context = page.context();', '  const context = page.context();\n  const live = ' + json.dumps(metadata, separators=(',', ':')) + ';')
 start = source.index('  const asset = id =>')
-end = source.index('\n  const shapes =', start)
+end = source.index('\n', start)
 source = source[:start] + '  const asset = () => live.asset;' + source[end:]
 source = source.replace("['cg-browser-a', 'cg-browser-b']", "['cg-browser-a']")
 start = source.index('      const snapshot = { ...state };')
 end = source.index('\n    } else {', start)
 source = source[:start] + '''      const response = await route.fetch({ url: live.panelBaseUrl + path, headers: live.headers, postData: route.request().postData() });
       await route.fulfill({ response }); return;''' + source[end:]
+source = source.replace("    let data;", '''    if (path.includes('/code-graph/guides/')) {
+      const response = await route.fetch({ url: live.panelBaseUrl + path, headers: live.headers, postData: route.request().postData() });
+      await route.fulfill({ response }); return;
+    }
+    let data;''')
 source = source.replace("fixture: 'mock API / real CodePage'", "fixture: 'real SDK / Knowledge HTTP / Panel HTTP; identity and catalog fixtures'")
 output.write_text(source)
 print(output)

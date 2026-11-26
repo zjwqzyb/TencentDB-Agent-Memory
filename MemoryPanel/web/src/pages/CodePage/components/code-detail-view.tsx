@@ -3,7 +3,10 @@
  * 数据与回调来自 useCodeSources 返回对象；Markdown 用共享 AssetMarkdown（compact 密度）。
  */
 import { useLayoutEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CodeGraphWorkspace } from '../graph/CodeGraphWorkspace';
+import { CodeGraphChangeReview } from '../graph/CodeGraphChangeReview';
+import { CodeGuideEditor } from './CodeGuideEditor';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, Card, MetricsBoard, SearchBox, StatusTip, Text } from 'tea-component';
 import { ArrowLeftIcon, CodeIcon, RefreshIcon } from 'tea-icons-react';
@@ -12,10 +15,14 @@ import { formatRepoName } from '../constants/code-constants';
 import { statusLabel } from './code-ui';
 import type { CodeSourcesStore } from '../hooks/useCodeSources';
 
+function isPilotAsset(asset: { repo_name: string; repo_url: string } | undefined): boolean {
+  const repository = `${asset?.repo_name ?? ''} ${asset?.repo_url ?? ''}`.toLowerCase();
+  return repository.includes('memhub') || repository.includes('tencentdb-agent-memory');
+}
+
 export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState('overview');
-  const graphPanelRef = useRef<HTMLDivElement>(null);
+  const [searchParams] = useSearchParams();
   const {
     setSubView,
     selected,
@@ -31,6 +38,10 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
     exploreResult,
     handleExplore,
   } = store;
+
+  const [tab, setTab] = useState(() => (isPilotAsset(selected) ? 'graph' : 'overview'));
+  const graphPanelRef = useRef<HTMLDivElement>(null);
+  const isPilot = isPilotAsset(selected);
 
   useLayoutEffect(() => {
     if (tab !== 'graph') return;
@@ -71,7 +82,9 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
   const selBranch = selected.branch ?? '';
 
   return (
-    <div className={`_codedetail-root${tab === 'graph' ? ' _codedetail-root--graph' : ''}`}>
+      <div
+        className={`_codedetail-root${tab === 'graph' ? ' _codedetail-root--graph' : ''}`}
+      >
       {/* 返回面包屑 */}
       <div className="_codedetail-breadcrumb">
         <Button type="link" onClick={() => setSubView('list')}>
@@ -157,7 +170,7 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
       )}
 
       <div className="_codedetail-tabs" role="tablist" aria-label={t('code.graph.tab')}>
-        {(['overview', 'graph'] as const).map((id, index) => (
+        {(['overview', 'graph', 'history', 'editor'] as const).map((id, index) => (
           <button
             key={id}
             id={`code-detail-tab-${id}`}
@@ -170,19 +183,28 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
             onKeyDown={(event) => {
               if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
               event.preventDefault();
+              const tabs = ['overview', 'graph', 'history', 'editor'] as const;
               const next =
                 event.key === 'Home'
-                  ? 'overview'
+                  ? tabs[0]
                   : event.key === 'End'
-                    ? 'graph'
-                    : index === 0
-                      ? 'graph'
-                      : 'overview';
+                    ? tabs[tabs.length - 1]
+                    : event.key === 'ArrowRight'
+                      ? tabs[(index + 1) % tabs.length]
+                      : tabs[(index - 1 + tabs.length) % tabs.length];
               setTab(next);
               document.getElementById(`code-detail-tab-${next}`)?.focus();
             }}
           >
-            {t(id === 'overview' ? 'code.graph.overview' : 'code.graph.tab')}
+            {t(
+              id === 'overview'
+                ? 'code.graph.overview'
+                : id === 'graph'
+                  ? 'code.graph.tab'
+                  : id === 'history'
+                    ? 'code.graph.history'
+                    : 'code.graph.guideEditor',
+            )}
           </button>
         ))}
       </div>
@@ -198,6 +220,8 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
           <CodeGraphWorkspace
             key={`${selected.code_graph_id}:${selected.version}:${selected.status}:${selected.last_sync_at}`}
             asset={selected}
+            mode={isPilot ? 'clusters' : 'calls'}
+            pilotHome={isPilot}
             onTextQuery={() => {
               setTab('overview');
               requestAnimationFrame(() =>
@@ -206,6 +230,28 @@ export function CodeDetailView({ store }: { store: CodeSourcesStore }) {
             }}
           />
         )}
+      </div>
+      <div
+        role="tabpanel"
+        id="code-detail-panel-history"
+        aria-labelledby="code-detail-tab-history"
+        hidden={tab !== 'history'}
+      >
+        {tab === 'history' && (
+          <CodeGraphChangeReview
+            asset={selected}
+            initialBefore={searchParams.get('code-review-before')}
+            initialAfter={searchParams.get('code-review-after')}
+          />
+        )}
+      </div>
+      <div
+        role="tabpanel"
+        id="code-detail-panel-editor"
+        aria-labelledby="code-detail-tab-editor"
+        hidden={tab !== 'editor'}
+      >
+        {tab === 'editor' && <CodeGuideEditor assetId={selected.code_graph_id} />}
       </div>
       <div
         role="tabpanel"

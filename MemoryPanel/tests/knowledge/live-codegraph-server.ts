@@ -12,14 +12,20 @@ import type { AddressInfo } from 'node:net';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { registerKnowledgeCodeGraphRoutes } from '../../src/panel/http/routes/knowledge/code-graph-routes.js';
+import { registerCodeGuideRoutes } from '../../src/panel/http/routes/knowledge/code-guide-routes.js';
+import { codeGuideRoutes } from '../../../MemoryKnowledge/src/routes/code-guides.js';
+import { codeReviewRoutes } from '../../../MemoryKnowledge/src/routes/code-review.js';
+import { CodeGuideStore } from '../../../MemoryKnowledge/src/store/code-guides.js';
+import { createDb } from '../../../MemoryKnowledge/src/db/client.js';
 import { HttpKnowledgeClient } from '../../src/panel/kernel/adapters/http-knowledge-client.js';
 import { InstanceRegistry } from '../../src/panel/config/instance-registry.js';
 import type { PanelDeps } from '../../src/panel/panel-deps.js';
 import type { MetaCallContext } from '../../src/panel/kernel/types.js';
 
-const { indexProject, closeIndex, getStats, structuredSdkInfo } = await import('../../../MemoryKnowledge/src/engines/code/bridge.js');
+const { indexProject, openIndex, closeIndex, getStats, structuredSdkInfo } = await import('../../../MemoryKnowledge/src/engines/code/bridge.js');
 const { createCodeGraphRoutes } = await import('../../../MemoryKnowledge/src/routes/code-graph.js');
-const root = mkdtempSync(join(tmpdir(), 'codegraph-browser-live-'));
+const externalRoot = process.env.CODEGRAPH_LIVE_INDEXED_REPO;
+const root = externalRoot || mkdtempSync(join(tmpdir(), 'codegraph-browser-live-'));
 const listeners: Server[] = [];
 let instance: Awaited<ReturnType<typeof indexProject>> | undefined;
 let stopping = false;
@@ -28,7 +34,7 @@ async function cleanup() {
   stopping = true;
   for (const server of listeners) await new Promise<void>(resolve => { server.close(() => resolve()); server.closeAllConnections(); });
   try { if (instance) closeIndex(instance); }
-  finally { rmSync(root, { recursive: true, force: true }); }
+  finally { if (!externalRoot) rmSync(root, { recursive: true, force: true }); }
 }
 process.once('SIGINT', () => { void cleanup().then(() => process.exit(0)); });
 process.once('SIGTERM', () => { void cleanup().then(() => process.exit(0)); });
@@ -51,46 +57,58 @@ try {
     'alpha/index.ts': 'import { beta } from "../beta";\nexport function alpha() { return beta(); }\n',
     'beta/index.ts': 'import { alpha } from "../alpha";\nexport function beta() { return alpha(); }\n',
   };
-  for (const [file, content] of Object.entries(files)) { mkdirSync(dirname(join(root, file)), { recursive: true }); writeFileSync(join(root, file), content); }
-  execFileSync('git', ['init', '--quiet'], { cwd: root });
-  execFileSync('git', ['add', '.'], { cwd: root });
-  execFileSync('git', ['-c', 'user.name=CodeGraph Test', '-c', 'user.email=codegraph-test@example.invalid', '-c', 'commit.gpgsign=false', 'commit', '--quiet', '-m', 'local browser fixture'], { cwd: root });
+  if (!externalRoot) {
+    for (const [file, content] of Object.entries(files)) { mkdirSync(dirname(join(root, file)), { recursive: true }); writeFileSync(join(root, file), content); }
+    execFileSync('git', ['init', '--quiet'], { cwd: root });
+    execFileSync('git', ['add', '.'], { cwd: root });
+    execFileSync('git', ['-c', 'user.name=CodeGraph Test', '-c', 'user.email=codegraph-test@example.invalid', '-c', 'commit.gpgsign=false', 'commit', '--quiet', '-m', 'local browser fixture'], { cwd: root });
+  }
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-  instance = await indexProject(root);
+  instance = externalRoot ? await openIndex(root) : await indexProject(root);
   const stats = getStats(instance);
   const sdk = await structuredSdkInfo(root);
   const stamp = new Date().toISOString();
+  // Reopening a pinned pilot index for a new UI build is not a reindex.
+  const indexedAt = (externalRoot && process.env.CODEGRAPH_LIVE_INDEXED_AT) || stamp;
   const serviceId = 'service-browser', userKey = 'codegraph-local-test-only';
   const user = { user_id: 'user-browser', username: 'browser-tester', display_name: 'Browser Tester', user_type: 'normal', status: 'active' };
   const team = { team_id: 'team-browser', name: 'Live CodeGraph Fixture', owner_user_id: user.user_id, status: 'active', created_at: stamp, updated_at: stamp };
   const agent = { agent_id: 'agent-browser', team_id: team.team_id, owner_user_id: user.user_id, name: 'Browser Agent', status: 'active', visibility: 'team', created_at: stamp, updated_at: stamp, metadata_json: '{}' };
-  const asset = { knowledge_id: 'cg-browser-a', code_graph_id: 'cg-browser-a', asset_type: 'code_graph', name: 'Live SDK CodeGraph', repo_name: 'Live SDK CodeGraph', repo_url: 'https://github.com/fixture/codegraph-live.git', branch: 'main', commit_hash: commit, team_id: team.team_id, visibility: 'team', owner_user_id: user.user_id, meta_status: 'active', status: 'ready', version: 1, stats: { files: stats.fileCount, nodes: stats.nodeCount, edges: stats.edgeCount }, last_sync_at: stamp, created_at: stamp, updated_at: stamp };
+  const asset = { knowledge_id: 'cg-browser-a', code_graph_id: 'cg-browser-a', asset_type: 'code_graph', name: 'Live SDK CodeGraph', repo_name: 'Live SDK CodeGraph', repo_url: 'https://github.com/fixture/codegraph-live.git', branch: 'main', commit_hash: commit, team_id: team.team_id, visibility: 'team', owner_user_id: user.user_id, meta_status: 'active', status: 'ready', version: 1, stats: { files: stats.fileCount, nodes: stats.nodeCount, edges: stats.edgeCount }, last_sync_at: indexedAt, created_at: stamp, updated_at: stamp };
   const knowledge = new Hono();
-  knowledge.route('/v3/code-graph', createCodeGraphRoutes({
-    cgService: {
+  const cgService = {
       getById: (service: string, id: string) => service === serviceId && id === asset.code_graph_id ? { ...asset } : undefined,
       dirFor: (service: string, selectedTeam: string, id: string) => {
         if (service !== serviceId || selectedTeam !== team.team_id || id !== asset.code_graph_id) throw new Error('fixture asset mismatch');
         return root;
       },
-    },
-    instancePool: { get: (id: string) => id === asset.code_graph_id ? instance : undefined },
+      historyDirFor: () => process.env.CODEGRAPH_LIVE_HISTORY_DIR ?? root + '.history',
+  } as unknown as Parameters<typeof createCodeGraphRoutes>[0]['cgService'];
+  const { raw } = createDb({path: ':memory:'});
+  raw.prepare('INSERT INTO knowledge_code_graph(code_graph_id,service_id,team_id,repo_url,branch,created_at,updated_at) VALUES(?,?,?,?,?,?,?)')
+    .run(asset.code_graph_id, serviceId, team.team_id, asset.repo_url, asset.branch, stamp, stamp);
+  knowledge.route('/v3/code-graph/guides', codeGuideRoutes(cgService, new CodeGuideStore(raw)));
+  knowledge.route('/v3/code-graph/reviews', codeReviewRoutes(cgService));
+  knowledge.route('/v3/code-graph', createCodeGraphRoutes({
+    cgService, instancePool: { get: (id: string) => id === asset.code_graph_id ? instance : undefined },
     publicBaseUrl: '',
   } as unknown as Parameters<typeof createCodeGraphRoutes>[0]));
   const knowledgeBaseUrl = await listen(knowledge);
   const routes = new Hono();
-  registerKnowledgeCodeGraphRoutes(routes, {
+  const panelDeps = {
     instanceRegistry: new InstanceRegistry([{ instance_id: serviceId, name: 'Local live fixture', gateway_endpoint: 'http://unused.invalid', api_key: 'test-only' }]),
     metaKernel: { invoke: async (action: string, body: Record<string, unknown>, ctx: MetaCallContext) => {
       if (ctx.instanceId !== serviceId) return { code: 404, data: null };
       if (action === 'auth/verify') return { code: 0, data: { valid: ctx.userKey === userKey, user } };
       if (action === 'asset/get') return { code: 0, data: body.asset_id === asset.code_graph_id ? { asset_id: asset.code_graph_id, team_id: team.team_id, asset_type: 'code_graph' } : null };
-      if (action === 'acl/check') return { code: 0, data: { allowed: body.user_id === user.user_id && body.asset_id === asset.code_graph_id && body.action === 'read' } };
+      if (action === 'acl/check') return { code: 0, data: { allowed: body.user_id === user.user_id && body.asset_id === asset.code_graph_id && (body.action === 'read' || (externalRoot && body.action === 'write')) } };
       if (action === 'team-member/get') return { code: 0, data: body.team_id === team.team_id && body.user_id === user.user_id ? { user_id: user.user_id, status: 'active' } : null };
       throw new Error(`Unexpected fixture metadata action: ${action}`);
     } },
     knowledgeClientFactory: (selectedService: string) => new HttpKnowledgeClient({ baseUrl: knowledgeBaseUrl, serviceId: selectedService, authToken: '', timeoutMs: 10_000 }),
-  } as unknown as PanelDeps);
+  } as unknown as PanelDeps;
+  registerKnowledgeCodeGraphRoutes(routes, panelDeps);
+  registerCodeGuideRoutes(routes, panelDeps);
   const panel = new Hono();
   panel.route('/api/v1', routes);
   const panelBaseUrl = await listen(panel);

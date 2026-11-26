@@ -28,6 +28,7 @@ import type {
   CountOpts,
 } from "./types.js";
 import { BuildQueue } from "./build-queue.js";
+import { captureCodeGraphHistory } from "./code-graph-history.js";
 import type { ICredentialStore } from "../source-auth/types.js";
 import { SSH_PROVIDER_ID } from "../code-source/providers/ssh.js";
 import type { AuthMethodKind } from "../code-source/auth-methods/types.js";
@@ -188,6 +189,10 @@ export class CodeGraphService {
 
   dirFor(serviceId: string, teamId: string, codeGraphId: string): string {
     return join(this.dataRoot, serviceId, teamId, codeGraphId);
+  }
+
+  historyDirFor(serviceId: string, teamId: string, codeGraphId: string): string {
+    return `${this.dirFor(serviceId, teamId, codeGraphId)}.history`;
   }
 
   /**
@@ -372,6 +377,11 @@ export class CodeGraphService {
     } catch (err) {
       this.logger?.warn?.(`[code-graph] rm dir failed ${codeGraphId}: ${String(err)}`);
     }
+    try {
+      rmSync(this.historyDirFor(serviceId, teamId, codeGraphId), { recursive: true, force: true });
+    } catch (err) {
+      this.logger?.warn?.(`[code-graph] rm history failed ${codeGraphId}: ${String(err)}`);
+    }
   }
 
   /**
@@ -455,13 +465,29 @@ export class CodeGraphService {
         this.finishCancelled(serviceId, teamId, codeGraphId);
         return;
       }
+      const indexedAt = new Date().toISOString();
+      try {
+        await captureCodeGraphHistory({
+          assetDir: this.dirFor(serviceId, teamId, codeGraphId),
+          branch,
+          version: this.store.getCodeGraphById(serviceId, codeGraphId)?.version ?? 0,
+          indexedAt,
+          shortCommit: result.commitHash,
+        });
+      } catch (error) {
+        this.logger?.warn?.(`[code-graph] historical snapshot unavailable for ${codeGraphId}: ${String(error)}`);
+      }
+      if (this.isDeleted(serviceId, codeGraphId)) {
+        this.finishCancelled(serviceId, teamId, codeGraphId);
+        return;
+      }
       this.store.updateCodeGraphStatus(serviceId, codeGraphId, {
         status: "ready",
         internal_status: null,
         sync_error: null,
         commit_hash: result.commitHash ?? null,
         stats_json: result.stats ? JSON.stringify(result.stats) : null,
-        last_sync_at: new Date().toISOString(),
+        last_sync_at: indexedAt,
       });
       const synced = this.store.getCodeGraphById(serviceId, codeGraphId);
       if (synced) {
