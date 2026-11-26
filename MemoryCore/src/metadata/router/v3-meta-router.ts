@@ -513,8 +513,9 @@ function mapErrorCode(code: string): number {
     case "filter_not_allowed":
     case "invalid_issue":
     case "invalid_user_ids":
-    case "invalid_prototype":
       return 400;
+    case "invalid_prototype":
+      return 422;
     case "prototype_unavailable":
       return 503;
     case "user_inactive":
