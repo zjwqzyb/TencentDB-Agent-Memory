@@ -5,12 +5,13 @@
  * 路由 handler 用 `schema.safeParse(body)` 校验后再调用 MetadataService。
  */
 import * as issueSchemas from "../issue/issue-schemas.js";
+import * as P from "../prototype/schema.js";
 import { z } from "zod";
 import { UPSTREAM_PROVIDERS } from "../types.js";
 import { paginationInputSchema } from "./pagination.js";
 
 // ── 枚举 ──
-const assetType = z.enum(["skill", "llm_wiki", "code_graph", "chat_memory"]);
+const assetType = z.enum(["skill", "llm_wiki", "code_graph", "chat_memory", "prototype"]);
 const visibility = z.enum(["private", "team", "restricted", "agent", "task"]);
 const assetStatus = z.enum(["draft", "candidate", "approved", "deprecated", "archived", "failed"]);
 const injectionMode = z.enum(["direct", "summary", "tool", "reference"]);
@@ -582,6 +583,16 @@ export const upstreamExtractionDisableSchema = z.object({
 export const upstreamExtractionDeleteSchema = z.object({}).catchall(z.unknown());
 
 export const V3_SCHEMAS = {
+  "/v3/meta/prototype/project/create": P.projectCreate,
+  "/v3/meta/prototype/project/list": P.team,
+  "/v3/meta/prototype/project/get": P.project,
+  "/v3/meta/prototype/page/list": P.project,
+  "/v3/meta/prototype/page/history": P.page,
+  "/v3/meta/prototype/page/get": P.readPage,
+  "/v3/meta/prototype/page/save": P.save,
+  "/v3/meta/prototype/page/restore": P.restore,
+  "/v3/meta/prototype/contract/publish": P.publish,
+  "/v3/meta/prototype/contract/get": P.readContract,
   "/v3/meta/user/create": userCreateSchema,
   "/v3/meta/user/create-with-key": userCreateWithKeySchema,
   "/v3/meta/user/get": userGetSchema,

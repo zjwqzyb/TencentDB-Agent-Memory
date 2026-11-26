@@ -5,7 +5,7 @@ import { metaPost, metaListAll, getCurrentUser } from './base';
 import type { Asset, AssetType, AssetStatus } from './types';
 
 function newExternalAssetId(assetType: AssetType): string {
-  const prefix = { skill: 'skl', llm_wiki: 'wiki', code_graph: 'cg', chat_memory: 'mem' }[assetType];
+  const prefix = { skill: 'skl', llm_wiki: 'wiki', code_graph: 'cg', chat_memory: 'mem', prototype: 'proto' }[assetType];
   const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 12);
   return `${prefix}-${suffix}`;
 }

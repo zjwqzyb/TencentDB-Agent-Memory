@@ -30,6 +30,9 @@ import { extractInstanceId } from "./instance.js";
 import { resolvePagination } from "./pagination.js";
 import { resolveUserId } from "../service/resolve-user-id.js";
 import type { AgentFilter, TaskFilter, ParticipationLogFilter } from "../types.js";
+import * as P from "../prototype/schema.js";
+import * as proto from "../prototype/service.js";
+import { createProject, listProjects, access } from "../prototype/access.js";
 import * as I from "../issue/issue-schemas.js";
 import * as S from "./v3-meta-schemas.js";
 import {
@@ -102,6 +105,16 @@ const OK = { ok: true } as const;
 
 // ── Route table（55 接口）──
 const routeTable: Record<string, Handler> = {
+  [`${V3_PREFIX}/prototype/project/create`]: bind(P.projectCreate, (d,c,s) => createProject(s,c,d)),
+  [`${V3_PREFIX}/prototype/project/list`]: bind(P.team, (d,c,s) => listProjects(s,c,d.team_id)),
+  [`${V3_PREFIX}/prototype/project/get`]: bind(P.project, (d,c,s) => access(s,c,d)),
+  [`${V3_PREFIX}/prototype/page/list`]: bind(P.project, (d,c,s) => proto.listPages(s,c,d)),
+  [`${V3_PREFIX}/prototype/page/history`]: bind(P.page, (d,c,s) => proto.history(s,c,d)),
+  [`${V3_PREFIX}/prototype/page/get`]: bind(P.readPage, (d,c,s) => proto.readPage(s,c,d)),
+  [`${V3_PREFIX}/prototype/page/save`]: bind(P.save, (d,c,s) => proto.save(s,c,d)),
+  [`${V3_PREFIX}/prototype/page/restore`]: bind(P.restore, (d,c,s) => proto.restore(s,c,d)),
+  [`${V3_PREFIX}/prototype/contract/publish`]: bind(P.publish, (d,c,s) => proto.publish(s,c,d)),
+  [`${V3_PREFIX}/prototype/contract/get`]: bind(P.readContract, (d,c,s) => proto.readContract(s,c,d)),
   // User
   [`${V3_PREFIX}/user/create`]: bind(S.userCreateSchema, async (d, c, s) => {
     s.assertCanManageUsers(c);
@@ -300,8 +313,8 @@ const routeTable: Record<string, Handler> = {
   [`${V3_PREFIX}/asset/delete`]: bind(S.assetDeleteSchema, (d, c, s) => s.deleteAssetsForCaller(d.asset_ids, c)),
   // 调用者视角读（水平越权修复）：成员校验 + 逐条权限过滤，与 list-accessible 同源
   [`${V3_PREFIX}/asset/list`]: bind(S.assetListSchema, (d, c, s) => s.listAssetsForCaller(d, c)),
-  [`${V3_PREFIX}/asset/list-accessible`]: bind(S.assetListAccessibleSchema, (d, _c, s) =>
-    s.listAccessibleAssets(d)),
+  [`${V3_PREFIX}/asset/list-accessible`]: bind(S.assetListAccessibleSchema, (d, c, s) =>
+    s.listAccessibleAssets({ ...d, user_id: c.userId, user_key: undefined })),
 
   [`${V3_PREFIX}/asset/touch-usage`]: bind(S.assetTouchUsageSchema, async (d, c, s) => {
     await s.touchAssetUsageForCaller(d.asset_id, c);
@@ -336,7 +349,10 @@ const routeTable: Record<string, Handler> = {
   [`${V3_PREFIX}/acl/list`]: bind(S.aclListSchema, (d, c, s) =>
     s.listAclByAssetForCaller(d.asset_id, c, resolvePagination(d)),
   ),
-  [`${V3_PREFIX}/acl/check`]: bind(S.aclCheckSchema, async (d, _c, s) => {
+  [`${V3_PREFIX}/acl/check`]: bind(S.aclCheckSchema, async (d, c, s) => {
+    if ((await s.getAssetById(d.asset_id))?.asset_type === "prototype") {
+      return s.checkAssetPermission({ ...d, user_id: c.userId, user_key: undefined });
+    }
     if (d.agent_id) await requireEntity(s, EntityType.Agent, d.agent_id);
     return s.checkAssetPermission(d);
   }),
@@ -476,6 +492,7 @@ function mapErrorCode(code: string): number {
     case "agent_not_accessible":
       return 403;
     case "asset_not_bindable":
+    case "prototype_conflict":
     case "issue_conflict":
     case "duplicate_entry":
     case "duplicate_user_key":
@@ -496,7 +513,10 @@ function mapErrorCode(code: string): number {
     case "filter_not_allowed":
     case "invalid_issue":
     case "invalid_user_ids":
+    case "invalid_prototype":
       return 400;
+    case "prototype_unavailable":
+      return 503;
     case "user_inactive":
       return 403;
     case "user_key_not_found":

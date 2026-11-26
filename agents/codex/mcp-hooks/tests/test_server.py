@@ -46,7 +46,7 @@ class ServerSmokeTests(unittest.TestCase):
             replies = [json.loads(line) for line in result.stdout.splitlines()]
             self.assertEqual(replies[0]["result"]["serverInfo"]["version"], "3.3.0")
             tools = replies[1]["result"]["tools"]
-            self.assertEqual(len(tools), 14)
+            self.assertEqual(len(tools), 16)
             session_tool = next(t for t in tools if t["name"] == "project_session")
             self.assertEqual(
                 session_tool["inputSchema"]["properties"]["defer_task"]["type"],

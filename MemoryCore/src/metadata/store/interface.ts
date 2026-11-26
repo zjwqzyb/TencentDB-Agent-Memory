@@ -59,6 +59,7 @@ import type {
   DeleteInstanceUpstreamGroupInput,
   SupportedAgent,
 } from "../types.js";
+import type { PrototypeStore } from "../prototype/store.js";
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -79,6 +80,9 @@ export interface IMetadataStore {
   init(): MaybePromise<void>;
   /** 关闭存储连接。 */
   close(): MaybePromise<void>;
+
+  /** 原型资产存储。 */
+  prototype: PrototypeStore;
 
   // ── User ──
   createUser(input: CreateUserInput): MaybePromise<UserEntity>;

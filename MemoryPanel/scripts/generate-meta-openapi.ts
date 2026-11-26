@@ -21,12 +21,26 @@ const ACTION_TAG: Record<string, string> = {
   task: 'Meta · Task',
   'task-agent': 'Meta · Task Agent',
   asset: 'Meta · Asset',
+  prototype: 'Meta · Prototype',
   'agent-fixed-asset': 'Meta · Agent Fixed Asset',
   acl: 'Meta · ACL',
   auth: 'Meta · Auth',
 };
 
 const AUTH_VERIFY = 'auth/verify';
+
+const PROTOTYPE_DESCRIPTIONS: Record<string, string> = {
+  'prototype/project/list': 'List prototype assets visible to the caller.',
+  'prototype/project/create': 'Create a stable prototype asset in a team.',
+  'prototype/project/get': 'Get the caller access state for a prototype project.',
+  'prototype/page/list': 'List saved prototype pages for a project.',
+  'prototype/page/history': 'List immutable version history for one prototype page.',
+  'prototype/page/get': 'Read the current page or an exact saved version.',
+  'prototype/page/save': 'Atomically save one or more prototype pages.',
+  'prototype/page/restore': 'Restore an exact historical version as a new version.',
+  'prototype/contract/publish': 'Publish an immutable component contract.',
+  'prototype/contract/get': 'Read an exact component contract version.',
+};
 
 function tagFor(action: string): string {
   const prefix = action.includes('/') ? action.slice(0, action.indexOf('/')) : action;
@@ -43,6 +57,7 @@ function yamlQuote(s: string): string {
 }
 
 function panelDescription(action: string): string {
+  if (PROTOTYPE_DESCRIPTIONS[action]) return PROTOTYPE_DESCRIPTIONS[action]!;
   if (isNotInScopeAction(action)) {
     return '新面板一期 **不转发** 至内核；Control 返回 HTTP 501、`message=NOT_IN_SCOPE`。';
   }
@@ -161,6 +176,7 @@ tags:
   - name: Meta · Task
   - name: Meta · Task Agent
   - name: Meta · Asset
+  - name: Meta · Prototype
   - name: Meta · Agent Fixed Asset
   - name: Meta · ACL
   - name: Meta · Auth

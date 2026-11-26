@@ -584,7 +584,15 @@ export class MetadataService {
     return resolvePagination(input);
   }
 
-  private async allAclRecords(assetId: string): Promise<AclEntity[]> {
+  async activePrototypeMember(teamId: string, userId: string | undefined): Promise<boolean> {
+    if (!userId) return false;
+    const [team, membership, user] = await Promise.all([
+      this.store.getTeamById(teamId), this.store.getTeamMember(teamId, userId), this.store.getUserById(userId),
+    ]);
+    return team?.status === "active" && membership?.status === "active" && user?.status === "active";
+  }
+
+  async allAclRecords(assetId: string): Promise<AclEntity[]> {
     const out: AclEntity[] = [];
     let offset = 0;
     const limit = 100;
@@ -1482,6 +1490,13 @@ export class MetadataService {
   async getAssetForCaller(assetId: string, ctx: V3AuthContext): Promise<AssetEntity | null> {
     const asset = await this.getAssetById(assetId);
     if (!asset) return null;
+    if (asset.asset_type === "prototype") {
+      if (!ctx.userId || asset.status !== "approved") return null;
+      for (const action of ["read", "write"] as const) {
+        if ((await this.checkAssetPermission({ user_id: ctx.userId, asset_id: assetId, action })).allowed) return asset;
+      }
+      return null;
+    }
     if (ctx.isSystemAdmin) return asset;
     if (!ctx.userId) return null;
     if (asset.owner_user_id === ctx.userId) return asset;
@@ -1502,12 +1517,9 @@ export class MetadataService {
   ): Promise<PaginatedResult<AssetEntity>> {
     const pagination = this.pag(params);
     const { team_id, limit: _limit, offset: _offset, ...filter } = params;
-    if (ctx.isSystemAdmin) {
-      return this.listAssetsByTeam(team_id, pagination, filter);
-    }
     if (!ctx.userId) return paginateArray([], pagination);
     const member = await this.store.getTeamMember(team_id, ctx.userId);
-    if (!member || member.status !== "active") return paginateArray([], pagination);
+    if (!ctx.isSystemAdmin && member?.status !== "active") return paginateArray([], pagination);
 
     const result: AssetEntity[] = [];
     let offset = 0;
@@ -1515,7 +1527,11 @@ export class MetadataService {
     while (true) {
       const page = await this.store.listAssetsByTeam(team_id, { limit, offset }, filter);
       for (const asset of page.items) {
-        if (asset.owner_user_id === ctx.userId) {
+        if (asset.asset_type === "prototype") {
+          if (await this.getAssetForCaller(asset.asset_id, ctx)) result.push(asset);
+          continue;
+        }
+        if (ctx.isSystemAdmin || asset.owner_user_id === ctx.userId) {
           result.push(asset);
           continue;
         }
@@ -1577,7 +1593,7 @@ export class MetadataService {
     for (const row of rows) {
       const counts = byAgent.get(row.agent_id);
       if (!counts) continue;
-      if (row.asset_type in counts) {
+      if (row.asset_type === "prototype" || row.asset_type in counts) {
         counts[row.asset_type] = row.cnt;
       }
       totals.set(row.agent_id, (totals.get(row.agent_id) ?? 0) + row.cnt);
@@ -1604,7 +1620,7 @@ export class MetadataService {
       if (!asset) {
         throw new MetadataError("asset_not_found", `asset not found: ${b.asset_id}`);
       }
-      if (!canBindAsset(agent, asset)) {
+      if (asset.asset_type === "prototype" || !canBindAsset(agent, asset)) {
         throw new MetadataError(
           "asset_not_bindable",
           `asset ${b.asset_id} (visibility=${asset.visibility}) cannot bind to agent ${agentId}`,
@@ -1626,7 +1642,7 @@ export class MetadataService {
     if (!agent) throw new MetadataError("agent_not_found", `agent not found: ${agentId}`);
     const asset = await this.getAssetById(b.asset_id);
     if (!asset) throw new MetadataError("asset_not_found", `asset not found: ${b.asset_id}`);
-    if (!canBindAsset(agent, asset)) {
+    if (asset.asset_type === "prototype" || !canBindAsset(agent, asset)) {
       throw new MetadataError(
         "asset_not_bindable",
         `asset ${b.asset_id} (visibility=${asset.visibility}) cannot bind to agent ${agentId}`,
@@ -1931,6 +1947,27 @@ export class MetadataService {
       return { allowed: false, reason: "asset_not_available" };
     }
 
+    if (asset.asset_type === "prototype" &&
+        (asset.status !== "approved" || !await this.activePrototypeMember(asset.team_id,userId))) {
+      return { allowed: false, reason: "asset_not_available" };
+    }
+    if (asset.asset_type === "prototype" && params.agent_id) {
+      const agent = await this.store.getAgentById(params.agent_id);
+      if (params.action !== "read" || !agent || agent.status !== "active" ||
+          agent.owner_user_id !== userId || agent.team_id !== asset.team_id) {
+        return { allowed: false, reason: "asset_not_available" };
+      }
+      const acl = await this.allAclRecords(asset.asset_id);
+      if (!acl.some(row => row.subject_type === "agent" && row.subject_id === agent.agent_id &&
+          row.permission === "read" && row.effect === "allow")) {
+        return { allowed: false, reason: "asset_not_available" };
+      }
+      // The Agent grant cannot supply the caller's own project permission.
+      const caller = { user_id: userId, asset_id: asset.asset_id };
+      const read = await this.checkAssetPermission({ ...caller, action: "read" });
+      return read.allowed ? read : this.checkAssetPermission({ ...caller, action: "write" });
+    }
+
     // owner 短路，无需查成员/ACL
     if (asset.owner_user_id === userId) {
       return { allowed: true, reason: "owner" };
@@ -2115,6 +2152,9 @@ export class MetadataService {
   private async assertCallerIsAssetOwner(ctx: V3AuthContext, assetId: string): Promise<AssetEntity> {
     const asset = await this.getAssetById(assetId);
     if (!asset) throw new MetadataError("asset_not_found", `asset not found: ${assetId}`);
+    if (asset.asset_type === "prototype" && !await this.activePrototypeMember(asset.team_id,ctx.userId)) {
+      throw new MetadataError("asset_not_found", "Project is unavailable");
+    }
     this.assertCallerIsResourceOwner(ctx, asset.owner_user_id);
     return asset;
   }
@@ -2122,6 +2162,9 @@ export class MetadataService {
   private async assertCallerIsAssetOwnerOrTeamAdmin(ctx: V3AuthContext, assetId: string): Promise<AssetEntity> {
     const asset = await this.getAssetById(assetId);
     if (!asset) throw new MetadataError("asset_not_found", `asset not found: ${assetId}`);
+    if (asset.asset_type === "prototype" && !await this.activePrototypeMember(asset.team_id,ctx.userId)) {
+      throw new MetadataError("asset_not_found", "Project is unavailable");
+    }
     const callerId = this.requireCallerId(ctx);
     if (asset.owner_user_id === callerId) return asset;
     await this.assertCallerIsTeamAdmin(ctx, asset.team_id);
@@ -2304,6 +2347,7 @@ export class MetadataService {
   }
 
   async createAssetForCaller(input: CreateAssetInput, ctx: V3AuthContext): Promise<AssetEntity> {
+    if (input.asset_type === "prototype") throw new MetadataError("invalid_prototype", "Use prototype/project/create");
     await this.assertTeamExists(input.team_id);
     await this.requireActiveTeamMember(ctx, input.team_id);
     this.assertCallerIsResourceOwner(ctx, input.owner_user_id);

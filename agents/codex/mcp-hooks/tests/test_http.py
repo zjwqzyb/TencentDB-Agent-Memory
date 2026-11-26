@@ -130,7 +130,7 @@ class DirectHTTPTests(unittest.TestCase):
                                 input="".join(json.dumps(r) + "\n" for r in requests), text=True, capture_output=True, timeout=10, check=True)
         replies = [json.loads(line)["result"] for line in result.stdout.splitlines()]
         self.assertEqual(replies[0]["serverInfo"]["version"], "3.3.0")
-        self.assertEqual(len(replies[1]["tools"]), 14)
+        self.assertEqual(len(replies[1]["tools"]), 16)
         self.assertFalse(replies[2]["isError"])
         context = json.loads(replies[2]["content"][0]["text"])
         self.assertEqual(context["session"]["generation"], 2)

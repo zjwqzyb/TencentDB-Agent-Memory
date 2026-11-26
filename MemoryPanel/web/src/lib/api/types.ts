@@ -78,7 +78,7 @@ export interface Agent {
   metadata_json: string;
 }
 
-export type AssetType = 'skill' | 'llm_wiki' | 'code_graph' | 'chat_memory';
+export type AssetType = 'skill' | 'llm_wiki' | 'code_graph' | 'chat_memory' | 'prototype';
 export type AssetStatus = 'draft' | 'candidate' | 'approved' | 'deprecated' | 'archived';
 
 export interface Asset {
@@ -88,7 +88,7 @@ export interface Asset {
   name: string;
   description?: string;
   owner_user_id: string;
-  source_type: 'uploaded' | 'url' | 'extracted' | 'synced';
+  source_type: 'uploaded' | 'url' | 'extracted' | 'synced' | 'prototype';
   source_ref?: string;
   version: number;
   visibility: 'private' | 'task' | 'agent' | 'team' | 'restricted';

@@ -23,6 +23,10 @@ export default defineConfig({
         target: TMC_BACKEND_TARGET,
         changeOrigin: true,
       },
+      '/prototype-editor': {
+        target: TMC_BACKEND_TARGET,
+        changeOrigin: true,
+      },
       '/health': {
         target: TMC_BACKEND_TARGET,
         changeOrigin: true,

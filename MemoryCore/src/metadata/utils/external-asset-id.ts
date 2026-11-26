@@ -11,6 +11,7 @@ export const EXTERNAL_ASSET_ID_PREFIX: Record<AssetType, string> = {
   llm_wiki: "wiki",
   code_graph: "cg",
   chat_memory: "mem",
+  prototype: "proto",
 };
 
 /** 生成符合规范的外部资产 ID，如 `skl-a3b9c1f2`。 */

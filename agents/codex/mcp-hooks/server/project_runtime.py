@@ -688,6 +688,21 @@ def run(r):
             "knowledge/" + path,
             {("code_graph_id" if kind == "code_graph" else "wiki_id"): key, **body},
         )
+    if action in ("prototype_page", "prototype_contract"):
+        page = action == "prototype_page"
+        key = "page_key" if page else "component_type"
+        rev = "version" if page else "contract_version"
+        if type(r.get(rev)) is not int or r[rev] < 1:
+            raise ValueError("An exact positive version is required")
+        scope = {"team_id": b["team_id"], "asset_id": ident(r["asset_id"]),
+                 key: ident(r[key]), rev: r[rev]}
+        endpoint = "page/get" if page else "contract/get"
+        result = api("meta/prototype/" + endpoint, {**scope, "agent_id": b["agent_id"]})
+        if not isinstance(result, dict) or any(result.get(k) != v for k, v in scope.items()):
+            raise ValueError("Prototype response does not match the requested version and scope")
+        if page and result.get("snapshot", {}).get("format_version") != 1:
+            raise ValueError("Unsupported prototype snapshot format")
+        return result
     if action == "skills":
         op = r.get("operation", "list")
         if op == "list":

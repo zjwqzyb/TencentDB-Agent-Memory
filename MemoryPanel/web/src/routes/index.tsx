@@ -16,6 +16,7 @@ import { AgentsPage } from '@/pages/AgentsPage';
 import { ApiKeysPage } from '@/pages/ApiKeysPage';
 import { GuidePage } from '@/pages/GuidePage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
+import { PrototypesPage } from '@/pages/PrototypesPage';
 
 export const routes: RouteObject[] = [
   {
@@ -26,6 +27,7 @@ export const routes: RouteObject[] = [
       { path: 'wiki', element: <WikiPage /> },
       { path: 'code', element: <CodePage /> },
       { path: 'skills', element: <SkillsPage /> },
+      { path: 'prototypes', element: <PrototypesPage /> },
       { path: 'memory', element: <ChatMemoryPage /> },
       { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'team/members', element: <MembersPage /> },

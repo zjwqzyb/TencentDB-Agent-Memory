@@ -1,8 +1,10 @@
 import { codeGraphZh } from './code-graph';
+import { prototypeZh } from './prototypes';
 /** 中文翻译 — zh-CN */
 
 export const zhCN = {
   ...codeGraphZh,
+  ...prototypeZh,
   // ===== App =====
   'app.checkingSession': '正在检测登录态…',
 

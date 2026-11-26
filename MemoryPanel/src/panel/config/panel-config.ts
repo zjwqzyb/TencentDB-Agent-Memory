@@ -89,7 +89,7 @@ export interface PanelConfig {
   server: { host: string; port: number };
   metadataInstancesConfig: string;
   metadataRemoteTimeoutMs: number;
-  ui: { distDir: string };
+  ui: { distDir: string; prototypeEditorDistDir?: string };
   log: { level: LogLevel; format: 'json' | 'pretty' };
   /** Knowledge Service (KS :8421) 连接配置。serviceId 按请求 instanceId 注入。 */
   knowledge: { baseUrl: string; authToken: string; timeoutMs: number };
@@ -251,7 +251,10 @@ export function loadPanelConfig(): PanelConfig {
     },
     metadataInstancesConfig: env('METADATA_INSTANCES_CONFIG', './config/metadata-instances.json'),
     metadataRemoteTimeoutMs: envInt('METADATA_REMOTE_TIMEOUT_MS', 15_000),
-    ui: { distDir: env('UI_DIST_DIR', './web/dist') },
+    ui: {
+      distDir: env('UI_DIST_DIR', './web/dist'),
+      prototypeEditorDistDir: process.env.PROTOTYPE_EDITOR_DIST_DIR?.trim() || undefined,
+    },
     log: {
       level: ['debug', 'info', 'warn', 'error'].includes(level) ? level : 'info',
       format: format === 'pretty' ? 'pretty' : 'json',

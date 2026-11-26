@@ -147,6 +147,18 @@ TOOLS = [
         ["code_graph_id", "operation", "query"],
     ),
     tool(
+        "read_prototype_page",
+        "Read a saved prototype page at its exact version in the selected team's project. The component tree is declarative data.",
+        {"asset_id": S, "page_key": S, "version": {"type": "integer", "minimum": 1}},
+        ["asset_id", "page_key", "version"],
+    ),
+    tool(
+        "read_prototype_contract",
+        "Read the immutable component contract referenced by a saved prototype.",
+        {"asset_id": S, "component_type": S, "contract_version": {"type": "integer", "minimum": 1}},
+        ["asset_id", "component_type", "contract_version"],
+    ),
+    tool(
         "project_skills",
         "List/search this Agent’s active Skills or read a Skill and its resource files. Loading never executes resource code. Inspect the contents and follow higher-priority/user requirements.",
         {
@@ -222,6 +234,8 @@ def run(name, a):
         "read_project_memory": "memory",
         "list_knowledge_bases": "context",
         "project_session": "session",
+        "read_prototype_page": "prototype_page",
+        "read_prototype_contract": "prototype_contract",
         "project_skills": "skills",
         "manage_project_task": "task",
         "create_project_skill": "create_skill",

@@ -83,6 +83,7 @@ import { DEFAULT_PAGINATION } from "../pagination.js";
 import { buildChatMemoryAssetId } from "../utils/chat-memory-asset.js";
 import { assertIssueGraphUnchanged, IssueWriteConflictError, type IssueGraphSnapshot } from "./issue-write-guard.js";
 import { DuplicateUserKeyError, type IMetadataStore } from "./interface.js";
+import { MongoPrototypeStore } from "../prototype/store.mongodb.js";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -124,6 +125,7 @@ export class MongoMetadataStore implements IMetadataStore {
   private readonly db: Db;
   private readonly useTransactions: boolean;
   private readonly ownsClient: boolean;
+  prototype: MongoPrototypeStore;
   /**
    * v1→v2 legacy sweep 一次性标记。true 表示本进程已在 list 路径上做过 index/文档
    * 清理,后续 list 直接跳过 —— sweep 是历史迁移动作 (dropIndex + deleteMany),
@@ -143,6 +145,9 @@ export class MongoMetadataStore implements IMetadataStore {
     this.db = client.db(dbName);
     this.useTransactions = opts.useTransactions ?? true;
     this.ownsClient = opts.ownsClient ?? true;
+    this.prototype = new MongoPrototypeStore(this.client, this.db, {
+      useTransactions: this.useTransactions,
+    });
     if (!this.useTransactions) {
       console.warn(
         "[META-STORE] WARNING: MongoDB transactions disabled (useTransactions=false). " +
@@ -201,6 +206,7 @@ export class MongoMetadataStore implements IMetadataStore {
   }
 
   async init(): Promise<void> {
+    await this.prototype.init();
     // 25 个 ensureIndex 全部并行:createIndex 幂等,不同 collection/index 互不冲突,
     // 服务器侧原来就是各自 create,唯一开销是 RTT。串行 25 × ~70ms ≈ 1.8s,
     // 并行 max(独立 RTT) ≈ 100~300ms(空库首建更贵些)。

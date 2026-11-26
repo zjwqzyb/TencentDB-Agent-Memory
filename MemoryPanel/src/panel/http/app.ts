@@ -70,10 +70,16 @@ export function buildPanelApp(deps: PanelDeps): Hono {
   });
 
   const distDir = deps.config.ui.distDir;
+  if (deps.config.ui.prototypeEditorDistDir) {
+    app.use('/prototype-editor/*', serveStatic({
+      root: deps.config.ui.prototypeEditorDistDir,
+      rewriteRequestPath: pathname => pathname.slice('/prototype-editor'.length),
+    }));
+  }
   app.use('/*', serveStatic({ root: distDir }));
   app.get('*', (c, next) => {
     const p = c.req.path;
-    if (p.startsWith('/api/') || p === '/health') return next();
+    if (p.startsWith('/api/') || p.startsWith('/prototype-editor/') || p === '/health') return next();
     return serveStatic({ path: path.join(distDir, 'index.html') })(c, next);
   });
 

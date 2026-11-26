@@ -32,7 +32,7 @@ export type TaskStatus = "running" | "completed";
  */
 export type TaskSourceType = "manual" | "external" | "other";
 
-export type AssetType = "skill" | "llm_wiki" | "code_graph" | "chat_memory";
+export type AssetType = "skill" | "llm_wiki" | "code_graph" | "chat_memory" | "prototype";
 export type AssetVisibility = "private" | "team" | "restricted" | "agent" | "task";
 export type AssetStatus =
   | "draft"
@@ -219,6 +219,7 @@ export interface FixedAssetTypeCounts {
   code_graph: number;
   llm_wiki: number;
   chat_memory: number;
+  prototype?: number;
 }
 
 /** 单个 agent 的固定资产分配汇总。 */

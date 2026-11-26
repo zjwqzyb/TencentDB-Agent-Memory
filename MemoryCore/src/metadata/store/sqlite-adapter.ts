@@ -80,6 +80,7 @@ import { DEFAULT_PAGINATION } from "../pagination.js";
 import { buildChatMemoryAssetId } from "../utils/chat-memory-asset.js";
 import { assertIssueGraphUnchanged, type IssueGraphSnapshot } from "./issue-write-guard.js";
 import { DuplicateUserKeyError, type IMetadataStore } from "./interface.js";
+import { SqlitePrototypeStore } from "../prototype/store.sqlite.js";
 
 const require = createRequire(import.meta.url);
 function requireNodeSqlite(): typeof import("node:sqlite") {
@@ -114,6 +115,7 @@ export class SqliteMetadataStore implements IMetadataStore {
   private db!: DatabaseSync;
   private readonly dbPath: string;
   private initialized = false;
+  prototype!: SqlitePrototypeStore;
 
   /** @param dbPath 文件路径或 ":memory:"。 */
   constructor(dbPath: string) {
@@ -130,6 +132,8 @@ export class SqliteMetadataStore implements IMetadataStore {
     this.db.exec("PRAGMA busy_timeout = 5000");
     this.db.exec("PRAGMA foreign_keys = ON");
     this.createSchema();
+    this.prototype = new SqlitePrototypeStore(this.db);
+    this.prototype.init();
     this.initialized = true;
   }
 

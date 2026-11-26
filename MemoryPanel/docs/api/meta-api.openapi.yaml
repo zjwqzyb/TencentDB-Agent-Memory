@@ -39,6 +39,7 @@ tags:
   - name: Meta · Task
   - name: Meta · Task Agent
   - name: Meta · Asset
+  - name: Meta · Prototype
   - name: Meta · Agent Fixed Asset
   - name: Meta · ACL
   - name: Meta · Auth
@@ -74,6 +75,36 @@ paths:
       operationId: meta_user_create
       summary: user/create
       description: "透明代理；须 Header `X-Tdai-User-Key` 为 system_admin。非 admin → 内核 403。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/user/create-with-key:
+    post:
+      tags: ["Meta · User"]
+      operationId: meta_user_create-with-key
+      summary: user/create-with-key
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
       security: []
       parameters:
         - $ref: '#/components/parameters/TdaiServiceId'
@@ -788,6 +819,486 @@ paths:
           $ref: "#/components/responses/KernelUnavailable"
         '504':
           $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/agent/set-default-template:
+    post:
+      tags: ["Meta · Agent"]
+      operationId: meta_agent_set-default-template
+      summary: agent/set-default-template
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/agent/get-default-template:
+    post:
+      tags: ["Meta · Agent"]
+      operationId: meta_agent_get-default-template
+      summary: agent/get-default-template
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/project/create:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_project_create
+      summary: prototype/project/create
+      description: "Create a stable prototype asset in a team."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/project/list:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_project_list
+      summary: prototype/project/list
+      description: "List prototype assets visible to the caller."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/project/get:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_project_get
+      summary: prototype/project/get
+      description: "Get the caller access state for a prototype project."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/page/list:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_page_list
+      summary: prototype/page/list
+      description: "List saved prototype pages for a project."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/page/history:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_page_history
+      summary: prototype/page/history
+      description: "List immutable version history for one prototype page."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/page/get:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_page_get
+      summary: prototype/page/get
+      description: "Read the current page or an exact saved version."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/page/save:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_page_save
+      summary: prototype/page/save
+      description: "Atomically save one or more prototype pages."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/page/restore:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_page_restore
+      summary: prototype/page/restore
+      description: "Restore an exact historical version as a new version."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/contract/get:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_contract_get
+      summary: prototype/contract/get
+      description: "Read an exact component contract version."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/prototype/contract/publish:
+    post:
+      tags: ["Meta · Prototype"]
+      operationId: meta_prototype_contract_publish
+      summary: prototype/contract/publish
+      description: "Publish an immutable component contract."
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/issue/create:
+    post:
+      tags: [Meta]
+      operationId: meta_issue_create
+      summary: issue/create
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/issue/get:
+    post:
+      tags: [Meta]
+      operationId: meta_issue_get
+      summary: issue/get
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/issue/update:
+    post:
+      tags: [Meta]
+      operationId: meta_issue_update
+      summary: issue/update
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/issue/comment:
+    post:
+      tags: [Meta]
+      operationId: meta_issue_comment
+      summary: issue/comment
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
   /api/v1/meta/task/create:
     post:
       tags: ["Meta · Task"]
@@ -884,6 +1395,36 @@ paths:
       operationId: meta_task_delete
       summary: task/delete
       description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/issue/list:
+    post:
+      tags: [Meta]
+      operationId: meta_issue_list
+      summary: issue/list
+      description: "分页 list；body 可选 limit（默认 20，最大 100）、offset（默认 0）。默认 created_at DESC（v3.1.2+；team-member 为 joined_at DESC）。须 Header 双凭证。"
       security: []
       parameters:
         - $ref: '#/components/parameters/TdaiServiceId'
@@ -1576,6 +2117,246 @@ paths:
           $ref: "#/components/responses/KernelUnavailable"
         '504':
           $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/get:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_get
+      summary: instance-upstream/extraction/get
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/create:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_create
+      summary: instance-upstream/extraction/create
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/update:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_update
+      summary: instance-upstream/extraction/update
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/test:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_test
+      summary: instance-upstream/extraction/test
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/enable:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_enable
+      summary: instance-upstream/extraction/enable
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/disable:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_disable
+      summary: instance-upstream/extraction/disable
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/resync-knowledge:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_resync-knowledge
+      summary: instance-upstream/extraction/resync-knowledge
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/instance-upstream/extraction/models:
+    post:
+      tags: [Meta]
+      operationId: meta_instance-upstream_extraction_models
+      summary: instance-upstream/extraction/models
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
   /api/v1/meta/auth/verify:
     post:
       tags: ["Meta · Auth"]
@@ -1670,6 +2451,96 @@ paths:
       tags: [Meta]
       operationId: meta_config_user_set
       summary: config/user/set
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/user-session-default/get:
+    post:
+      tags: [Meta]
+      operationId: meta_user-session-default_get
+      summary: user-session-default/get
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/user-session-default/set:
+    post:
+      tags: [Meta]
+      operationId: meta_user-session-default_set
+      summary: user-session-default/set
+      description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/TdaiServiceId'
+        - $ref: '#/components/parameters/TdaiUserKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: 内核风格信封（业务成败优先看 body.code）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: "#/components/responses/ControlBadRequest"
+        '502':
+          $ref: "#/components/responses/KernelUnavailable"
+        '504':
+          $ref: "#/components/responses/KernelTimeout"
+  /api/v1/meta/user-session-default/delete:
+    post:
+      tags: [Meta]
+      operationId: meta_user-session-default_delete
+      summary: user-session-default/delete
       description: "透明代理至内核；字段见 08-metadata-v3-api-reference.md。须 Header 双凭证。"
       security: []
       parameters:

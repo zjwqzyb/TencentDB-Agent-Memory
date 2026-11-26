@@ -23,6 +23,7 @@ const PATH_TO_PAGE: Record<string, PageId> = {
   '/wiki': 'wiki',
   '/code': 'code',
   '/skills': 'skills',
+  '/prototypes': 'prototypes',
   '/memory': 'chat_memory',
   '/analytics': 'analytics',
   '/team/members': 'team_members',
@@ -42,6 +43,7 @@ function legacyHashToPath(): string | null {
   if (leaf === 'wiki') return '/wiki';
   if (leaf === 'code') return '/code';
   if (leaf === 'skills' || leaf === 'skill') return '/skills';
+  if (leaf === 'prototypes' || leaf === 'prototype') return '/prototypes';
   if (leaf === 'chat_memory' || leaf === 'memory' || leaf === 'chat-memory') return '/memory';
   if (leaf === 'agents' || leaf === 'team_agents') return '/team/agents';
   if (leaf === 'team' || leaf === 'members' || leaf === 'team_members') return '/team/members';
@@ -238,4 +240,3 @@ export function ConsoleLayout() {
     </div>
   );
 }
- 
