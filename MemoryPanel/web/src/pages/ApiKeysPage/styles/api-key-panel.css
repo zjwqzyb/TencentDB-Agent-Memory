@@ -48,30 +48,83 @@
   user-select: all;
 }
 
-/* 接入指引端点卡片
- * 用 grid 而不是 flex 的原因：
- *   flex 的 `align-items: stretch` 理论默认会让两个 endpoint 等高，
- *   但这里 Card.Body 内部又嵌了一层 .tea-card__content block div，
- *   实际渲染中偶尔出现两个端点高度不齐（左框单行 URL、右框 URL 换行
- *   成两行时，底部 baseline 不在同一水平线）。改用 grid 后，
- *   同一行内的 grid item 高度天然一致（grid row 高度取该行最大值），
- *   行为更稳定，不依赖 Tea Card 内部布局细节。
- *
- * 用 `1fr 1fr` 而不是 `repeat(auto-fit, minmax(280px, 1fr))` 的原因：
- *   auto-fit + minmax(280, 1fr) 在父容器 < 2×280+gap=572px 时会自动
- *   堆叠成单列（在 Card 收窄的场景下会触发，两个 endpoint 上下排列、
- *   宽度也不一致）。这里期望两个端点始终并排且等宽，所以强制 `1fr 1fr`，
- *   URL 过长时由 endpoint 内的 `wordBreak: break-all` 换行承载。 */
-._memory-apikey-endpoints {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+/* Codex MCP + Hooks 指南 */
+._memory-apikey-guide-intro,
+._memory-apikey-guide-step-desc,
+._memory-apikey-guide-hint {
+  font-size: 12px;
+  line-height: 1.6;
 }
 
-._memory-apikey-endpoint {
-  min-width: 0; /* grid item 默认 min-width:auto 会拒绝被 URL 撑爆，必须显式置 0 */
+._memory-apikey-guide-connections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+._memory-apikey-guide-label,
+._memory-apikey-guide-step-title {
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+._memory-apikey-guide-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+}
+
+._memory-apikey-guide-code {
+  min-width: 0;
+  margin: 0;
   padding: 8px 12px;
-  border: 1px solid var(--tea-color-border-primary-default);
   border-radius: 4px;
   background: var(--tea-color-bg-secondary-default);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+._memory-apikey-guide-hint {
+  margin-top: 6px;
+}
+
+._memory-apikey-guide-steps {
+  margin: 16px 0 0;
+  padding-left: 22px;
+}
+
+._memory-apikey-guide-step {
+  padding-left: 4px;
+}
+
+._memory-apikey-guide-step + ._memory-apikey-guide-step {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--tea-color-border-default);
+}
+
+._memory-apikey-guide-step-desc {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 720px) {
+  ._memory-apikey-guide-connections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  ._memory-apikey-guide-code-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  ._memory-apikey-guide-code-row > .tea-btn {
+    justify-self: start;
+  }
 }

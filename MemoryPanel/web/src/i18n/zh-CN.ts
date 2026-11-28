@@ -1284,7 +1284,7 @@ export const zhCN = {
 
   // ===== ApiKeyPanel =====
   'apiKey.title': 'User_Key 管理',
-  'apiKey.desc': '管理你的 User Key，用于外部客户端接入（如 CodeBuddy / ClaudeCode CLI）。',
+  'apiKey.desc': '管理 Codex MCP + Hooks 使用的业务 User Key。',
   'apiKey.create': '新建 Key',
   'apiKey.fresh.desc':
     '以下是 {{keyId}} 的完整 Key（仅展示这一次，请立即复制并安全保存；关闭后将无法再次查看明文）：',
@@ -1301,10 +1301,29 @@ export const zhCN = {
   'apiKey.confirm.revoke.ok': '吊销',
   'apiKey.empty.title': '你还没有任何 User Key',
   'apiKey.empty.desc': '点击右上角「新建 Key」创建你的第一把 Key',
-  'apiKey.endpoint.title': '客户端接入地址',
-  'apiKey.endpoint.current': '当前实例：',
-  'apiKey.endpoint.loading': '正在加载接入地址…',
-  'apiKey.endpoint.copy': '复制',
+  'apiKey.endpoint.title': 'Codex MCP + Hooks',
+  'apiKey.endpoint.intro':
+    'MCP 提供团队资产工具，Hooks 提供记忆召回与可选对话采集。安装会保留现有模型、provider 和 ChatGPT 登录。',
+  'apiKey.endpoint.current': '当前实例 service_id',
+  'apiKey.endpoint.panelRoot': 'Panel 根地址',
+  'apiKey.endpoint.panelRootHint':
+    'Codex 本机必须能访问此地址。配置 base_url 时直接使用，不追加 /api/v1。',
+  'apiKey.endpoint.copyAddress': '复制地址',
+  'apiKey.endpoint.copyServiceId': '复制 ID',
+  'apiKey.endpoint.copyCommand': '复制命令',
+  'apiKey.endpoint.copyConfig': '复制配置',
+  'apiKey.endpoint.step.install.title': '安装 MCP + Hooks',
+  'apiKey.endpoint.step.install.desc':
+    '在 MemoryHub 仓库根目录执行。把 /absolute/path/to/workspace 替换为实际工作区绝对路径。需要 Python 3.11+，以及支持这些 Hooks 事件的 Codex 版本。',
+  'apiKey.endpoint.step.credentials.title': '配置项目凭据',
+  'apiKey.endpoint.step.credentials.desc':
+    '按 examples/project.server.json 创建 ~/.codex/tencent-memory/config/<key>.json 并设为 0600。填入同一业务用户的 user_key 和 user_id、其可访问的 team_id 与自有 agent_id。base_url 和 service_id 已按当前面板填好，替换其余占位值；完整 Key 仅写入本机受保护文件。',
+  'apiKey.endpoint.step.projects.title': '配置 projects.json',
+  'apiKey.endpoint.step.projects.desc':
+    '编辑安装目录的 projects.json，设置 enabled=true 和 transport=http。path、MCP cwd 与 Hook 事件 cwd 指向同一工作区，所有路径用绝对路径，配置文件名为 <key>.json。team 和 agent 仅作默认显示名。',
+  'apiKey.endpoint.step.restart.title': '重启并验证',
+  'apiKey.endpoint.step.restart.desc':
+    '重启 Codex。首次对话选择 Team、Agent，并选择任务或暂不绑定。发送 mem:help 查看工作流，再试 mem:list-tasks；工具成功返回即可确认当前连接。',
   'apiKey.create.caption': '新建 User_Key',
   'apiKey.create.expiresAt': '过期时间',
   'apiKey.create.expiresAt.extra': '留空表示永不过期',

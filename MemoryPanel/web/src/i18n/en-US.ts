@@ -1310,8 +1310,7 @@ export const enUS = {
 
   // ===== ApiKeyPanel =====
   'apiKey.title': 'User_Key Management',
-  'apiKey.desc':
-    'Manage your User Keys for external client access (e.g. CodeBuddy / ClaudeCode CLI).',
+  'apiKey.desc': 'Manage business User Keys for Codex MCP + Hooks.',
   'apiKey.create': 'New Key',
   'apiKey.fresh.desc':
     'Here is the full Key for {{keyId}} (shown only once. Please copy and save it securely immediately. You will not be able to view it again after closing):',
@@ -1329,10 +1328,29 @@ export const enUS = {
   'apiKey.confirm.revoke.ok': 'Revoke',
   'apiKey.empty.title': "You don't have any User Keys yet",
   'apiKey.empty.desc': 'Click "New Key" in the top right to create your first key',
-  'apiKey.endpoint.title': 'Client Access Endpoint',
-  'apiKey.endpoint.current': 'Current instance: ',
-  'apiKey.endpoint.loading': 'Loading access endpoint…',
-  'apiKey.endpoint.copy': 'Copy',
+  'apiKey.endpoint.title': 'Codex MCP + Hooks',
+  'apiKey.endpoint.intro':
+    'MCP provides team asset tools. Hooks provide memory recall and optional conversation capture. Installation preserves your current model, provider, and ChatGPT login.',
+  'apiKey.endpoint.current': 'Current instance service_id',
+  'apiKey.endpoint.panelRoot': 'Panel root',
+  'apiKey.endpoint.panelRootHint':
+    'This address must be reachable from Codex. Use it directly as base_url without appending /api/v1.',
+  'apiKey.endpoint.copyAddress': 'Copy address',
+  'apiKey.endpoint.copyServiceId': 'Copy ID',
+  'apiKey.endpoint.copyCommand': 'Copy command',
+  'apiKey.endpoint.copyConfig': 'Copy config',
+  'apiKey.endpoint.step.install.title': 'Install MCP + Hooks',
+  'apiKey.endpoint.step.install.desc':
+    'Run this from the MemoryHub repository root. Replace /absolute/path/to/workspace with the actual absolute workspace path. Requires Python 3.11+ and a Codex version that supports these Hook events.',
+  'apiKey.endpoint.step.credentials.title': 'Configure project credentials',
+  'apiKey.endpoint.step.credentials.desc':
+    'Create ~/.codex/tencent-memory/config/<key>.json from examples/project.server.json with mode 0600. Enter user_key and user_id for the same business user, an accessible team_id, and an agent_id owned by that user. base_url and service_id are prefilled for this Panel. Replace the remaining placeholders and keep the full Key only in this protected local file.',
+  'apiKey.endpoint.step.projects.title': 'Configure projects.json',
+  'apiKey.endpoint.step.projects.desc':
+    'Edit projects.json in the installation directory and set enabled=true and transport=http. Point path, the MCP cwd, and Hook event cwd to the same workspace. Use absolute paths and name the credential file <key>.json. team and agent are default display names.',
+  'apiKey.endpoint.step.restart.title': 'Restart and verify',
+  'apiKey.endpoint.step.restart.desc':
+    'Restart Codex. In the first chat, choose a Team and Agent, then select a task or defer task binding. Send mem:help for the workflow, then try mem:list-tasks. A successful tool result confirms the current connection.',
   'apiKey.create.caption': 'New User_Key',
   'apiKey.create.expiresAt': 'Expires At',
   'apiKey.create.expiresAt.extra': 'Leave empty for never expires',

@@ -36,13 +36,28 @@ import {
   Modal,
 } from 'tea-component';
 import { AddIcon } from 'tea-icons-react';
-import { userKeysApi, metaInstancesApi, type UserKey } from '@/lib/teamApi';
+import { userKeysApi, type UserKey } from '@/lib/teamApi';
 import { useCurrentRole } from '@/services/useCurrentRole';
 import { useAuthStore } from '@/stores/auth';
 import { tea } from '@/lib/tea-bridge';
 import '../styles/api-key-panel.css';
 
 const { autotip } = Table.addons;
+const INSTALL_COMMAND =
+  'python3 agents/codex/mcp-hooks/install.py --project-dir "/absolute/path/to/workspace"';
+
+function CopyableCode({ value, copyLabel }: { value: string; copyLabel: string }) {
+  return (
+    <div className="_memory-apikey-guide-code-row">
+      <pre className="_memory-apikey-guide-code">
+        <code>{value}</code>
+      </pre>
+      <Copy text={value}>
+        <Button>{copyLabel}</Button>
+      </Copy>
+    </div>
+  );
+}
 
 export default function ApiKeyPanel() {
   const { t } = useTranslation();
@@ -50,31 +65,40 @@ export default function ApiKeyPanel() {
   const { auth } = useAuthStore();
   const [keys, setKeys] = useState<UserKey[]>([]);
   const [loading, setLoading] = useState(true);
-  // 客户端接入 base 地址（来自当前登录的 instance 元数据；每个实例不同）。
-  // 优先取 proxy_endpoint —— 开源本地部署 core+proxy 分开时客户端要接的是 proxy；
-  // 未配置时回落 gateway_endpoint，等同老行为（线上 gateway 前置 proxy，两者合一）。
-  const [clientBaseUrl, setClientBaseUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!auth?.instance_id) {
-      setClientBaseUrl(null);
-      return;
-    }
-    void metaInstancesApi
-      .list()
-      .then((list) => {
-        if (cancelled) return;
-        const hit = list.find((i) => i.instance_id === auth.instance_id);
-        setClientBaseUrl(hit?.proxy_endpoint ?? hit?.gateway_endpoint ?? null);
-      })
-      .catch(() => {
-        if (!cancelled) setClientBaseUrl(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [auth?.instance_id]);
+  const panelOrigin = window.location.origin;
+  const credentialConfig = JSON.stringify(
+    {
+      name: 'REPLACE_WITH_PROJECT_NAME',
+      team_name: 'REPLACE_WITH_TEAM_NAME',
+      base_url: panelOrigin,
+      service_id: auth?.instance_id || 'REPLACE_WITH_SERVICE_ID',
+      user_id: auth?.user_id || 'REPLACE_WITH_USER_ID',
+      user_key: 'REPLACE_WITH_USER_KEY',
+      team_id: 'REPLACE_WITH_TEAM_ID',
+      agent_id: 'REPLACE_WITH_AGENT_ID',
+    },
+    null,
+    2,
+  );
+  const projectsConfig = JSON.stringify(
+    {
+      projects: [
+        {
+          key: 'example-project',
+          name: 'example-project',
+          path: '/absolute/path/to/workspace',
+          enabled: true,
+          team: 'REPLACE_WITH_TEAM_NAME',
+          agent: 'REPLACE_WITH_AGENT_NAME',
+          capture_conversations: false,
+          transport: 'http',
+          config_file: '/absolute/path/to/.codex/tencent-memory/config/example-project.json',
+        },
+      ],
+    },
+    null,
+    2,
+  );
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -144,6 +168,7 @@ export default function ApiKeyPanel() {
     if (Number.isNaN(d.getTime())) return iso;
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
+
   return (
     <div className="_memory-apikey-body">
       {/* ===== 刚创建的 Key 提示（仅展示一次） ===== */}
@@ -279,85 +304,73 @@ export default function ApiKeyPanel() {
         />
       </Card>
 
-      {/* ===== 接入指引 ===== */}
-      {/*
-        instance-id 从当前登录态注入（auth.instance_id）—— 用户不用再手工替换
-        [instance-id] 占位符，也不用去别处找自己现在连的是哪个实例。
-        未登录理论上不会走到这个页（LoginGate 挡在外面），仍保留占位 fallback 兜底。
-      */}
+      {/* ===== Codex MCP + Hooks 接入 ===== */}
       <Card>
         <Card.Body title={t('apiKey.endpoint.title')}>
-          {auth?.instance_name && (
-            <div
-              style={{ marginBottom: 8, fontSize: 11, color: 'var(--tea-color-text-secondary)' }}
-            >
-              {t('apiKey.endpoint.current')}
-              <code>{auth.instance_name}</code>
-              <span style={{ opacity: 0.6, marginLeft: 6 }}>({auth.instance_id})</span>
+          <Text theme="text" parent="div" className="_memory-apikey-guide-intro">
+            {t('apiKey.endpoint.intro')}
+          </Text>
+
+          <div className="_memory-apikey-guide-connections">
+            <div>
+              <Text theme="label" parent="div" className="_memory-apikey-guide-label">
+                {t('apiKey.endpoint.panelRoot')}
+              </Text>
+              <CopyableCode value={panelOrigin} copyLabel={t('apiKey.endpoint.copyAddress')} />
+              <Text theme="weak" parent="div" className="_memory-apikey-guide-hint">
+                {t('apiKey.endpoint.panelRootHint')}
+              </Text>
             </div>
-          )}
-          <div className="_memory-apikey-endpoints">
-            {(() => {
-              // base 未拉到就显示加载中；防止用户误抄硬编码 URL
-              if (!clientBaseUrl) {
-                return (
-                  <Text theme="weak" style={{ fontSize: 11 }}>
-                    {t('apiKey.endpoint.loading')}
-                  </Text>
-                );
-              }
-              // 去掉结尾斜杠，避免 base + /path 拼成双斜杠（! 绕过闭包窄化）
-              const base = clientBaseUrl!.replace(/\/+$/, '');
-              const iid = auth?.instance_id ?? '[instance-id]';
-              const endpoints: Array<{ label: string; url: string }> = [
-                { label: 'CodeBuddy', url: `${base}/codebuddy/${iid}` },
-                { label: 'Claude Code', url: `${base}/claude-code/${iid}` },
-                // WorkBuddy 走 /workbuddy/<spaceId>（spaceId=instance_id，与 codebuddy 对称）。
-                // 网页版底层 OpenAI ChatCompletions、桌面版 Responses API，proxy 均已适配。
-                { label: 'WorkBuddy', url: `${base}/workbuddy/${iid}` },
-                // codex 用 OpenAI Responses API（POST /v1/responses）；proxy 侧
-                // 同时注册了 v1/无v1 两种路径，惯例用不带 /v1 的 base，客户端
-                // config.toml 里 base_url 直接填这个地址即可，wire_api="responses"。
-                { label: 'Codex', url: `${base}/codex/${iid}` },
-                // dsh (deepseek-harness) — DeepSeek 官方 agent harness,Web UI 会话
-                // 走 OpenAI Chat Completions。**尾巴不带 /v1** —— dsh 客户端
-                // hardcoded 拼 ${baseURL}/chat/completions,与 CB 同族;proxy 侧
-                // 路由 /dsh/{spaceId}/chat/completions 已对齐。用户填的 baseURL
-                // 直接是这里的地址,不要在后面再加 /v1。
-                { label: 'DeepSeek Harness (dsh)', url: `${base}/dsh/${iid}` },
-                // OpenCode — sst/opencode 通用终端 AI 编程 Agent，协议 = 标准
-                // OpenAI Chat Completions（POST /v1/chat/completions），与 CB/dsh 同族。
-                // proxy 侧 agent-adapters/opencode.ts 已适配 form 回填 + mem: 命令族全套。
-                { label: 'OpenCode', url: `${base}/opencode/${iid}` },
-                { label: 'OpenClaw', url: `${base}/openclaw/${iid}` },
-                { label: 'Hermes', url: `${base}/hermes/${iid}` },
-              ];
-              return endpoints.map((ep) => (
-                <div className="_memory-apikey-endpoint" key={ep.label}>
-                  <Text theme="label" parent="div" style={{ marginBottom: 4 }}>
-                    {ep.label}
-                  </Text>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <code
-                      style={{
-                        flex: 1,
-                        fontSize: 11,
-                        wordBreak: 'break-all',
-                        background: 'var(--tea-color-bg-secondary-default)',
-                        padding: '4px 8px',
-                        borderRadius: 4,
-                      }}
-                    >
-                      {ep.url}
-                    </code>
-                    <Copy text={ep.url}>
-                      <Button>{t('apiKey.endpoint.copy')}</Button>
-                    </Copy>
-                  </div>
-                </div>
-              ));
-            })()}
+            {auth?.instance_id && (
+              <div>
+                <Text theme="label" parent="div" className="_memory-apikey-guide-label">
+                  {t('apiKey.endpoint.current')}
+                </Text>
+                <CopyableCode
+                  value={auth.instance_id}
+                  copyLabel={t('apiKey.endpoint.copyServiceId')}
+                />
+              </div>
+            )}
           </div>
+
+          <ol className="_memory-apikey-guide-steps">
+            <li className="_memory-apikey-guide-step">
+              <Text theme="label" parent="div" className="_memory-apikey-guide-step-title">
+                {t('apiKey.endpoint.step.install.title')}
+              </Text>
+              <Text theme="text" parent="div" className="_memory-apikey-guide-step-desc">
+                {t('apiKey.endpoint.step.install.desc')}
+              </Text>
+              <CopyableCode value={INSTALL_COMMAND} copyLabel={t('apiKey.endpoint.copyCommand')} />
+            </li>
+            <li className="_memory-apikey-guide-step">
+              <Text theme="label" parent="div" className="_memory-apikey-guide-step-title">
+                {t('apiKey.endpoint.step.credentials.title')}
+              </Text>
+              <Text theme="text" parent="div" className="_memory-apikey-guide-step-desc">
+                {t('apiKey.endpoint.step.credentials.desc')}
+              </Text>
+              <CopyableCode value={credentialConfig} copyLabel={t('apiKey.endpoint.copyConfig')} />
+            </li>
+            <li className="_memory-apikey-guide-step">
+              <Text theme="label" parent="div" className="_memory-apikey-guide-step-title">
+                {t('apiKey.endpoint.step.projects.title')}
+              </Text>
+              <Text theme="text" parent="div" className="_memory-apikey-guide-step-desc">
+                {t('apiKey.endpoint.step.projects.desc')}
+              </Text>
+              <CopyableCode value={projectsConfig} copyLabel={t('apiKey.endpoint.copyConfig')} />
+            </li>
+            <li className="_memory-apikey-guide-step">
+              <Text theme="label" parent="div" className="_memory-apikey-guide-step-title">
+                {t('apiKey.endpoint.step.restart.title')}
+              </Text>
+              <Text theme="text" parent="div" className="_memory-apikey-guide-step-desc">
+                {t('apiKey.endpoint.step.restart.desc')}
+              </Text>
+            </li>
+          </ol>
         </Card.Body>
       </Card>
       {/* ===== 新建弹窗：只需设置「过期时间」（可留空＝永不过期），不再需要名称 ===== */}
